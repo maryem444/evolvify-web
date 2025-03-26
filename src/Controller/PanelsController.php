@@ -1,0 +1,16 @@
+<?php
+// src/Controller/PanelsController.php
+
+namespace App\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Routing\Annotation\Route;
+
+class PanelsController extends AbstractController
+{
+    #[Route("/panels", name:"app_panels")]
+    public function index()
+    {
+        return $this->render('panels.html.twig');
+    }
+}

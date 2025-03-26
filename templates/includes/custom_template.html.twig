@@ -1,0 +1,36 @@
+<!-- Custom template | don't include it in your project! -->
+<div class="custom-template">
+    <div class="title">Settings</div>
+    <div class="custom-content">
+        <div class="switcher">
+            <div class="switch-block">
+                <h4>Logo Header</h4>
+                <div class="btnSwitch">
+                    {% for color in ['dark', 'blue', 'purple', 'light-blue', 'green', 'orange', 'red', 'white', 'dark2', 'blue2', 'purple2', 'light-blue2', 'green2', 'orange2', 'red2'] %}
+                        <button type="button" class="changeLogoHeaderColor {% if color == 'dark' %}selected{% endif %}" data-color="{{ color }}"></button>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="switch-block">
+                <h4>Navbar Header</h4>
+                <div class="btnSwitch">
+                    {% for color in ['dark', 'blue', 'purple', 'light-blue', 'green', 'orange', 'red', 'white', 'dark2', 'blue2', 'purple2', 'light-blue2', 'green2', 'orange2', 'red2'] %}
+                        <button type="button" class="changeTopBarColor {% if color == 'white' %}selected{% endif %}" data-color="{{ color }}"></button>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="switch-block">
+                <h4>Sidebar</h4>
+                <div class="btnSwitch">
+                    {% for color in ['white', 'dark', 'dark2'] %}
+                        <button type="button" class="changeSideBarColor {% if color == 'dark' %}selected{% endif %}" data-color="{{ color }}"></button>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="custom-toggle">
+        <i class="icon-settings"></i>
+    </div>
+</div>
+<!-- End Custom template -->
