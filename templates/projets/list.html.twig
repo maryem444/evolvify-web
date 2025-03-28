@@ -1,0 +1,157 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Liste des Projets
+{% endblock %}
+
+{% block stylesheets %}
+	<style>
+		.page-header {
+			margin-top: 80px;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+		}
+		.page-title {
+			margin: 0;
+			font-size: 24px;
+			color: #034694; /* Bleu marine */
+			font-weight: bold;
+		}
+		.header-buttons {
+			display: flex;
+			align-items: center;
+			gap: 10px; /* This adds space between the buttons */
+		}
+		.btn-add-projet {
+			background: linear-gradient(to right, #4CAF50, #2196F3);
+			color: white;
+			border: none;
+			padding: 8px 16px;
+			border-radius: 4px;
+			font-size: 14px;
+			font-weight: 500;
+			text-transform: uppercase;
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			text-decoration: none;
+			transition: opacity 0.3s ease;
+		}
+
+
+		.btn-add-projet:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+		}
+
+		.btn-add-projet i {
+			margin-right: 5px;
+		}
+
+		.table thead {
+			background-color: rgb(169, 243, 240) !important;
+			color: white;
+		}
+
+		.btn-group {
+			display: flex;
+			gap: 10px;
+		}
+
+		.btn-group i {
+			cursor: pointer;
+			transition: color 0.3s ease;
+		}
+
+		.btn-group .fa-edit {
+			color: #4CAF50;
+		}
+
+		.btn-group .fa-trash {
+			color: #F44336;
+		}
+
+		.btn-group .fa-edit:hover {
+			color: #45a049;
+		}
+
+		.btn-group .fa-trash:hover {
+			color: #d32f2f;
+		}
+
+		.btn-add-projet i,
+		.btn-export-pdf i {
+			margin-right: 5px;
+		}
+	</style>
+{% endblock %}
+
+{% block content %}
+	<div class="container-fluid">
+		<div class="page-header">
+			<h1 class="page-title">📋 Liste des Projets</h1>
+			<div class="header-buttons">
+				<a href="{{ path('export_pdf') }}" class="btn btn-danger">
+					<i class="fas fa-file-pdf"></i>
+					Extraire PDF
+				</a>
+				<a href="{{ path('projet_add') }}" class="btn-add-projet">
+					<i class="fas fa-plus"></i>Ajouter Projet
+				</a>
+			</div>
+		</div>
+		<div class="card">
+			<div class="card-body">
+				<table class="table table-striped table-bordered">
+					<thead>
+						<tr>
+							<th>Nom</th>
+							<th>Abbreviation</th>
+							<th>Description</th>
+							<th>Statut</th>
+							<th>Date de début</th>
+							<th>Date de fin</th>
+							<th>Actions</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for projet in projets %}
+							<tr>
+								<td>{{ projet.name }}</td>
+								<td>{{ projet.abbreviation }}</td>
+								<td>{{ projet.description }}</td>
+								<td>
+									{% if projet.status == constant('App\\Entity\\StatutProjet::IN_PROGRESS') %}
+										<span class="badge bg-warning text-dark">En cours</span>
+									{% else %}
+										<span class="badge bg-success">Terminé</span>
+									{% endif %}
+								</td>
+								<td>{{ projet.starterAt ? projet.starterAt|date('d/m/Y') : '-' }}</td>
+								<td>{{ projet.endDate ? projet.endDate|date('d/m/Y') : '-' }}</td>
+								<td>
+									<div class="btn-group" role="group">
+										<a href="{{ path('projet_edit', { 'id': projet.id }) }}" title="Modifier">
+											<i class="fas fa-edit"></i>
+										</a>
+										<form action="{{ path('projet_delete', { 'id': projet.id }) }}" method="post" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce projet ?');" style="display:inline;">
+											<input type="hidden" name="_method" value="DELETE">
+											<button type="submit" style="border: none; background: none; padding: 0;">
+												<i class="fas fa-trash" title="Supprimer" style="color: #F44336; cursor: pointer;"></i>
+											</button>
+										</form>
+									</div>
+								</td>
+							</tr>
+						{% else %}
+							<tr>
+								<td colspan="7" class="text-center">Aucun projet trouvé</td>
+							</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+	
+{% endblock %}

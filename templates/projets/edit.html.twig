@@ -1,0 +1,175 @@
+{% block body %}
+	<!DOCTYPE html>
+	<html lang="fr">
+		<head>
+			<meta charset="UTF-8">
+			<title>Modifier un Projet</title>
+			<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+			<style>
+				/* Réutilisation des styles du formulaire d'ajout */
+				.overlay {
+					position: fixed;
+					top: 0;
+					left: 0;
+					width: 100%;
+					height: 100%;
+					background-color: rgba(0, 0, 0, 0.5);
+					display: flex;
+					justify-content: center;
+					align-items: center;
+					z-index: 1050;
+					backdrop-filter: blur(3px);
+					animation: fadeIn 0.3s ease-out;
+				}
+
+				@keyframes fadeIn {
+					from {
+						opacity: 0;
+					}
+					to {
+						opacity: 1;
+					}
+				}
+
+				.modal-custom {
+					background: linear-gradient(135deg, rgba(245, 247, 250, 0.95) 0%, rgba(195, 207, 226, 0.95) 100%);
+					border-radius: 15px;
+					box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+					max-width: 700px;
+					width: 95%;
+					max-height: 90vh;
+					overflow-y: auto;
+					position: relative;
+					animation: slideIn 0.4s ease-out;
+				}
+
+				@keyframes slideIn {
+					from {
+						opacity: 0;
+						transform: translateY(-50px);
+					}
+					to {
+						opacity: 1;
+						transform: translateY(0);
+					}
+				}
+
+				.modal-header {
+					background: linear-gradient(to right, rgba(78, 115, 223, 0.9) 0%, rgba(34, 74, 190, 0.9) 100%);
+					color: white;
+					border-top-left-radius: 15px;
+					border-top-right-radius: 15px;
+					padding: 15px;
+					position: relative;
+				}
+
+				.modal-close {
+					position: absolute;
+					right: 15px;
+					top: 50%;
+					transform: translateY(-50%);
+					background: none;
+					border: none;
+					color: white;
+					font-size: 30px;
+					line-height: 1;
+					opacity: 0.7;
+					transition: all 0.3s ease;
+				}
+
+				.modal-close:hover {
+					opacity: 1;
+					color: #ff4444;
+					transform: translateY(-50%) rotate(90deg);
+				}
+
+				.form-control,
+				.form-select {
+					background-color: rgba(255, 255, 255, 0.8);
+					border-radius: 8px;
+					transition: all 0.3s ease;
+				}
+
+				.form-control:focus,
+				.form-select:focus {
+					background-color: white;
+					box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+					border-color: #4e73df;
+				}
+			</style>
+		</head>
+		<body>
+			<div class="overlay">
+				<div class="modal-custom">
+					<div class="modal-header position-relative">
+						<h5 class="modal-title">✏️ Modifier le Projet</h5>
+						<button type="button" class="modal-close" onclick="window.history.back()">&times;</button>
+					</div>
+					<div class="modal-body p-4">
+						{{ form_start(form, {'attr': {'class': 'needs-validation', 'novalidate': 'novalidate'}}) }}
+
+						<div class="row">
+							<div class="col-md-6 mb-3">
+								{{ form_label(form.name, 'Nom du Projet', {'label_attr': {'class': 'form-label'}}) }}
+								{{ form_widget(form.name, {'attr': {'class': 'form-control'}}) }}
+								{{ form_errors(form.name) }}
+							</div>
+							<div class="col-md-6 mb-3">
+								{{ form_label(form.abbreviation, 'Abréviation', {'label_attr': {'class': 'form-label'}}) }}
+								{{ form_widget(form.abbreviation, {'attr': {'class': 'form-control'}}) }}
+								{{ form_errors(form.abbreviation) }}
+							</div>
+						</div>
+
+						<div class="mb-3">
+							{{ form_label(form.description, 'Description', {'label_attr': {'class': 'form-label'}}) }}
+							{{ form_widget(form.description, {'attr': {'class': 'form-control', 'rows': 3}}) }}
+							{{ form_errors(form.description) }}
+						</div>
+
+						<div class="row">
+							<div class="col-md-4 mb-3">
+								{{ form_label(form.status, 'Statut', {'label_attr': {'class': 'form-label'}}) }}
+								{{ form_widget(form.status, {'attr': {'class': 'form-select'}}) }}
+							</div>
+							<div class="col-md-4 mb-3">
+								{{ form_label(form.starterAt, 'Date de Début', {'label_attr': {'class': 'form-label'}}) }}
+								{{ form_widget(form.starterAt, {'attr': {'class': 'form-control'}}) }}
+							</div>
+							<div class="col-md-4 mb-3">
+								{{ form_label(form.endDate, 'Date de Fin', {'label_attr': {'class': 'form-label'}}) }}
+								{{ form_widget(form.endDate, {'attr': {'class': 'form-control'}}) }}
+							</div>
+						</div>
+
+						<div class="mb-3">
+							{{ form_label(form.uploaded_files, 'Fichiers du Projet', {'label_attr': {'class': 'form-label'}}) }}
+
+							{# Affichage du fichier actuel s'il existe #}
+							{% if projet.uploadedFiles %}
+								<div class="alert alert-info">
+									Fichier actuel :
+									<a href="{{ asset(projet.uploadedFiles) }}" target="_blank" class="alert-link">
+										{{ projet.uploadedFiles }}
+									</a>
+								</div>
+							{% endif %}
+							{{ form_widget(form.uploaded_files, {'attr': {'class': 'form-control'}}) }}
+						</div>
+
+						<div class="d-flex justify-content-end gap-3">
+							<button type="button" class="btn btn-secondary" onclick="window.history.back()">
+								Annuler
+							</button>
+							{{ form_widget(form.save, {'attr': {'class': 'btn btn-primary'}}) }}
+						</div>
+
+						{{ form_end(form) }}
+					</div>
+				</div>
+			</div>
+
+			<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+		</body>
+	</html>
+{% endblock %}
