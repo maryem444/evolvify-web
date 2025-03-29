@@ -251,7 +251,7 @@
 								<td>{{ tache.idEmploye ?? '-' }}</td>
 								<td>
 									<div class="btn-group" role="group">
-										<a href="#" title="Modifier">
+										<a href="{{ path('taches_edit', { 'id_tache': tache.idTache }) }}" title="Modifier">
 											<i class="fas fa-edit"></i>
 										</a>
 										<form action="{{ path('taches_delete', { 'id_tache': tache.idTache }) }}" method="post" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette tâche ?');" style="display:inline;">
@@ -274,12 +274,18 @@
 	</table>
 </div></div></div><!-- Modale pour Ajouter une Tâche --><div class="overlay" id="overlay"><div class="modal-custom">
 <div class="modal-header">
-	<h5>Ajouter une Tâche</h5>
+	<h5>
+		{% if editMode is defined and editMode %}Modifier{% else %}Ajouter
+		{% endif %}
+		une Tâche</h5>
 	<span class="close-btn" onclick="closeModal()">&times;</span>
 </div>
 <div class="modal-body">
-	{{ form_start(form, {'action': path('taches_add'), 'method': 'POST'}) }}
-	{{ form_errors(form) }}
+	{% if editMode is defined and editMode %}
+		{{ form_start(form, {'action': path('taches_edit', {'id_tache': tache_id}), 'method': 'POST'}) }}
+	{% else %}
+		{{ form_start(form, {'action': path('taches_add'), 'method': 'POST'}) }}
+	{% endif %}
 
 	<div class="form-group">
 		{{ form_label(form.description) }}
@@ -318,11 +324,15 @@
 		<button type="button" class="btn btn-secondary" onclick="closeModal()">Annuler</button>
 		{{ form_widget(form.submit, {'attr': {'class': 'btn btn-primary'}}) }}
 	</div>
-	{{ form_end(form) }}
-</div></div></div></div><script>function openModal() {
+	{{ form_end(form) }}</div></div></div></div><script>function openModal() {
 document.getElementById('overlay').style.display = 'flex';
 }
 
 function closeModal() {
 document.getElementById('overlay').style.display = 'none';
-}</script>{% endblock %}
+}
+
+{% if editMode is defined and editMode %}
+document.addEventListener('DOMContentLoaded', function () {
+openModal();
+});{% endif %}</script>{% endblock %}

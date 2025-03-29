@@ -81,4 +81,41 @@ class TacheController extends AbstractController
 
         return $this->redirectToRoute('taches_list');
     }
+    #[Route('/taches/edit/{id_tache}', name: 'taches_edit', methods: ['GET', 'POST'])]
+public function edit(
+    Request $request,
+    int $id_tache,
+    TacheRepository $tacheRepository,
+    EntityManagerInterface $entityManager
+): Response {
+    // Récupérer la tâche à modifier
+    $tache = $tacheRepository->find($id_tache);
+    
+    if (!$tache) {
+        $this->addFlash('error', 'Tâche non trouvée');
+        return $this->redirectToRoute('taches_list');
+    }
+    
+    // Créer le formulaire avec la tâche existante
+    $form = $this->createForm(TacheType::class, $tache);
+    $form->handleRequest($request);
+    
+    if ($form->isSubmitted() && $form->isValid()) {
+        // Mettre à jour la tâche
+        $entityManager->flush();
+        
+        $this->addFlash('success', 'La tâche a été modifiée avec succès !');
+        return $this->redirectToRoute('taches_list');
+    }
+    
+    // Si c'est une requête GET ou si le formulaire n'est pas valide
+    $taches = $tacheRepository->getTacheListQB();
+    
+    return $this->render('tache/list.html.twig', [
+        'taches' => $taches,
+        'form' => $form->createView(),
+        'editMode' => true,
+        'tache_id' => $id_tache
+    ]);
+}
 }
