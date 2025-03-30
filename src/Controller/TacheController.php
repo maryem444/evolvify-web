@@ -2,11 +2,12 @@
 
 namespace App\Controller;
 
+use App\Entity\Projet;
 use App\Entity\Tache;
 use Symfony\Component\HttpFoundation\Request;
 use App\Form\TacheType;
 use App\Repository\TacheRepository;
-use Doctrine\Persistence\ManagerRegistry;
+use App\Repository\ProjetRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -14,108 +15,104 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class TacheController extends AbstractController
 {
-    #[Route('/taches', name: 'taches_list')]
-    public function index(TacheRepository $tacheRepository): Response
+    #[Route('/projets/{id}/taches', name: 'taches_list')]
+    public function index(int $id, ProjetRepository $projetRepository, TacheRepository $tacheRepository): Response
     {
-        $taches = $tacheRepository->getTacheListQB();
-        $tache = new Tache(); // Create a new Tache for the form
-        $form = $this->createForm(TacheType::class, $tache);
+        $projet = $projetRepository->find($id);
 
-        return $this->render('tache/list.html.twig', [
-            'taches' => $taches,
-            'form' => $form->createView(), // Pass the form to the template
-        ]);
-    }
-
-    #[Route('/taches/ajouter', name: 'taches_add', methods: ['POST'])]
-    public function add(Request $request, EntityManagerInterface $entityManager, TacheRepository $tacheRepository): Response
-    {
-        $tache = new Tache();
-        $form = $this->createForm(TacheType::class, $tache);
-
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-            // Définir la date de création à la date actuelle
-            $tache->setCreatedAt(new \DateTime());
-
-            // Sauvegarde la tâche dans la base de données
-            $entityManager->persist($tache);
-            $entityManager->flush();
-
-            $this->addFlash('success', 'La tâche a été ajoutée avec succès !');
-
-            return $this->redirectToRoute('taches_list');
+        if (!$projet) {
+            throw $this->createNotFoundException('Projet introuvable.');
         }
 
-        // If form is not valid, return to the list with errors
-        $taches = $tacheRepository->getTacheListQB();
+        $taches = $tacheRepository->findBy(['projet' => $projet]);
+        $form = $this->createForm(TacheType::class, new Tache());
+
         return $this->render('tache/list.html.twig', [
+            'projet' => $projet,
             'taches' => $taches,
             'form' => $form->createView(),
         ]);
     }
 
-    #[Route('/taches/supprimer/{id_tache}', name: 'taches_delete', methods: ['POST'])]
-    public function deleteTache(
-        int $id_tache,
-        TacheRepository $tacheRepository,
-        EntityManagerInterface $entityManager
-    ): Response {
-        // Explicitly find the Tache entity
-        $tache = $tacheRepository->find($id_tache);
+    #[Route('/projets/{id}/taches/ajouter', name: 'taches_add', methods: ['POST'])]
+    public function add(int $id, Request $request, ProjetRepository $projetRepository, EntityManagerInterface $entityManager): Response
+    {
+        $projet = $projetRepository->find($id);
 
-        if (!$tache) {
-            $this->addFlash('error', 'Tâche non trouvée');
-            return $this->redirectToRoute('taches_list');
+        if (!$projet) {
+            throw $this->createNotFoundException('Projet introuvable.');
         }
+        $idEmploye = 87;
+        $tache = new Tache();
+        $form = $this->createForm(TacheType::class, $tache);
+        $form->handleRequest($request);
 
-        try {
-            $entityManager->remove($tache);
+        if ($form->isSubmitted() && $form->isValid()) {
+            $tache->setCreatedAt(new \DateTime());
+            $tache->setProjet($projet); // Associer la tâche au projet
+            $tache->setIdEmploye($idEmploye);
+            $entityManager->persist($tache);
             $entityManager->flush();
 
-            $this->addFlash('success', 'La tâche a été supprimée avec succès');
-        } catch (\Exception $e) {
-            $this->addFlash('error', 'Erreur lors de la suppression de la tâche : ' . $e->getMessage());
+            $this->addFlash('success', 'Tâche ajoutée avec succès !');
+            return $this->redirectToRoute('taches_list', ['id' => $id]);
         }
 
-        return $this->redirectToRoute('taches_list');
+        return $this->render('tache/list.html.twig', [
+            'projet' => $projet,
+            'form' => $form->createView(),
+        ]);
     }
-    #[Route('/taches/edit/{id_tache}', name: 'taches_edit', methods: ['GET', 'POST'])]
-public function edit(
-    Request $request,
-    int $id_tache,
-    TacheRepository $tacheRepository,
-    EntityManagerInterface $entityManager
-): Response {
-    // Récupérer la tâche à modifier
-    $tache = $tacheRepository->find($id_tache);
-    
-    if (!$tache) {
-        $this->addFlash('error', 'Tâche non trouvée');
-        return $this->redirectToRoute('taches_list');
-    }
-    
-    // Créer le formulaire avec la tâche existante
-    $form = $this->createForm(TacheType::class, $tache);
-    $form->handleRequest($request);
-    
-    if ($form->isSubmitted() && $form->isValid()) {
-        // Mettre à jour la tâche
+
+    #[Route('/projets/{id}/taches/supprimer/{tacheId}', name: 'taches_delete', methods: ['POST'])]
+    public function deleteTache(int $id, int $tacheId, TacheRepository $tacheRepository, EntityManagerInterface $entityManager): Response
+    {
+        $tache = $tacheRepository->find($tacheId);
+
+        if (!$tache || $tache->getProjet()->getId() !== $id) {
+            $this->addFlash('error', 'Tâche introuvable ou non associée à ce projet.');
+            return $this->redirectToRoute('taches_list', ['id' => $id]);
+        }
+
+        $entityManager->remove($tache);
         $entityManager->flush();
-        
-        $this->addFlash('success', 'La tâche a été modifiée avec succès !');
-        return $this->redirectToRoute('taches_list');
+        $this->addFlash('success', 'Tâche supprimée avec succès.');
+
+        return $this->redirectToRoute('taches_list', ['id' => $id]);
     }
-    
-    // Si c'est une requête GET ou si le formulaire n'est pas valide
-    $taches = $tacheRepository->getTacheListQB();
-    
-    return $this->render('tache/list.html.twig', [
-        'taches' => $taches,
-        'form' => $form->createView(),
-        'editMode' => true,
-        'tache_id' => $id_tache
-    ]);
-}
+
+    #[Route('/projets/{id}/taches/edit/{tacheId}', name: 'taches_edit', methods: ['GET', 'POST'])]
+    public function edit(int $id, int $tacheId, Request $request, TacheRepository $tacheRepository, ProjetRepository $projetRepository, EntityManagerInterface $entityManager): Response
+    {
+        // Récupérer la tâche et le projet
+        $tache = $tacheRepository->find($tacheId);
+        $projet = $projetRepository->find($id);
+
+        // Vérifier si la tâche et le projet existent et si la tâche est bien associée au projet
+        if (!$tache || !$projet || $tache->getProjet()->getId() !== $id) {
+            $this->addFlash('error', 'Tâche ou projet introuvable.');
+            return $this->redirectToRoute('taches_list', ['id' => $id]);
+        }
+
+        // Récupérer toutes les tâches associées au projet
+        $taches = $tacheRepository->findBy(['projet' => $projet]);
+
+        // Créer le formulaire d'édition
+        $form = $this->createForm(TacheType::class, $tache);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $entityManager->flush();
+            $this->addFlash('success', 'Tâche modifiée avec succès !');
+            return $this->redirectToRoute('taches_list', ['id' => $id]);
+        }
+
+        return $this->render('tache/list.html.twig', [
+            'form' => $form->createView(),
+            'tache_id' => $tacheId,
+            'editMode' => true,
+            'projet' => $projet,
+            'taches' => $taches,
+        ]);
+    }
 }

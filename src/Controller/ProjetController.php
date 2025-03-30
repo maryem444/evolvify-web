@@ -7,6 +7,7 @@ use App\Entity\StatutProjet;
 use Symfony\Component\HttpFoundation\Request;
 use App\Form\ProjetType;
 use App\Repository\ProjetRepository;
+use App\Repository\TacheRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -102,4 +103,16 @@ class ProjetController extends AbstractController
             'projet' => $projet,
         ]);
     }
+    #[Route('/projet/{id}/taches', name: 'projet_taches')]
+    public function showTaches(Projet $projet, TacheRepository $tacheRepository): Response
+    {
+        // Récupérer les tâches liées à ce projet
+        $taches = $tacheRepository->findBy(['projet' => $projet]);
+        
+        return $this->render('tache/list.html.twig', [
+            'projet' => $projet,
+            'taches' => $taches
+        ]);
+    }
+   
 }

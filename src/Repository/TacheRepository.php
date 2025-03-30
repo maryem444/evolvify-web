@@ -3,11 +3,10 @@
 namespace App\Repository;
 
 use App\Entity\Tache;
-use App\Entity\StatutTache;
-use App\Entity\Priorite;
+use App\Entity\Projet;
+use App\Entity\Utilisateur;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
-use Doctrine\ORM\QueryBuilder;
 
 /**
  * @extends ServiceEntityRepository<Tache>
@@ -20,10 +19,10 @@ class TacheRepository extends ServiceEntityRepository
     }
 
     /**
-     * Récupère la liste de toutes les tâches
+     * Récupère la liste de toutes les tâches.
      * @return Tache[]
      */
-    public function getTacheListQB()
+    public function getTacheListQB(): array
     {
         return $this->createQueryBuilder('t')
             ->getQuery()
@@ -31,11 +30,11 @@ class TacheRepository extends ServiceEntityRepository
     }
 
     /**
-     * Recherche des tâches par statut
-     * @param StatutTache $status
+     * Recherche des tâches par statut.
+     * @param string $status
      * @return Tache[]
      */
-    public function findByStatus(StatutTache $status)
+    public function findByStatus(string $status): array
     {
         return $this->createQueryBuilder('t')
             ->where('t.status = :status')
@@ -45,11 +44,11 @@ class TacheRepository extends ServiceEntityRepository
     }
 
     /**
-     * Recherche des tâches par priorité
-     * @param Priorite $priority
+     * Recherche des tâches par priorité.
+     * @param string $priority
      * @return Tache[]
      */
-    public function findByPriority(Priorite $priority)
+    public function findByPriority(string $priority): array
     {
         return $this->createQueryBuilder('t')
             ->where('t.priority = :priority')
@@ -59,70 +58,74 @@ class TacheRepository extends ServiceEntityRepository
     }
 
     /**
-     * Recherche des tâches par projet
+     * Recherche des tâches par projet.
      * @param int $projetId
      * @return Tache[]
      */
-    public function findByProjet(int $projetId)
+    public function findByProjet(int $projetId): array
     {
         return $this->createQueryBuilder('t')
-            ->where('t.id_projet = :projetId')
+            ->join('t.projet', 'p')
+            ->where('p.id = :projetId') // Correction ici
             ->setParameter('projetId', $projetId)
             ->getQuery()
             ->getResult();
     }
 
     /**
-     * Recherche des tâches par employé
+     * Recherche des tâches par employé.
      * @param int $employeId
      * @return Tache[]
      */
-    public function findByEmploye(int $employeId)
+    public function findByEmploye(int $employeId): array
     {
         return $this->createQueryBuilder('t')
-            ->where('t.id_employe = :employeId')
+            ->join('t.employe', 'e')
+            ->where('e.idEmploye = :employeId') // Correction ici
             ->setParameter('employeId', $employeId)
             ->getQuery()
             ->getResult();
     }
 
     /**
-     * Recherche des tâches avec filtre multiple
+     * Recherche des tâches avec filtres multiples.
      * @param array $filters
      * @return Tache[]
      */
-    public function searchTaches(array $filters = [])
+    public function searchTaches(array $filters = []): array
     {
         $qb = $this->createQueryBuilder('t');
 
-        if (isset($filters['status']) && $filters['status'] instanceof StatutTache) {
+        if (!empty($filters['status'])) {
             $qb->andWhere('t.status = :status')
-               ->setParameter('status', $filters['status']);
+                ->setParameter('status', $filters['status']);
         }
 
-        if (isset($filters['priority']) && $filters['priority'] instanceof Priorite) {
+        if (!empty($filters['priority'])) {
             $qb->andWhere('t.priority = :priority')
-               ->setParameter('priority', $filters['priority']);
+                ->setParameter('priority', $filters['priority']);
         }
 
-        if (isset($filters['projet'])) {
-            $qb->andWhere('t.id_projet = :projetId')
-               ->setParameter('projetId', $filters['projet']);
+        if (!empty($filters['projet'])) {
+            $qb->leftJoin('t.projet', 'p') // Utilisation de leftJoin pour éviter d'exclure certaines tâches
+                ->andWhere('p.id = :projetId')
+                ->setParameter('projetId', $filters['projet']);
         }
 
-        if (isset($filters['employe'])) {
-            $qb->andWhere('t.id_employe = :employeId')
-               ->setParameter('employeId', $filters['employe']);
+        if (!empty($filters['employe'])) {
+            $qb->leftJoin('t.employe', 'e')
+                ->andWhere('e.idEmploye = :employeId')
+                ->setParameter('employeId', $filters['employe']);
         }
 
         return $qb->getQuery()->getResult();
     }
 
     /**
-     * Compte le nombre de tâches par statut
+     * Compte le nombre de tâches par statut.
      * @return array
      */
-    public function countTachesByStatus()
+    public function countTachesByStatus(): array
     {
         return $this->createQueryBuilder('t')
             ->select('t.status, COUNT(t) as count')

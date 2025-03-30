@@ -84,17 +84,14 @@ class ProjetType extends AbstractType
             'mimeTypesMessage' => 'Veuillez uploader un fichier PDF, JPEG ou PNG',
           ]),
         ],
+      ])
+      // Ajouter un champ pour afficher le fichier existant
+      ->add('save', SubmitType::class, [
+        'label' => 'Enregistrer le projet',
+        'attr' => [
+          'class' => 'btn btn-primary'
+        ]
       ]);
-
-    // Ajouter un champ pour afficher le fichier existant
-
-
-    $builder->add('save', SubmitType::class, [
-      'label' => 'Enregistrer le projet',
-      'attr' => [
-        'class' => 'btn btn-primary'
-      ]
-    ]);
   }
 
   public function configureOptions(OptionsResolver $resolver): void

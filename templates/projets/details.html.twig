@@ -1,0 +1,256 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Détails du projet
+	{{ projet.name }}
+{% endblock %}
+
+{% block stylesheets %}
+	<style>
+		.project-detail-container {
+			margin-top: 80px;
+			max-width: 900px;
+			margin-left: auto;
+			margin-right: auto;
+		}
+		.project-header {
+			background-color: rgb(169, 243, 240);
+			padding: 20px;
+			border-radius: 8px 8px 0 0;
+			color: #034694;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+		}
+		.project-header h1 {
+			margin: 0;
+			font-size: 28px;
+			font-weight: bold;
+		}
+		.project-badge {
+			background-color: rgba(255, 255, 255, 0.3);
+			padding: 4px 10px;
+			border-radius: 4px;
+			font-size: 14px;
+			font-weight: 500;
+		}
+		.project-body {
+			background-color: white;
+			padding: 25px;
+			border-radius: 0 0 8px 8px;
+			box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+		}
+		.project-section {
+			margin-bottom: 25px;
+		}
+		.project-section-title {
+			font-size: 18px;
+			color: #034694;
+			margin-bottom: 10px;
+			font-weight: bold;
+		}
+		.project-description {
+			font-size: 16px;
+			line-height: 1.6;
+			margin-bottom: 25px;
+			padding: 15px;
+			background-color: #f9f9f9;
+			border-radius: 6px;
+			border-left: 4px solid #034694;
+		}
+		.project-info-grid {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 20px;
+		}
+		.project-info-item {
+			display: flex;
+			align-items: center;
+			padding: 12px;
+			background-color: #f5f5f5;
+			border-radius: 6px;
+		}
+		.project-info-item i {
+			margin-right: 10px;
+			font-size: 18px;
+		}
+		.project-status {
+			display: inline-block;
+			padding: 5px 12px;
+			border-radius: 20px;
+			font-size: 14px;
+			font-weight: 500;
+		}
+		.file-container {
+			margin-top: 20px;
+			padding: 15px;
+			background-color: #f0f0f0;
+			border-radius: 6px;
+			display: flex;
+			align-items: center;
+		}
+		.file-icon {
+			font-size: 24px;
+			margin-right: 15px;
+		}
+		.btn-return {
+			margin-top: 20px;
+			padding: 8px 16px;
+			background-color: #034694;
+			color: white;
+			text-decoration: none;
+			border-radius: 4px;
+			display: inline-flex;
+			align-items: center;
+			transition: background-color 0.3s;
+		}
+		.btn-return:hover {
+			background-color: #023570;
+		}
+		.btn-return i {
+			margin-right: 8px;
+		}
+		.btn-edit {
+			margin-top: 20px;
+			padding: 8px 16px;
+			background-color: #4CAF50;
+			color: white;
+			text-decoration: none;
+			border-radius: 4px;
+			display: inline-flex;
+			align-items: center;
+			margin-left: 10px;
+			transition: background-color 0.3s;
+		}
+		.btn-edit:hover {
+			background-color: #3d8b40;
+		}
+		.actions-container {
+			display: flex;
+			margin-top: 20px;
+			.btn-tasks {
+				margin-top: 20px;
+				padding: 8px 16px;
+				background-color: #9C27B0;
+				color: white;
+				text-decoration: none;
+				border-radius: 4px;
+				display: inline-flex;
+				align-items: center;
+				margin-left: 10px;
+				transition: background-color 0.3s;
+			}
+			.btn-tasks:hover {
+				background-color: #7B1FA2;
+			}
+		}
+	</style>
+{% endblock %}
+
+{% block content %}
+	<div class="container-fluid">
+		<div class="project-detail-container">
+			<div class="project-header">
+				<h1>{{ projet.name }}</h1>
+				<span class="project-badge">{{ projet.abbreviation }}</span>
+			</div>
+
+			<div class="project-body">
+				<div class="project-section">
+					<div class="project-section-title">Description</div>
+					<div class="project-description">
+						{{ projet.description }}
+					</div>
+				</div>
+
+				<div class="project-section">
+					<div class="project-section-title">Informations générales</div>
+					<div class="project-info-grid">
+						<div class="project-info-item">
+							<i class="fas fa-calendar-alt text-primary"></i>
+							<div>
+								<strong>Date de début:</strong><br>
+								{{ projet.starterAt ? projet.starterAt|date('d/m/Y') : 'Non défini' }}
+							</div>
+						</div>
+
+						<div class="project-info-item">
+							<i class="fas fa-calendar-check text-danger"></i>
+							<div>
+								<strong>Date de fin:</strong><br>
+								{{ projet.endDate ? projet.endDate|date('d/m/Y') : 'Non défini' }}
+							</div>
+						</div>
+
+						<div class="project-info-item">
+							<i class="fas fa-info-circle" style="color: #2196F3;"></i>
+							<div>
+								<strong>Statut:</strong><br>
+								{% if projet.status == constant('App\\Entity\\StatutProjet::IN_PROGRESS') %}
+									<span class="project-status bg-warning text-dark">En cours</span>
+								{% else %}
+									<span class="project-status bg-success text-white">Terminé</span>
+								{% endif %}
+							</div>
+						</div>
+
+						<div class="project-info-item">
+							<i class="fas fa-tag" style="color: #9C27B0;"></i>
+							<div>
+								<strong>Identifiant:</strong><br>
+								#{{ projet.id }}
+							</div>
+						</div>
+					</div>
+				</div>
+
+				{% if projet.uploadedFiles %}
+					<div class="project-section">
+						<div class="project-section-title">Document joint</div>
+						<div class="file-container">
+							{% set fileExtension = projet.uploadedFiles|split('.')|last|lower %}
+
+							{% if fileExtension == 'pdf' %}
+								<i class="fas fa-file-pdf file-icon" style="color: #F44336;"></i>
+							{% elseif fileExtension in ['jpg', 'jpeg', 'png'] %}
+								<i class="fas fa-file-image file-icon" style="color: #4CAF50;"></i>
+							{% else %}
+								<i class="fas fa-file file-icon" style="color: #2196F3;"></i>
+							{% endif %}
+
+							<div>
+								<div style="font-weight: bold; margin-bottom: 5px;">Document attaché</div>
+								<a href="{{ asset(projet.uploadedFiles) }}" target="_blank" class="btn btn-sm btn-primary">
+									<i class="fas fa-download"></i>
+									Télécharger
+								</a>
+
+								{% if fileExtension in ['jpg', 'jpeg', 'png'] %}
+									<div style="margin-top: 15px;">
+										<img src="{{ asset(projet.uploadedFiles) }}" alt="Aperçu de l'image" style="max-width: 100%; max-height: 300px; border-radius: 4px;">
+									</div>
+								{% endif %}
+							</div>
+						</div>
+					</div>
+				{% endif %}
+
+				<div class="actions-container">
+					<a href="{{ path('projets_cards') }}" class="btn-return">
+						<i class="fas fa-arrow-left"></i>
+						Retour à la liste
+					</a>
+
+					<a href="{{ path('projet_edit_card', {'id': projet.id}) }}" class="btn-edit">
+						<i class="fas fa-edit"></i>
+						Modifier
+					</a>
+
+					<a href="{{ path('kanban_tasks_list', {'id': projet.id}) }}" class="btn-tasks">
+						<i class="fas fa-tasks"></i>
+						Voir tâches
+					</a>
+				</div>
+			</div>
+		</div>
+	</div>
+{% endblock %}

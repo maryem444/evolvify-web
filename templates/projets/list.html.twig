@@ -130,16 +130,21 @@
 								<td>{{ projet.starterAt ? projet.starterAt|date('d/m/Y') : '-' }}</td>
 								<td>{{ projet.endDate ? projet.endDate|date('d/m/Y') : '-' }}</td>
 								<td>
-									<div class="btn-group" role="group">
-										<a href="{{ path('projet_edit', { 'id': projet.id }) }}" title="Modifier">
-											<i class="fas fa-edit"></i>
-										</a>
-										<form action="{{ path('projet_delete', { 'id': projet.id }) }}" method="post" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce projet ?');" style="display:inline;">
-											<input type="hidden" name="_method" value="DELETE">
-											<button type="submit" style="border: none; background: none; padding: 0;">
-												<i class="fas fa-trash" title="Supprimer" style="color: #F44336; cursor: pointer;"></i>
-											</button>
-										</form>
+									<div class="project-card-footer">
+										<div class="project-card-actions">
+											<a href="{{ path('projet_edit', {'id': projet.id, 'returnTo': 'list'}) }}" title="Modifier">
+												<i class="fas fa-edit" style="color: #4CAF50;"></i>
+											</a>
+											<a href="{{ path('taches_list', {'id': projet.id}) }}">
+												<i class="fa fa-tasks" title="Taches" style="color:rgb(199, 43, 238); cursor: pointer;"></i>
+											</a>
+											<form action="{{ path('projet_delete', {'id': projet.id, 'returnTo': 'list'}) }}" method="post" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce projet ?');" style="display:inline;">
+												<input type="hidden" name="_method" value="DELETE">
+												<button type="submit" style="border: none; background: none; padding: 0;">
+													<i class="fas fa-trash" title="Supprimer" style="color: #F44336; cursor: pointer;"></i>
+												</button>
+											</form>
+										</div>
 									</div>
 								</td>
 							</tr>
@@ -153,5 +158,5 @@
 			</div>
 		</div>
 	</div>
-	
+
 {% endblock %}

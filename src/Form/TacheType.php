@@ -1,4 +1,5 @@
 <?php
+// src/Form/TacheType.php
 
 namespace App\Form;
 
@@ -18,10 +19,14 @@ class TacheType extends AbstractType
 {
   public function buildForm(FormBuilderInterface $builder, array $options): void
   {
+    $idProjet = $options['idProjet'] ?? '96'; // Valeur par défaut si non fournie
+    $idEmploye = $options['idEmploye'] ?? '87'; // ID employé statique temporaire
+
     $builder
       ->add('description', TextType::class, [
         'label' => 'Description',
-        'required' => true
+        'required' => true,
+        'attr' => ['placeholder' => 'Décrivez la tâche']
       ])
       ->add('status', ChoiceType::class, [
         'label' => 'Statut',
@@ -50,16 +55,16 @@ class TacheType extends AbstractType
       ->add('createdAt', DateType::class, [
         'label' => 'Date de création',
         'widget' => 'single_text',
-        'data' => new \DateTime(), // Définit la date actuelle par défaut
+        'data' => new \DateTime(),
         'required' => true
       ])
       ->add('idProjet', HiddenType::class, [
-        'data' => 96,
-        'empty_data' => 96
+        'data' => $idProjet,
+        'mapped' => false
       ])
       ->add('idEmploye', HiddenType::class, [
-        'data' => 87,
-        'empty_data' => 87
+        'data' => $idEmploye, // Assure-toi que l'ID est bien injecté
+        'mapped' => false
       ])
       ->add('submit', SubmitType::class, [
         'label' => 'Enregistrer'
@@ -70,6 +75,8 @@ class TacheType extends AbstractType
   {
     $resolver->setDefaults([
       'data_class' => Tache::class,
+      'idProjet' => null,
+      'idEmploye' => null, // Ajout de la nouvelle option
     ]);
   }
 }

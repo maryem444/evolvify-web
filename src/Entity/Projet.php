@@ -4,7 +4,11 @@ namespace App\Entity;
 
 use App\Repository\ProjetRepository;
 use Doctrine\DBAL\Types\Types;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
+use App\Entity\Tache;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: ProjetRepository::class)]
 class Projet
@@ -15,27 +19,78 @@ class Projet
     private ?int $id_projet = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: "Le nom du projet est obligatoire.")]
+    #[Assert\Length(
+        min: 3,
+        max: 255,
+        minMessage: "Le nom doit contenir au moins {{ limit }} caractères.",
+        maxMessage: "Le nom ne peut pas dépasser {{ limit }} caractères."
+    )]
     private ?string $name = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: "La description est obligatoire.")]
     private ?string $description = null;
 
     #[ORM\Column(type: 'string', enumType: StatutProjet::class)]
     private ?StatutProjet $status = null;
 
     #[ORM\Column(name: "end_date", type: Types::DATE_MUTABLE)]
+    #[Assert\NotBlank(message: "La date de fin est requise.")]
+    #[Assert\GreaterThan(propertyPath: "starterAt", message: "⚠️ La date de fin doit être postérieure à la date de début.")]
     private ?\DateTimeInterface $endDate = null;
 
     #[ORM\Column(name: "starter_at", type: Types::DATE_MUTABLE)]
+    #[Assert\NotBlank(message: "La date de début est requise.")]
     private ?\DateTimeInterface $starterAt = null;
 
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: "L'abréviation est obligatoire.")]
     private ?string $abbreviation = null;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Assert\File(
+        maxSize: "5M",
+        mimeTypes: ["application/pdf", "image/jpeg", "image/png"],
+        mimeTypesMessage: "Le fichier doit être un PDF, une image JPG ou PNG."
+    )]
     private ?string $uploaded_files = null;
     
+
+    #[ORM\OneToMany(mappedBy: "projet", targetEntity: Tache::class, cascade: ["persist", "remove"])]
+    private Collection $taches;
+    
+    public function __construct()
+    {
+        $this->taches = new ArrayCollection();
+    }
+    
+    public function getTaches(): Collection
+    {
+        return $this->taches;
+    }
+    
+    public function addTache(Tache $tache): static
+    {
+        if (!$this->taches->contains($tache)) {
+            $this->taches[] = $tache;
+            $tache->setProjet($this);
+        }
+        return $this;
+    }
+    
+    public function removeTache(Tache $tache): static
+    {
+        if ($this->taches->removeElement($tache)) {
+            if ($tache->getProjet() === $this) {
+                $tache->setProjet(null);
+            }
+        }
+        return $this;
+    }
+
+
 
     public function getId(): ?int
     {
