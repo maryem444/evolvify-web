@@ -20,12 +20,9 @@
         "symfony/doctrine-bridge": "7.2.*",
         "symfony/dotenv": "7.2.*",
         "symfony/flex": "^2",
-        "symfony/form": "7.2.*",
-        "symfony/framework-bundle": "7.2.*",
-        "symfony/mime": "7.2.*",
+        "symfony/framework-bundle": "6.4",
         "symfony/runtime": "7.2.*",
-        "symfony/twig-bundle": "7.2.*",
-        "symfony/validator": "7.2.*",
+        "symfony/twig-bundle": "6.4",
         "symfony/yaml": "7.2.*"
     },
     "config": {
@@ -75,7 +72,7 @@
     "extra": {
         "symfony": {
             "allow-contrib": false,
-            "require": "7.2.*"
+            "require": "6.4.*"
         }
     },
     "require-dev": {
