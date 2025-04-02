@@ -11,6 +11,16 @@
 			justify-content: space-between;
 			align-items: center;
 		}
+		.form-error {
+			color: #e74c3c;
+			font-size: 13px;
+			margin-top: 5px;
+			display: block;
+		}
+
+		.is-invalid {
+			border-color: #e74c3c !important;
+		}
 		.page-title {
 			margin: 0;
 			font-size: 24px;
@@ -278,7 +288,7 @@
 								<td>{{ tache.idEmploye ?? '-' }}</td>
 								<td>
 									<div class="btn-group" role="group">
-										<a href="#" onclick="openModal({{ tache.idTache }}, '{{ tache.description }}')" title="Modifier">
+										<a href="#" onclick="openModal({{ tache.idTache }}, '{{ tache.description }}','{{ tache.location }}')" title="Modifier">
 											<i class="fas fa-edit"></i>
 										</a>
 
@@ -316,11 +326,15 @@
 			</div>
 			<div class="modal-body">
 				{{ form_start(form, {'action': path('taches_add', {'id': projet.id}), 'method': 'POST'}) }}
+				{{ form_errors(form) }}
+
 				<div class="form-group">
 					{{ form_label(form.description) }}
 					{{ form_widget(form.description, {'attr': {'class': 'form-control'}}) }}
 					{{ form_errors(form.description) }}
+					{# Cette ligne affiche les erreurs #}
 				</div>
+
 
 				<div class="form-group">
 					{{ form_label(form.status) }}
@@ -336,8 +350,9 @@
 
 				<div class="form-group">
 					{{ form_label(form.location) }}
-					{{ form_widget(form.location, {'attr': {'class': 'form-control', 'placeholder': 'Lieu de la tâche'}}) }}
+					{{ form_widget(form.location, {'attr': {'class': 'form-control'}}) }}
 					{{ form_errors(form.location) }}
+					{# Cette ligne affiche les erreurs #}
 				</div>
 
 				<div class="form-group">
@@ -359,17 +374,19 @@
 	</div>
 
 	<script>
-		function openModal(tacheId = null, description = '') {
+		function openModal(tacheId = null, description = '', location = '') {
 let form = document.querySelector("#overlay form");
 
 if (tacheId) { // Mode édition : on modifie l'action du formulaire
 form.action = `/projets/{{ projet.id }}/taches/edit/` + tacheId;
 document.querySelector("#overlay h5").innerText = "Modifier une Tâche";
 document.querySelector("#tache_description").value = description;
+document.querySelector("#tache_location").value = location;
 } else { // Mode ajout : réinitialisation du formulaire
 form.action = `/projets/{{ projet.id }}/taches/ajouter`;
 document.querySelector("#overlay h5").innerText = "Ajouter une Tâche";
 document.querySelector("#tache_description").value = '';
+document.querySelector("#tache_location").value = '';
 }
 
 document.getElementById("overlay").style.display = "flex";

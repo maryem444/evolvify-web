@@ -26,28 +26,33 @@ class Projet
         minMessage: "Le nom doit contenir au moins {{ limit }} caractères.",
         maxMessage: "Le nom ne peut pas dépasser {{ limit }} caractères."
     )]
-    private ?string $name = null;
+    private ?string $name = '';
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: "La description est obligatoire.")]
-    private ?string $description = null;
+    private ?string $description = '';
 
     #[ORM\Column(type: 'string', enumType: StatutProjet::class)]
     private ?StatutProjet $status = null;
 
     #[ORM\Column(name: "end_date", type: Types::DATE_MUTABLE)]
-    #[Assert\NotBlank(message: "La date de fin est requise.")]
+    #[Assert\NotBlank(message: "La date du projet est obligatoire.")]
     #[Assert\GreaterThan(propertyPath: "starterAt", message: "⚠️ La date de fin doit être postérieure à la date de début.")]
     private ?\DateTimeInterface $endDate = null;
 
     #[ORM\Column(name: "starter_at", type: Types::DATE_MUTABLE)]
-    #[Assert\NotBlank(message: "La date de début est requise.")]
+    #[Assert\NotBlank(message: "La date du projet est obligatoire.")]
+    #[Assert\LessThan(propertyPath: "endDate", message: "⚠️ La date de début doit être antérieure à la date de fin.")]
     private ?\DateTimeInterface $starterAt = null;
 
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: "L'abréviation est obligatoire.")]
-    private ?string $abbreviation = null;
+    #[Assert\Length(
+        max: 10,
+        maxMessage: "L'abréviation ne doit pas dépasser {{ limit }} caractères."
+    )]
+    private ?string $abbreviation = '';
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     #[Assert\File(
@@ -56,21 +61,21 @@ class Projet
         mimeTypesMessage: "Le fichier doit être un PDF, une image JPG ou PNG."
     )]
     private ?string $uploaded_files = null;
-    
+
 
     #[ORM\OneToMany(mappedBy: "projet", targetEntity: Tache::class, cascade: ["persist", "remove"])]
     private Collection $taches;
-    
+
     public function __construct()
     {
         $this->taches = new ArrayCollection();
     }
-    
+
     public function getTaches(): Collection
     {
         return $this->taches;
     }
-    
+
     public function addTache(Tache $tache): static
     {
         if (!$this->taches->contains($tache)) {
@@ -79,7 +84,7 @@ class Projet
         }
         return $this;
     }
-    
+
     public function removeTache(Tache $tache): static
     {
         if ($this->taches->removeElement($tache)) {
@@ -174,13 +179,13 @@ class Projet
     {
         return $this->uploaded_files;
     }
-    
+
     public function setUploadedFiles(?string $uploaded_files): static
     {
         $this->uploaded_files = $uploaded_files;
         return $this;
     }
-    
+
     public function __toString(): string
     {
         // Retourne un format lisible pour l'objet Projet

@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\TacheRepository;
+use Symfony\Component\Validator\Constraints as Assert;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: TacheRepository::class)]
@@ -14,7 +15,14 @@ class Tache
     private ?int $id_tache = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $description = null;
+    #[Assert\NotBlank(message: 'La description est obligatoire.')]
+    #[Assert\Length(
+        min: 5,
+        max: 255,
+        minMessage: 'La description doit contenir au moins {{ limit }} caractères.',
+        maxMessage: 'La description ne peut pas dépasser {{ limit }} caractères.'
+    )]
+    private ?string $description = '';
 
     #[ORM\Column(type: 'string', enumType: StatutTache::class)]
     private ?StatutTache $status = null;
@@ -29,7 +37,8 @@ class Tache
     private ?Priorite $priority = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $location = null;
+    #[Assert\NotBlank(message: 'La location est obligatoire.')]
+    private ?string $location = '';
 
     #[ORM\ManyToOne(targetEntity: Projet::class, inversedBy: "taches")]
     #[ORM\JoinColumn(name: "id_projet", referencedColumnName: "id_projet", nullable: false)]

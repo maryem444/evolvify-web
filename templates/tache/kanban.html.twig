@@ -175,6 +175,95 @@
 			background-color: #218838;
 			color: white;
 		}
+
+		/* Modal styles */
+		.overlay {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background-color: rgba(0, 0, 0, 0.5);
+			display: none;
+			justify-content: center;
+			align-items: center;
+			z-index: 1050;
+			padding: 20px;
+			overflow: auto;
+		}
+
+		.modal-custom {
+			background-color: #fff;
+			border-radius: 10px;
+			padding: 20px;
+			width: 500px;
+			max-height: 90vh;
+			overflow-y: auto;
+			box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+			position: relative;
+		}
+
+		.modal-header {
+			font-size: 18px;
+			font-weight: bold;
+			margin-bottom: 20px;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+		}
+
+		.modal-body input,
+		.modal-body select {
+			width: 100%;
+			padding: 10px;
+			margin-bottom: 15px;
+			border-radius: 5px;
+			border: 1px solid #ccc;
+		}
+
+		.modal-body .form-icon {
+			margin-right: 10px;
+		}
+
+		.modal-footer {
+			text-align: right;
+			display: flex;
+			justify-content: flex-end;
+			gap: 10px;
+			margin-top: 15px;
+		}
+
+		.close-btn {
+			color: #888;
+			font-size: 24px;
+			cursor: pointer;
+			line-height: 1;
+		}
+
+		.modal-body input:focus,
+		.modal-body select:focus {
+			border-color: #4CAF50;
+			box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+			outline: none;
+		}
+
+		@media(max-width: 480px) {
+			.modal-custom {
+				width: 95%;
+				margin: 0 auto;
+			}
+		}
+
+		.form-error {
+			color: #e74c3c;
+			font-size: 13px;
+			margin-top: 5px;
+			display: block;
+		}
+
+		.is-invalid {
+			border-color: #e74c3c !important;
+		}
 	</style>
 {% endblock %}
 
@@ -190,7 +279,9 @@
 				</div>
 			{% endfor %}
 		{% endfor %}
-		<a href="#" class="add-task-btn">+ Ajouter Tâche</a>
+
+		<a href="#" class="add-task-btn" onclick="openModal()">+ Ajouter Tâche</a>
+
 		<div class="kanban-board">
 			{% for status, columnClass in {'TO_DO': 'to-do', 'IN_PROGRESS': 'in-progress', 'DONE': 'done', 'CANCELED': 'canceled'} %}
 				<div class="kanban-column">
@@ -205,7 +296,6 @@
 												<span>50%</span>
 											</div>
 										</div>
-
 									{% endif %}
 									{% if status == 'DONE' %}
 										<div class="progress-bar">
@@ -213,7 +303,6 @@
 												<span>100%</span>
 											</div>
 										</div>
-
 									{% endif %}
 
 									<h5>Description :
@@ -230,7 +319,6 @@
 											<i class="fas fa-trash-alt"></i>
 										</button>
 									</form>
-
 								</div>
 							{% endfor %}
 						{% else %}
@@ -240,11 +328,88 @@
 				</div>
 			{% endfor %}
 		</div>
+
 		<div class="actions-container mt-3">
 			<a href="{{ path('projets_cards') }}" class="btn-return">
 				<i class="fas fa-arrow-left"></i>
 				Retour à la liste
 			</a>
 		</div>
+
+		<!-- Modal pour ajouter une tâche -->
+		<div class="overlay" id="overlay">
+			<div class="modal-custom">
+				<div class="modal-header">
+					<h5>Ajouter une Tâche</h5>
+					<span class="close-btn" onclick="closeModal()">&times;</span>
+				</div>
+				<div class="modal-body">
+					{{ form_start(form, {'action': path('kanban_task_add', {'id': projet.id}), 'method': 'POST'}) }}
+					{{ form_errors(form) }}
+
+					<div class="form-group">
+						{{ form_label(form.description) }}
+						{{ form_widget(form.description, {'attr': {'class': 'form-control'}}) }}
+						{{ form_errors(form.description) }}
+					</div>
+
+					<div class="form-group">
+						{{ form_label(form.status) }}
+						{{ form_widget(form.status, {'attr': {'class': 'form-control'}}) }}
+						{{ form_errors(form.status) }}
+					</div>
+
+					<div class="form-group">
+						{{ form_label(form.priority) }}
+						{{ form_widget(form.priority, {'attr': {'class': 'form-control'}}) }}
+						{{ form_errors(form.priority) }}
+					</div>
+
+					<div class="form-group">
+						{{ form_label(form.location) }}
+						{{ form_widget(form.location, {'attr': {'class': 'form-control'}}) }}
+						{{ form_errors(form.location) }}
+					</div>
+
+					<div class="form-group">
+						{{ form_label(form.createdAt) }}
+						{{ form_widget(form.createdAt, {'attr': {'class': 'form-control'}}) }}
+						{{ form_errors(form.createdAt) }}
+					</div>
+
+					{{ form_widget(form.idEmploye) }}
+
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" onclick="closeModal()">Annuler</button>
+						{{ form_widget(form.submit, {'attr': {'class': 'btn btn-primary'}}) }}
+					</div>
+					{{ form_end(form) }}
+				</div>
+			</div>
+		</div>
 	</div>
+
+	<script>
+		function openModal(tacheId = null, description = '', location = '') {
+let form = document.querySelector("#overlay form");
+
+if (tacheId) { // Mode édition
+form.action = `/projets/{{ projet.id }}/taches/edit/` + tacheId;
+document.querySelector("#overlay h5").innerText = "Modifier une Tâche";
+document.querySelector("#tache_description").value = description;
+document.querySelector("#tache_location").value = location;
+} else { // Mode ajout
+form.action = `/projets/{{ projet.id }}/taches/ajouter`;
+document.querySelector("#overlay h5").innerText = "Ajouter une Tâche";
+document.querySelector("#tache_description").value = '';
+document.querySelector("#tache_location").value = '';
+}
+
+document.getElementById("overlay").style.display = "flex";
+}
+
+function closeModal() {
+document.getElementById("overlay").style.display = "none";
+}
+	</script>
 {% endblock %}

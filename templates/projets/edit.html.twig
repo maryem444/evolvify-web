@@ -107,23 +107,26 @@
 					</div>
 					<div class="modal-body p-4">
 						{{ form_start(form, {'attr': {'class': 'needs-validation', 'novalidate': 'novalidate'}}) }}
+						{{ form_errors(form) }}
 
 						<div class="row">
 							<div class="col-md-6 mb-3">
 								{{ form_label(form.name, 'Nom du Projet', {'label_attr': {'class': 'form-label'}}) }}
-								{{ form_widget(form.name, {'attr': {'class': 'form-control'}}) }}
+								{{ form_widget(form.name, {'attr': {'class': 'form-control', 'required': 'required'}}) }}
 								{{ form_errors(form.name) }}
 							</div>
+
+
 							<div class="col-md-6 mb-3">
 								{{ form_label(form.abbreviation, 'Abréviation', {'label_attr': {'class': 'form-label'}}) }}
-								{{ form_widget(form.abbreviation, {'attr': {'class': 'form-control'}}) }}
+								{{ form_widget(form.abbreviation, {'attr': {'class': 'form-control', 'required': 'required'}}) }}
 								{{ form_errors(form.abbreviation) }}
 							</div>
 						</div>
 
 						<div class="mb-3">
 							{{ form_label(form.description, 'Description', {'label_attr': {'class': 'form-label'}}) }}
-							{{ form_widget(form.description, {'attr': {'class': 'form-control', 'rows': 3}}) }}
+							{{ form_widget(form.description, {'attr': {'class': 'form-control', 'required': 'required'}}) }}
 							{{ form_errors(form.description) }}
 						</div>
 
@@ -135,10 +138,15 @@
 							<div class="col-md-4 mb-3">
 								{{ form_label(form.starterAt, 'Date de Début', {'label_attr': {'class': 'form-label'}}) }}
 								{{ form_widget(form.starterAt, {'attr': {'class': 'form-control'}}) }}
+								{{ form_errors(form.starterAt) }}
+								{# Ajout ici #}
 							</div>
+
 							<div class="col-md-4 mb-3">
 								{{ form_label(form.endDate, 'Date de Fin', {'label_attr': {'class': 'form-label'}}) }}
 								{{ form_widget(form.endDate, {'attr': {'class': 'form-control'}}) }}
+								{{ form_errors(form.endDate) }}
+								{# Ajout ici #}
 							</div>
 						</div>
 

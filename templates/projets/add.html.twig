@@ -82,7 +82,25 @@
 				transform: translateY(-50%) rotate(90deg);
 			}
 
-			/* Autres styles comme précédemment */
+			/* Validation des champs */
+			.valid-feedback {
+				color: green;
+				font-weight: bold;
+			}
+
+			.invalid-feedback {
+				color: red;
+				font-weight: bold;
+			}
+
+			.form-control:valid {
+				border-color: green;
+			}
+
+			.form-control:invalid {
+				border-color: red;
+			}
+
 			.form-control,
 			.form-select {
 				background-color: rgba(255, 255, 255, 0.8);
@@ -96,25 +114,6 @@
 				box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
 				border-color: #4e73df;
 			}
-
-            * Validation des champs */
-        .valid-feedback {
-            color: green;
-            font-weight: bold;
-        }
-
-        .invalid-feedback {
-            color: red;
-            font-weight: bold;
-        }
-
-        .form-control:valid {
-            border-color: green;
-        }
-
-        .form-control:invalid {
-            border-color: red;
-        }
 		</style>
 	</head>
 	<body>
@@ -122,18 +121,20 @@
 			<div class="modal-custom">
 				<div class="modal-header position-relative">
 					<h5 class="modal-title">📋 Ajouter un Nouveau Projet</h5>
-					<button type="button" class="modal-close" onclick="window.history.back()">&times;</button>
+					<button type="button" class="modal-close" onclick="window.history.back()" aria-label="Fermer">&times;</button>
 				</div>
 				<div class="modal-body p-4">
-					<form method="post">
-						{{ form_start(form, {'attr': {'class': 'needs-validation', 'novalidate': 'novalidate'}}) }}
+					<form method="post" class="needs-validation" novalidate>
+						{{ form_start(form) }}
+
+						<!-- Affichage des erreurs globales -->
+						{{ form_errors(form) }}
 
 						<div class="row">
 							<div class="col-md-6 mb-3">
 								{{ form_label(form.name, 'Nom du Projet', {'label_attr': {'class': 'form-label'}}) }}
 								{{ form_widget(form.name, {'attr': {'class': 'form-control'}}) }}
 								{{ form_errors(form.name) }}
-                                
 							</div>
 							<div class="col-md-6 mb-3">
 								{{ form_label(form.abbreviation, 'Abréviation', {'label_attr': {'class': 'form-label'}}) }}
@@ -156,31 +157,38 @@
 							<div class="col-md-4 mb-3">
 								{{ form_label(form.starterAt, 'Date de Début', {'label_attr': {'class': 'form-label'}}) }}
 								{{ form_widget(form.starterAt, {'attr': {'class': 'form-control'}}) }}
+								{{ form_errors(form.starterAt) }}
+								{# Ajout ici #}
 							</div>
+
 							<div class="col-md-4 mb-3">
 								{{ form_label(form.endDate, 'Date de Fin', {'label_attr': {'class': 'form-label'}}) }}
 								{{ form_widget(form.endDate, {'attr': {'class': 'form-control'}}) }}
+								{{ form_errors(form.endDate) }}
+								{# Ajout ici #}
 							</div>
-						</div>
 
-						<div class="mb-3">
-							{{ form_label(form.uploaded_files, 'Fichiers du Projet', {'label_attr': {'class': 'form-label'}}) }}
-							{{ form_widget(form.uploaded_files, {'attr': {'class': 'form-control'}}) }}
-						</div>
 
-						<div class="d-flex justify-content-end gap-3">
-							<button type="button" class="btn btn-secondary" onclick="window.history.back()">
-								Annuler
-							</button>
-							{{ form_widget(form.save, {'attr': {'class': 'btn btn-primary'}}) }}
-						</div>
+							<div class="mb-3">
+								{{ form_label(form.uploaded_files, 'Fichiers du Projet', {'label_attr': {'class': 'form-label'}}) }}
+								{{ form_widget(form.uploaded_files, {'attr': {'class': 'form-control'}}) }}
+								{{ form_errors(form.uploaded_files) }}
+								{# Assurez-vous que ceci est présent #}
+							</div>
 
-						{{ form_end(form) }}
-					</form>
+
+							<div class="d-flex justify-content-end gap-3">
+								<a href="{{ path('projets_list') }}" class="btn btn-secondary">Annuler</a>
+								{{ form_widget(form.save, {'attr': {'class': 'btn btn-primary'}}) }}
+							</div>
+
+							{{ form_end(form) }}
+						</form>
+					</div>
 				</div>
 			</div>
-		</div>
 
-		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+			<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+		</body>
 	</body>
 </html>

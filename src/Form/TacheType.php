@@ -26,7 +26,6 @@ class TacheType extends AbstractType
       ->add('description', TextType::class, [
         'label' => 'Description',
         'required' => true,
-        'attr' => ['placeholder' => 'Décrivez la tâche']
       ])
       ->add('status', ChoiceType::class, [
         'label' => 'Statut',
@@ -50,7 +49,7 @@ class TacheType extends AbstractType
       ->add('location', TextType::class, [
         'label' => 'Localisation',
         'required' => true,
-        'attr' => ['placeholder' => 'Lieu de la tâche']
+
       ])
       ->add('createdAt', DateType::class, [
         'label' => 'Date de création',
