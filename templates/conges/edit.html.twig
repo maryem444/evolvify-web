@@ -1,0 +1,163 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier le congé{% endblock %}
+
+{% block content %}
+    <div class="container-fluid">
+        <div class="page-header">
+            <h4 class="page-title">Modifier le congé</h4>
+            <ul class="breadcrumbs">
+                <li class="nav-home">
+                    <a href="#">
+                        <i class="fas fa-home"></i>
+                    </a>
+                </li>
+                <li class="separator">
+                    <i class="fas fa-angle-right"></i>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ path('app_conge_index') }}">Congés</a>
+                </li>
+                <li class="separator">
+                    <i class="fas fa-angle-right"></i>
+                </li>
+                <li class="nav-item">
+                    <a href="#">Modifier</a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Formulaire de modification</h4>
+                    </div>
+                    <div class="card-body">
+                        {{ form_start(form, {'attr': {'class': 'form'}}) }}
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label><i class="fas fa-calendar-alt mr-2"></i>Date de début</label>
+                                        {{ form_widget(form.leaveStart, {
+                                            'attr': {
+                                                'class': 'form-control',
+                                                'placeholder': 'Sélectionnez la date de début'
+                                            }
+                                        }) }}
+                                        {{ form_errors(form.leaveStart) }}
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label><i class="fas fa-calendar-alt mr-2"></i>Date de fin</label>
+                                        {{ form_widget(form.leaveEnd, {
+                                            'attr': {
+                                                'class': 'form-control',
+                                                'placeholder': 'Sélectionnez la date de fin'
+                                            }
+                                        }) }}
+                                        {{ form_errors(form.leaveEnd) }}
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label><i class="fas fa-tag mr-2"></i>Type de congé</label>
+                                        {{ form_widget(form.type, {
+                                            'attr': {
+                                                'class': 'form-control'
+                                            }
+                                        }) }}
+                                        {{ form_errors(form.type) }}
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label><i class="fas fa-info-circle mr-2"></i>Motif</label>
+                                        {{ form_widget(form.reason, {
+                                            'attr': {
+                                                'class': 'form-control',
+                                                'placeholder': 'Entrez le motif du congé'
+                                            }
+                                        }) }}
+                                        {{ form_errors(form.reason) }}
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label><i class="fas fa-comment mr-2"></i>Description</label>
+                                        {{ form_widget(form.description, {
+                                            'attr': {
+                                                'class': 'form-control',
+                                                'rows': '4',
+                                                'placeholder': 'Entrez une description détaillée'
+                                            }
+                                        }) }}
+                                        {{ form_errors(form.description) }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card-action text-center mt-4">
+                                <button type="submit" class="btn btn-success btn-lg">
+                                    <i class="fas fa-save mr-2"></i>Enregistrer
+                                </button>
+                                <a href="{{ path('app_conge_index') }}" class="btn btn-danger btn-lg">
+                                    <i class="fas fa-times mr-2"></i>Annuler
+                                </a>
+                            </div>
+                        {{ form_end(form) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block stylesheets %}
+<style>
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    .form-group label {
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        color: #1a2035;
+    }
+    .form-control {
+        border: 1px solid #ebedf2;
+        padding: 0.6rem 1rem;
+        height: auto;
+        border-radius: 4px;
+        transition: all 0.2s;
+    }
+    .form-control:focus {
+        border-color: #1572E8;
+        box-shadow: 0 0 0 2px rgba(21, 114, 232, 0.25);
+    }
+    .card-action {
+        border-top: 1px solid #ebecec;
+        padding: 1.5rem 0 0.5rem 0;
+    }
+    .card-action .btn {
+        margin: 0 0.5rem;
+    }
+    .invalid-feedback {
+        display: block;
+        color: #f25961;
+        margin-top: 0.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+$(document).ready(function() {
+    // Initialize date pickers with Bootstrap styling
+    $('input[type="date"]').flatpickr({
+        dateFormat: "Y-m-d",
+        locale: "fr",
+        allowInput: true,
+        theme: "light"
+    });
+});
+</script>
+{% endblock %} 

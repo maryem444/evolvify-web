@@ -1,0 +1,448 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouvelle demande de congé{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@x.x.x/dist/select2-bootstrap4.min.css" rel="stylesheet" />
+    <style>
+        .leave-request-form {
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            padding: 2rem;
+        }
+        .form-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .form-header h1 {
+            color: #2c3e50;
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+        .form-header p {
+            color: #7f8c8d;
+            margin: 0;
+        }
+        .form-section {
+            margin-bottom: 1.5rem;
+        }
+        .form-section label {
+            font-weight: 600;
+            color: #34495e;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        .date-range {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .date-range > div {
+            flex: 1;
+        }
+        .select2-container--bootstrap4 .select2-selection {
+            height: calc(1.5em + 0.75rem + 2px);
+            border: 1px solid #ced4da;
+        }
+        .certificate-section {
+            display: none;
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+        .certificate-section.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        .certificate-section .alert {
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .certificate-section .alert i {
+            font-size: 1.2rem;
+        }
+        .certificate-preview {
+            max-width: 200px;
+            margin-top: 1rem;
+            border-radius: 4px;
+            display: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .certificate-preview.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        .btn-submit {
+            background: #3498db;
+            color: white;
+            padding: 0.8rem 2rem;
+            border-radius: 30px;
+            border: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-submit:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.2);
+        }
+        .btn-cancel {
+            background: #95a5a6;
+            color: white;
+            padding: 0.8rem 2rem;
+            border-radius: 30px;
+            border: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-right: 1rem;
+        }
+        .btn-cancel:hover {
+            background: #7f8c8d;
+            transform: translateY(-2px);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .form-control {
+            height: calc(1.5em + 0.75rem + 2px);
+            padding: 0.375rem 0.75rem;
+            font-size: 1rem;
+            font-weight: 400;
+            line-height: 1.5;
+            color: #495057;
+            background-color: #fff;
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+        .form-control:focus {
+            border-color: #80bdff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+        textarea.form-control {
+            height: auto;
+        }
+        .certificate-upload-container {
+            border: 2px dashed #dee2e6;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px;
+            background: #fff;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .certificate-upload-container:hover {
+            border-color: #80bdff;
+            background: #f8f9fa;
+        }
+        .certificate-upload-container i {
+            font-size: 2.5rem;
+            color: #6c757d;
+            margin-bottom: 15px;
+        }
+        .certificate-upload {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            cursor: pointer;
+            z-index: 1;
+        }
+        .upload-text {
+            color: #495057;
+            margin: 10px 0;
+            font-size: 1.1rem;
+        }
+        .upload-requirements {
+            font-size: 0.875rem;
+            color: #6c757d;
+            margin-top: 10px;
+        }
+        .upload-preview {
+            position: relative;
+            margin-top: 15px;
+            display: none;
+            width: 100%;
+            text-align: center;
+        }
+        .upload-preview.active {
+            display: block;
+        }
+        .preview-image {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin: 0 auto;
+        }
+        .remove-image {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            line-height: 25px;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 2;
+        }
+        .form-card {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .upload-area:hover {
+            border-color: #0d6efd;
+        }
+        .upload-icon {
+            font-size: 2rem;
+            color: #6c757d;
+            margin-bottom: 10px;
+        }
+        .invalid-feedback {
+            display: block;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="container py-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="leave-request-form">
+                    <div class="form-header">
+                        <h1>Nouvelle demande de congé</h1>
+                        <p>Veuillez remplir le formulaire ci-dessous pour soumettre votre demande</p>
+                    </div>
+
+                    {{ form_start(form, {'attr': {'id': 'leave-form'}}) }}
+                    
+                    <div class="date-range">
+                        <div class="form-section">
+                            {{ form_label(form.dateDebut) }}
+                            {{ form_widget(form.dateDebut) }}
+                            {{ form_errors(form.dateDebut) }}
+                        </div>
+                        <div class="form-section">
+                            {{ form_label(form.dateFin) }}
+                            {{ form_widget(form.dateFin) }}
+                            {{ form_errors(form.dateFin) }}
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        {{ form_label(form.type) }}
+                        {{ form_widget(form.type) }}
+                        {{ form_errors(form.type) }}
+                    </div>
+
+                    <div class="form-section" id="certificatMedicalSection">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            Pour un congé maladie, veuillez joindre un certificat médical
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Certificat médical</label>
+                            <div class="certificate-upload-container" id="certificatMedicalUpload">
+                                <i class="fas fa-file-medical upload-icon"></i>
+                                <div class="upload-text">
+                                    <strong>Cliquez ici</strong> ou glissez-déposez votre certificat médical
+                                </div>
+                                {{ form_widget(form.certificatMedical, {
+                                    'attr': {
+                                        'class': 'certificate-upload',
+                                        'accept': 'image/*',
+                                        'data-max-size': '5242880'
+                                    }
+                                }) }}
+                                <div class="upload-requirements">
+                                    Formats acceptés: JPG, PNG, GIF - Taille max: 5MB
+                                </div>
+                            </div>
+                            <div class="upload-preview" id="certificatMedicalPreviewContainer">
+                                <img src="" class="preview-image" id="certificatMedicalPreview" alt="Aperçu du certificat">
+                                <div class="remove-image" id="removeCertificatMedical">
+                                    <i class="fas fa-times"></i>
+                                </div>
+                            </div>
+                            {{ form_errors(form.certificatMedical) }}
+                        </div>
+                    </div>
+
+                    <div class="form-section" id="documentSection">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            Document justificatif obligatoire
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Document justificatif</label>
+                            <div class="certificate-upload-container" id="documentUploadContainer">
+                                <i class="fas fa-file-upload upload-icon"></i>
+                                <div class="upload-text">
+                                    <strong>Cliquez ici</strong> ou glissez-déposez votre document
+                                </div>
+                                {{ form_widget(form.document, {
+                                    'attr': {
+                                        'class': 'certificate-upload',
+                                        'accept': 'image/*',
+                                        'data-max-size': '5242880',
+                                        'required': 'required'
+                                    }
+                                }) }}
+                                <div class="upload-requirements">
+                                    Formats acceptés: JPG, PNG, GIF - Taille max: 5MB
+                                </div>
+                            </div>
+                            <div class="upload-preview" id="documentPreviewContainer">
+                                <img src="" class="preview-image" id="documentPreview" alt="Aperçu du document">
+                                <div class="remove-image" id="removeDocument">
+                                    <i class="fas fa-times"></i>
+                                </div>
+                            </div>
+                            {{ form_errors(form.document) }}
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        {{ form_label(form.motif) }}
+                        {{ form_widget(form.motif) }}
+                        {{ form_errors(form.motif) }}
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <a href="{{ path('app_employe_dashboard', {'id': employe.id}) }}" class="btn btn-cancel">
+                            <i class="fas fa-times mr-2"></i>Annuler
+                        </a>
+                        <button type="submit" class="btn btn-submit">
+                            <i class="fas fa-paper-plane mr-2"></i>Soumettre la demande
+                        </button>
+                    </div>
+
+                    {{ form_end(form) }}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Select2
+            $('.select2').select2({
+                theme: 'bootstrap4',
+                width: '100%'
+            });
+
+            const typeSelect = document.querySelector('#conge_type');
+            const certificatMedicalSection = document.querySelector('#certificatMedicalSection');
+            const documentSection = document.querySelector('#documentSection');
+
+            function updateSections() {
+                const selectedType = typeSelect.value;
+                if (selectedType === 'CONGE_MALADIE') {
+                    certificatMedicalSection.style.display = 'block';
+                    documentSection.style.display = 'none';
+                } else {
+                    certificatMedicalSection.style.display = 'none';
+                    documentSection.style.display = 'block';
+                }
+            }
+
+            typeSelect.addEventListener('change', updateSections);
+            updateSections();
+
+            // Handle file uploads and previews
+            function setupFileUpload(inputId, uploadAreaId, previewId) {
+                const input = document.getElementById(inputId);
+                const uploadArea = document.getElementById(uploadAreaId);
+                const preview = document.getElementById(previewId);
+
+                uploadArea.addEventListener('click', () => input.click());
+                uploadArea.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    uploadArea.style.borderColor = '#0d6efd';
+                });
+                uploadArea.addEventListener('dragleave', () => {
+                    uploadArea.style.borderColor = '#ddd';
+                });
+                uploadArea.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    uploadArea.style.borderColor = '#ddd';
+                    if (e.dataTransfer.files.length) {
+                        input.files = e.dataTransfer.files;
+                        handleFileSelect(input, preview);
+                    }
+                });
+
+                input.addEventListener('change', () => handleFileSelect(input, preview));
+            }
+
+            function handleFileSelect(input, preview) {
+                if (input.files && input.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        preview.src = e.target.result;
+                        preview.style.display = 'block';
+                    };
+                    reader.readAsDataURL(input.files[0]);
+                }
+            }
+
+            setupFileUpload('{{ form.certificatMedical.vars.id }}', 'certificatMedicalUpload', 'certificatMedicalPreview');
+            setupFileUpload('{{ form.document.vars.id }}', 'documentUpload', 'documentPreview');
+
+            // Date validation
+            const dateDebut = document.getElementById('{{ form.dateDebut.vars.id }}');
+            const dateFin = document.getElementById('{{ form.dateFin.vars.id }}');
+
+            dateFin.addEventListener('change', function() {
+                if (dateDebut.value && this.value) {
+                    if (new Date(this.value) < new Date(dateDebut.value)) {
+                        this.value = dateDebut.value;
+                        alert('La date de fin ne peut pas être antérieure à la date de début');
+                    }
+                }
+            });
+
+            dateDebut.addEventListener('change', function() {
+                if (dateFin.value && this.value) {
+                    if (new Date(dateFin.value) < new Date(this.value)) {
+                        dateFin.value = this.value;
+                    }
+                }
+            });
+        });
+    </script>
+{% endblock %} 

@@ -1,0 +1,172 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Détails de la demande de congé{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+        .status-en-attente { background-color: #ffd700; color: #000; }
+        .status-approuve { background-color: #28a745; color: #fff; }
+        .status-refuse { background-color: #dc3545; color: #fff; }
+        
+        .leave-details {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .leave-details .row {
+            margin-bottom: 15px;
+        }
+        
+        .leave-details .label {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .document-preview {
+            max-width: 300px;
+            margin-top: 10px;
+        }
+        
+        .action-buttons {
+            margin-top: 20px;
+        }
+        
+        .action-buttons .btn {
+            margin-right: 10px;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="container mt-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ path('app_employe_dashboard', {'id': conge.employe.id}) }}">Tableau de bord</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Détails du congé</li>
+            </ol>
+        </nav>
+
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="alert alert-{{ label }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endfor %}
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title mb-0">
+                    <i class="fas fa-calendar-alt me-2"></i>
+                    Demande de congé de {{ conge.employe.prenom }} {{ conge.employe.nom }}
+                </h2>
+            </div>
+            <div class="card-body">
+                <div class="leave-details">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <div class="label">Statut</div>
+                                <span class="status-badge status-{{ conge.statut|lower }}">
+                                    {{ conge.statut|replace({'_': ' '})|capitalize }}
+                                </span>
+                            </div>
+                            <div class="mb-3">
+                                <div class="label">Type de congé</div>
+                                {{ conge.type|replace({'_': ' '})|capitalize }}
+                            </div>
+                            <div class="mb-3">
+                                <div class="label">Date de début</div>
+                                {{ conge.dateDebut|date('d/m/Y') }}
+                            </div>
+                            <div class="mb-3">
+                                <div class="label">Date de fin</div>
+                                {{ conge.dateFin|date('d/m/Y') }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            {% if conge.motif %}
+                                <div class="mb-3">
+                                    <div class="label">Motif</div>
+                                    {{ conge.motif }}
+                                </div>
+                            {% endif %}
+                            
+                            {% if conge.type == 'CONGE_MALADIE' and conge.certificatMedical %}
+                                <div class="mb-3">
+                                    <div class="label">Certificat médical</div>
+                                    <img src="{{ asset('uploads/certificats/' ~ conge.certificatMedical) }}" 
+                                         alt="Certificat médical" 
+                                         class="document-preview img-fluid">
+                                </div>
+                            {% endif %}
+                            
+                            {% if conge.type != 'CONGE_MALADIE' and conge.document %}
+                                <div class="mb-3">
+                                    <div class="label">Document justificatif</div>
+                                    <img src="{{ asset('uploads/documents/' ~ conge.document) }}" 
+                                         alt="Document justificatif" 
+                                         class="document-preview img-fluid">
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    {% if conge.statut == 'EN_ATTENTE' %}
+                        <form method="post" action="{{ path('app_conge_status', {'id': conge.id, 'newStatus': 'APPROUVE'}) }}" style="display: inline;">
+                            <button class="btn btn-success">
+                                <i class="fas fa-check me-1"></i> Approuver
+                            </button>
+                        </form>
+                        
+                        <form method="post" action="{{ path('app_conge_status', {'id': conge.id, 'newStatus': 'REFUSE'}) }}" style="display: inline;">
+                            <button class="btn btn-danger">
+                                <i class="fas fa-times me-1"></i> Refuser
+                            </button>
+                        </form>
+
+                        <a href="{{ path('app_conge_edit', {'id': conge.id}) }}" class="btn btn-primary">
+                            <i class="fas fa-edit me-1"></i> Modifier
+                        </a>
+
+                        <form method="post" action="{{ path('app_conge_delete', {'id': conge.id}) }}" style="display: inline;"
+                              onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette demande de congé ?');">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ conge.id) }}">
+                            <button class="btn btn-outline-danger">
+                                <i class="fas fa-trash me-1"></i> Supprimer
+                            </button>
+                        </form>
+                    {% endif %}
+
+                    <a href="{{ path('app_employe_dashboard', {'id': conge.employe.id}) }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> Retour
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Enable Bootstrap tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            });
+        });
+    </script>
+{% endblock %} 
