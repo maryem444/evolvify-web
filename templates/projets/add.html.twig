@@ -124,7 +124,8 @@
 					<button type="button" class="modal-close" onclick="window.history.back()" aria-label="Fermer">&times;</button>
 				</div>
 				<div class="modal-body p-4">
-					<form method="post" class="needs-validation" novalidate>
+					<form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+
 						{{ form_start(form) }}
 
 						<!-- Affichage des erreurs globales -->

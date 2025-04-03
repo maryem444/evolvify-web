@@ -181,6 +181,43 @@
 		.btn-export-pdf i {
 			margin-right: 5px;
 		}
+		.filter-panel {
+			background-color: #f8f9fa;
+			padding: 15px;
+			border-radius: 8px;
+			margin-bottom: 20px;
+			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+		}
+		.filter-form {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 15px;
+			align-items: flex-end;
+		}
+		.filter-form .form-group {
+			flex: 1;
+			min-width: 200px;
+		}
+		.filter-form label {
+			display: block;
+			margin-bottom: 5px;
+			font-weight: 500;
+			color: #555;
+		}
+		.filter-reset {
+			background-color: #6c757d;
+			color: white;
+			border: none;
+			padding: 8px 16px;
+			border-radius: 4px;
+			margin-left: 10px;
+			text-decoration: none;
+		}
+		.filter-reset:hover {
+			background-color: #5a6268;
+			color: white;
+			text-decoration: none;
+		}
 	</style>
 {% endblock %}
 
@@ -197,6 +234,32 @@
 					<i class="fas fa-plus"></i>Ajouter Projet
 				</a>
 			</div>
+		</div>
+		<div class="filter-panel">
+			<h5>
+				<i class="fas fa-filter"></i>
+				Filtrer les projets</h5>
+			{{ form_start(filterForm, {'attr': {'class': 'filter-form'}}) }}
+			<div class="form-group">
+				{{ form_label(filterForm.name) }}
+				{{ form_widget(filterForm.name) }}
+			</div>
+			<div class="form-group">
+				{{ form_label(filterForm.abbreviation) }}
+				{{ form_widget(filterForm.abbreviation) }}
+			</div>
+			<div class="form-group">
+				{{ form_label(filterForm.status) }}
+				{{ form_widget(filterForm.status) }}
+			</div>
+			<div class="form-group">
+				{{ form_widget(filterForm.submit) }}
+				<a href="{{ path('projets_list') }}" class="filter-reset">
+					<i class="fas fa-undo"></i>
+					Réinitialiser
+				</a>
+			</div>
+			{{ form_end(filterForm) }}
 		</div>
 		<div class="card">
 			<div class="card-body">

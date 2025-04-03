@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Projet;
 use App\Entity\StatutProjet;
+use App\Form\ProjetFilterType;
 use Symfony\Component\HttpFoundation\Request;
 use App\Form\ProjetType;
 use App\Repository\ProjetRepository;
@@ -18,12 +19,38 @@ use Symfony\Component\Routing\Annotation\Route;
 class ProjetController extends AbstractController
 {
     #[Route('/projets', name: 'projets_list')]
-    public function listProjets(ProjetRepository $projetRepository): Response
+    public function listProjets(Request $request, ProjetRepository $projetRepository): Response
     {
-        $projets = $projetRepository->getProjetListQB(); // Utilisation de la méthode corrigée
+        // Création du formulaire de filtre
+        $filterForm = $this->createForm(ProjetFilterType::class);
+        $filterForm->handleRequest($request);
+        
+        // Initialisation des filtres
+        $filters = [];
+        
+        // Si le formulaire est soumis et valide, on récupère les filtres
+        if ($filterForm->isSubmitted() && $filterForm->isValid()) {
+            $formData = $filterForm->getData();
+            
+            if (!empty($formData['name'])) {
+                $filters['name'] = $formData['name'];
+            }
+            
+            if (!empty($formData['abbreviation'])) {
+                $filters['abbreviation'] = $formData['abbreviation'];
+            }
+            
+            if (!empty($formData['status'])) {
+                $filters['status'] = $formData['status'];
+            }
+        }
+        
+        // Utilisation de la méthode searchProjets pour filtrer les projets
+        $projets = $projetRepository->searchProjets($filters);
 
         return $this->render('projets/list.html.twig', [
             'projets' => $projets,
+            'filterForm' => $filterForm->createView(),
         ]);
     }
 
@@ -36,19 +63,40 @@ class ProjetController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // Gestion de l'upload du fichier
+            /** @var UploadedFile $file */
+            $file = $form->get('uploaded_files')->getData();
+
+            if ($file) {
+                $uploadsDirectory = $this->getParameter('uploads_directory');
+                $newFilename = uniqid() . '.' . $file->guessExtension();
+
+                try {
+                    // Déplacement du fichier vers le dossier de destination
+                    $file->move($uploadsDirectory, $newFilename);
+
+                    // Enregistrer le chemin du fichier dans la base de données
+                    $projet->setUploadedFiles('uploads/' . $newFilename);
+                } catch (FileException $e) {
+                    $this->addFlash('danger', 'Erreur lors du téléchargement du fichier.');
+                }
+            }
+
+            // Persist le projet dans la base de données
             $manager = $doctrine->getManager();
             $manager->persist($projet);
             $manager->flush();
 
             $this->addFlash('success', 'Le projet a été ajouté avec succès');
 
-            return $this->redirectToRoute('projets_list'); // Assurez-vous que cette route existe
+            return $this->redirectToRoute('projets_list');
         }
 
         return $this->render('projets/add.html.twig', [
             'form' => $form->createView(),
         ]);
     }
+
     #[Route('/projetDelete/{id}', name: 'projet_delete', methods: ['POST'])]
     public function deleteProjet(Projet $projet, ManagerRegistry $doctrine): Response
     {
@@ -103,6 +151,7 @@ class ProjetController extends AbstractController
             'projet' => $projet,
         ]);
     }
+    
     #[Route('/projet/{id}/taches', name: 'projet_taches')]
     public function showTaches(Projet $projet, TacheRepository $tacheRepository): Response
     {
