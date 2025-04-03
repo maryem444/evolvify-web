@@ -108,11 +108,10 @@ class ProjetController extends AbstractController
     {
         // Récupérer les tâches liées à ce projet
         $taches = $tacheRepository->findBy(['projet' => $projet]);
-        
+
         return $this->render('tache/list.html.twig', [
             'projet' => $projet,
             'taches' => $taches
         ]);
     }
-   
 }

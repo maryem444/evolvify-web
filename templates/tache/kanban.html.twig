@@ -7,6 +7,104 @@
 {% block stylesheets %}
 	{{ parent() }}
 	<style>
+		.custom-confirm-dialog {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background-color: rgba(0, 0, 0, 0.5);
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			z-index: 9999;
+		}
+
+		.confirm-content {
+			width: 380px;
+			background-color: #fff3cd;
+			border: 2px solid #ffc107;
+			border-radius: 10px;
+			padding: 20px;
+			box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+			text-align: center;
+			animation: fadeIn 0.2s ease-out;
+		}
+
+		.confirm-header {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			margin-bottom: 15px;
+		}
+
+		.warning-icon {
+			color: #856404;
+			font-size: 40px;
+			margin-bottom: 10px;
+		}
+
+		.confirm-header h3 {
+			color: #856404;
+			font-size: 15px;
+			font-weight: bold;
+			margin: 5px 0;
+		}
+
+		.confirm-message {
+			color: #856404;
+			font-size: 13px;
+			margin-bottom: 20px;
+		}
+
+		.confirm-buttons {
+			display: flex;
+			justify-content: center;
+			gap: 15px;
+		}
+
+		.btn-cancel,
+		.btn-confirm {
+			padding: 8px 16px;
+			border-radius: 8px;
+			font-size: 13px;
+			border: none;
+			cursor: pointer;
+			transition: background-color 0.2s;
+		}
+
+		.btn-cancel {
+			background-color: #dddddd;
+			color: #333;
+		}
+
+		.btn-confirm {
+			background-color: #dc3545;
+			color: white;
+		}
+
+		.btn-cancel:hover {
+			background-color: #c8c8c8;
+		}
+
+		.btn-confirm:hover {
+			background-color: #c82333;
+		}
+
+		body.dialog-open {
+			overflow: hidden;
+		}
+
+		@keyframes fadeIn {
+			from {
+				opacity: 0;
+				transform: translateY(-20px);
+			}
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
+		}
 		.kanban-board {
 			display: flex;
 			gap: 10px;
@@ -161,6 +259,9 @@
 		.btn-return i {
 			margin-right: 5px;
 		}
+
+
+		/* Style ajusté pour le bouton ajouter tâche */
 		.add-task-btn {
 			background-color: #28a745;
 			color: white;
@@ -169,7 +270,9 @@
 			text-decoration: none;
 			font-weight: bold;
 			display: inline-block;
-			margin-bottom: 15px;
+			margin-left: 1080px;
+			margin-bottom: 30px;
+			margin-top: 20px;
 		}
 		.add-task-btn:hover {
 			background-color: #218838;
@@ -264,23 +367,19 @@
 		.is-invalid {
 			border-color: #e74c3c !important;
 		}
+		.progress-bar-fill span {
+			color: black; /* Définir la couleur du texte à noir */
+			font-weight: bold; /* Facultatif: ajouter du poids pour rendre le texte plus visible */
+		}
 	</style>
 {% endblock %}
 
 {% block content %}
 	<div class="container mt-4">
-		<h1>Projet :
-			{{ projet.name }}</h1>
 
-		{% for label, messages in app.flashes %}
-			{% for message in messages %}
-				<div class="alert alert-{{ label }}">
-					{{ message }}
-				</div>
-			{% endfor %}
-		{% endfor %}
-
+		<h1>Projet :{{ projet.name }}</h1>
 		<a href="#" class="add-task-btn" onclick="openModal()">+ Ajouter Tâche</a>
+
 
 		<div class="kanban-board">
 			{% for status, columnClass in {'TO_DO': 'to-do', 'IN_PROGRESS': 'in-progress', 'DONE': 'done', 'CANCELED': 'canceled'} %}
@@ -289,19 +388,15 @@
 					<div class="kanban-column-content {{ columnClass }}-content">
 						{% if tasksByStatus is defined and tasksByStatus[status] is not empty %}
 							{% for task in tasksByStatus[status] %}
-								<div class="task-card priority-{{ task.priority.value|lower }}">
+								<div class="task-card priority-{{ task.priority.value|lower }}" data-id="{{ task.getIdTache }}">
 									{% if status == 'IN_PROGRESS' %}
 										<div class="progress-bar">
-											<div class="progress-bar-fill in-progress" style="width: 50%;">
-												<span>50%</span>
-											</div>
+											<div class="progress-bar-fill in-progress" style="width: 50%;"></div>
 										</div>
 									{% endif %}
 									{% if status == 'DONE' %}
 										<div class="progress-bar">
-											<div class="progress-bar-fill done" style="width: 100%;">
-												<span>100%</span>
-											</div>
+											<div class="progress-bar-fill done" style="width: 100%;"></div>
 										</div>
 									{% endif %}
 
@@ -314,15 +409,13 @@
 									<p class="priority-{{ task.priority.getLabel()}}">Priorité :
 										{{ task.priority.getLabel() }}</p>
 
-									<form action="{{ path('kanban_task_delete', {'id': projet.id, 'tacheId': task.getIdTache}) }}" method="post" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette tâche?');">
-										<button type="submit" class="task-delete-btn" aria-label="Supprimer la tâche">
-											<i class="fas fa-trash-alt"></i>
+									<form action="{{ path('kanban_task_delete', { 'id': projet.id, 'tacheId': task.getIdTache }) }}" method="post" class="delete-form" style="display:inline;">
+										<button type="submit" style="border: none; background: none; padding: 0;">
+											<i class="fas fa-trash" title="Supprimer" style="color: #F44336; cursor: pointer;"></i>
 										</button>
 									</form>
 								</div>
 							{% endfor %}
-						{% else %}
-							<p>Aucune tâche dans cette catégorie.</p>
 						{% endif %}
 					</div>
 				</div>
@@ -344,37 +437,61 @@
 					<span class="close-btn" onclick="closeModal()">&times;</span>
 				</div>
 				<div class="modal-body">
-					{{ form_start(form, {'action': path('kanban_task_add', {'id': projet.id}), 'method': 'POST'}) }}
-					{{ form_errors(form) }}
+					{{ form_start(form, {'action': path('kanban_task_add', {'id': projet.id}), 'method': 'POST', 'attr': {'novalidate': 'novalidate'}}) }}
+
 
 					<div class="form-group">
 						{{ form_label(form.description) }}
-						{{ form_widget(form.description, {'attr': {'class': 'form-control'}}) }}
-						{{ form_errors(form.description) }}
+						{{ form_widget(form.description, {'attr': {'class': 'form-control' ~ (form.description.vars.valid ? '' : ' is-invalid')}}) }}
+						{% if not form.description.vars.valid %}
+							<div class="alert alert-warning">
+								<i class="fas fa-exclamation-triangle"></i>
+								{{ form_errors(form.description) }}
+							</div>
+						{% endif %}
 					</div>
+
 
 					<div class="form-group">
 						{{ form_label(form.status) }}
-						{{ form_widget(form.status, {'attr': {'class': 'form-control'}}) }}
-						{{ form_errors(form.status) }}
+						{{ form_widget(form.status, {'attr': {'class': 'form-control' ~ (form.status.vars.valid ? '' : ' is-invalid')}}) }}
+						{% if not form.status.vars.valid %}
+							<div class="invalid-feedback">
+								{{ form_errors(form.status) }}
+							</div>
+						{% endif %}
 					</div>
 
 					<div class="form-group">
 						{{ form_label(form.priority) }}
-						{{ form_widget(form.priority, {'attr': {'class': 'form-control'}}) }}
-						{{ form_errors(form.priority) }}
+						{{ form_widget(form.priority, {'attr': {'class': 'form-control' ~ (form.priority.vars.valid ? '' : ' is-invalid')}}) }}
+						{% if not form.priority.vars.valid %}
+							<div class="invalid-feedback">
+								{{ form_errors(form.priority) }}
+							</div>
+						{% endif %}
 					</div>
 
 					<div class="form-group">
 						{{ form_label(form.location) }}
-						{{ form_widget(form.location, {'attr': {'class': 'form-control'}}) }}
-						{{ form_errors(form.location) }}
+						{{ form_widget(form.location, {'attr': {'class': 'form-control' ~ (form.location.vars.valid ? '' : ' is-invalid')}}) }}
+						{% if not form.location.vars.valid %}
+							<div class="alert alert-warning">
+								<i class="fas fa-exclamation-triangle"></i>
+								{{ form_errors(form.location) }}
+							</div>
+						{% endif %}
 					</div>
+
 
 					<div class="form-group">
 						{{ form_label(form.createdAt) }}
-						{{ form_widget(form.createdAt, {'attr': {'class': 'form-control'}}) }}
-						{{ form_errors(form.createdAt) }}
+						{{ form_widget(form.createdAt, {'attr': {'class': 'form-control' ~ (form.createdAt.vars.valid ? '' : ' is-invalid')}}) }}
+						{% if not form.createdAt.vars.valid %}
+							<div class="invalid-feedback">
+								{{ form_errors(form.createdAt) }}
+							</div>
+						{% endif %}
 					</div>
 
 					{{ form_widget(form.idEmploye) }}
@@ -389,20 +506,92 @@
 		</div>
 	</div>
 
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+	<script>
+		document.addEventListener('DOMContentLoaded', function () {
+document.querySelectorAll('.kanban-column-content').forEach(column => {
+new Sortable(column, {
+group: 'tasks',
+animation: 150,
+onEnd: function (evt) {
+let taskId = evt.item.getAttribute('data-id'); // ID de la tâche
+let newStatus = evt.to.parentNode.querySelector('.kanban-column-header').innerText.toUpperCase();
+// Nouveau statut
+
+// Envoi de la requête AJAX pour mettre à jour le statut de la tâche
+fetch('{{ path("kanban_task_update_status", {"id": projet.id}) }}', {
+method: 'POST',
+headers: {
+'Content-Type': 'application/json',
+'X-Requested-With': 'XMLHttpRequest'
+},
+body: JSON.stringify(
+{taskId: taskId, newStatus: newStatus}
+)
+}).then(response => response.json()).then(data => {
+if (!data.success) {
+alert("Erreur lors de la mise à jour du statut");
+location.reload(); // Recharger la page en cas d'erreur
+}
+}).catch(error => console.error('Erreur:', error));
+updateProgressBar(evt.item);
+}
+});
+});
+});
+
+function updateProgressBar(taskElement) { // Trouver la barre de progression existante
+let progressBarContainer = taskElement.querySelector('.progress-bar');
+
+// Récupérer le nouveau statut de la tâche
+const newStatus = taskElement.closest('.kanban-column').querySelector('.kanban-column-header').innerText.toUpperCase();
+
+// Supprimer la barre si la tâche est "CANCELED" ou "TO_DO"
+if (newStatus === 'CANCELED' || newStatus === 'TO_DO') {
+if (progressBarContainer) {
+progressBarContainer.remove();
+}
+return;
+}
+
+// Créer la barre de progression si elle n'existe pas
+if (! progressBarContainer) {
+progressBarContainer = document.createElement('div');
+progressBarContainer.classList.add('progress-bar');
+const progressBarFill = document.createElement('div');
+progressBarFill.classList.add('progress-bar-fill');
+progressBarFill.innerHTML = '<span></span>';
+progressBarContainer.appendChild(progressBarFill);
+taskElement.insertBefore(progressBarContainer, taskElement.firstChild);
+}
+
+// Sélectionner la barre de progression interne
+const progressBarFill = progressBarContainer.querySelector('.progress-bar-fill');
+
+// Mettre à jour la barre selon le statut
+if (newStatus === 'IN_PROGRESS') {
+progressBarFill.style.width = '50%';
+progressBarFill.className = 'progress-bar-fill in-progress';
+} else if (newStatus === 'DONE') {
+progressBarFill.style.width = '100%';
+progressBarFill.className = 'progress-bar-fill done';
+}
+}
+	</script>
+
 	<script>
 		function openModal(tacheId = null, description = '', location = '') {
 let form = document.querySelector("#overlay form");
 
 if (tacheId) { // Mode édition
-form.action = `/projets/{{ projet.id }}/taches/edit/` + tacheId;
+form.action = "{{ path('kanban_task_edit', {'id': projet.id, 'tacheId': 'PLACEHOLDER'}) }}".replace('PLACEHOLDER', tacheId);
 document.querySelector("#overlay h5").innerText = "Modifier une Tâche";
 document.querySelector("#tache_description").value = description;
 document.querySelector("#tache_location").value = location;
 } else { // Mode ajout
-form.action = `/projets/{{ projet.id }}/taches/ajouter`;
+form.action = "{{ path('kanban_task_add', {'id': projet.id}) }}";
 document.querySelector("#overlay h5").innerText = "Ajouter une Tâche";
-document.querySelector("#tache_description").value = '';
-document.querySelector("#tache_location").value = '';
+form.reset();
 }
 
 document.getElementById("overlay").style.display = "flex";
@@ -411,5 +600,71 @@ document.getElementById("overlay").style.display = "flex";
 function closeModal() {
 document.getElementById("overlay").style.display = "none";
 }
+
+// Code optimisé pour vérifier les erreurs et ouvrir le modal après soumission
+document.addEventListener('DOMContentLoaded', function () { // Vérifier si le formulaire a été soumis et contient des erreurs
+const formHasErrors = {{ form.vars.submitted and not form.vars.valid ? 'true' : 'false' }};
+
+// N'ouvrir le modal que si le formulaire a été soumis et contient des erreurs
+if (formHasErrors) {
+openModal();
+}
+});
+	</script>
+	<script>
+		document.addEventListener('DOMContentLoaded', function () { // Sélectionner tous les formulaires de suppression
+var deleteForms = document.querySelectorAll('.delete-form');
+
+deleteForms.forEach(function (form) {
+form.addEventListener('submit', function (event) {
+event.preventDefault();
+
+// Créer une div pour notre boîte de dialogue personnalisée
+var confirmDialog = document.createElement('div');
+confirmDialog.className = 'custom-confirm-dialog';
+
+confirmDialog.innerHTML = `
+                        <div class="confirm-content">
+                            <div class="confirm-header">
+                                <i class="fas fa-exclamation-triangle warning-icon"></i>
+                                <h3>Attention !</h3>
+                            </div>
+                            <p class="confirm-message">Êtes-vous sûr de vouloir supprimer cette tâche ?</p>
+                            <div class="confirm-buttons">
+                                <button type="button" class="btn-cancel">Annuler</button>
+                                <button type="button" class="btn-confirm">Supprimer</button>
+                            </div>
+                        </div>
+                    `;
+
+// Ajouter la boîte de dialogue au body
+document.body.appendChild(confirmDialog);
+document.body.classList.add('dialog-open');
+
+// Gestionnaire pour le bouton Annuler
+confirmDialog.querySelector('.btn-cancel').addEventListener('click', function () {
+closeDialog();
+});
+
+// Gestionnaire pour le bouton Supprimer
+confirmDialog.querySelector('.btn-confirm').addEventListener('click', function () {
+closeDialog();
+form.submit();
+});
+
+// Fermer si on clique en dehors
+confirmDialog.addEventListener('click', function (e) {
+if (e.target === confirmDialog) {
+closeDialog();
+}
+});
+
+function closeDialog() {
+document.body.removeChild(confirmDialog);
+document.body.classList.remove('dialog-open');
+}
+});
+});
+});
 	</script>
 {% endblock %}

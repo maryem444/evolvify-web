@@ -12,7 +12,7 @@ class Tache
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
-    private ?int $id_tache = null;
+    private ?int $id_tache;
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: 'La description est obligatoire.')]
@@ -22,27 +22,27 @@ class Tache
         minMessage: 'La description doit contenir au moins {{ limit }} caractères.',
         maxMessage: 'La description ne peut pas dépasser {{ limit }} caractères.'
     )]
-    private ?string $description = '';
+    private ?string $description;
 
     #[ORM\Column(type: 'string', enumType: StatutTache::class)]
-    private ?StatutTache $status = null;
+    private ?StatutTache $status;
 
     #[ORM\Column(type: 'date')]
-    private ?\DateTimeInterface $created_at = null;
+    private ?\DateTimeInterface $created_at;
 
-    #[ORM\Column(type: 'integer', nullable: true)]
-    private ?int $id_employe = null;
+    #[ORM\Column(type: 'integer')]
+    private ?int $id_employe;
 
     #[ORM\Column(type: 'string', enumType: Priorite::class)]
-    private ?Priorite $priority = null;
+    private ?Priorite $priority;
 
-    #[ORM\Column(length: 255, nullable: true)]
+    #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: 'La location est obligatoire.')]
-    private ?string $location = '';
+    private ?string $location;
 
     #[ORM\ManyToOne(targetEntity: Projet::class, inversedBy: "taches")]
-    #[ORM\JoinColumn(name: "id_projet", referencedColumnName: "id_projet", nullable: false)]
-    private ?Projet $projet = null;
+    #[ORM\JoinColumn(name: "id_projet", referencedColumnName: "id_projet")]
+    private ?Projet $projet;
 
 
     // Getters et Setters

@@ -36,13 +36,17 @@ class ProjetType extends AbstractType
         ],
         'label' => 'Statut du projet',
       ])
-      ->add('endDate', DateType::class, [
-        'label' => 'Date de fin',
-        'widget' => 'single_text',
-      ])
       ->add('starterAt', DateType::class, [
-        'label' => 'Date de début',
         'widget' => 'single_text',
+        'required' => true,
+        'label' => 'Date de début',
+        'attr' => ['class' => 'form-control'],
+      ])
+      ->add('endDate', DateType::class, [
+        'widget' => 'single_text',
+        'required' => true,
+        'label' => 'Date de fin',
+        'attr' => ['class' => 'form-control'],
       ])
       ->add('abbreviation', TextType::class, [
         'label' => 'Abréviation',

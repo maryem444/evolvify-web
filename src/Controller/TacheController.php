@@ -35,7 +35,7 @@ class TacheController extends AbstractController
     }
 
     #[Route('/projets/{id}/taches/ajouter', name: 'taches_add', methods: ['POST'])]
-    public function add(int $id, Request $request, ProjetRepository $projetRepository, EntityManagerInterface $entityManager): Response
+    public function add(int $id, Request $request, ProjetRepository $projetRepository, TacheRepository $tacheRepository, EntityManagerInterface $entityManager): Response
     {
         $projet = $projetRepository->find($id);
 
@@ -58,12 +58,15 @@ class TacheController extends AbstractController
             return $this->redirectToRoute('taches_list', ['id' => $id]);
         }
 
+        // Si le formulaire n'est pas valide, récupérer les tâches existantes
+        $taches = $tacheRepository->findBy(['projet' => $projet]);
+
         return $this->render('tache/list.html.twig', [
             'projet' => $projet,
+            'taches' => $taches,
             'form' => $form->createView(),
         ]);
     }
-
     #[Route('/projets/{id}/taches/supprimer/{tacheId}', name: 'taches_delete', methods: ['POST'])]
     public function deleteTache(int $id, int $tacheId, TacheRepository $tacheRepository, EntityManagerInterface $entityManager): Response
     {

@@ -14,6 +14,8 @@ use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\Length;
+use Symfony\Component\Validator\Constraints\NotBlank;
 
 class TacheType extends AbstractType
 {
@@ -26,7 +28,11 @@ class TacheType extends AbstractType
       ->add('description', TextType::class, [
         'label' => 'Description',
         'required' => true,
+        'attr' => [
+          'placeholder' => 'Entrez une description'
+        ]
       ])
+
       ->add('status', ChoiceType::class, [
         'label' => 'Statut',
         'choices' => [
@@ -49,7 +55,9 @@ class TacheType extends AbstractType
       ->add('location', TextType::class, [
         'label' => 'Localisation',
         'required' => true,
-
+        'attr' => [
+          'placeholder' => 'Entrez une localisation'
+        ]
       ])
       ->add('createdAt', DateType::class, [
         'label' => 'Date de création',

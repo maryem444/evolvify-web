@@ -16,7 +16,7 @@ class Projet
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
-    private ?int $id_projet = null;
+    private ?int $id_projet;
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: "Le nom du projet est obligatoire.")]
@@ -33,14 +33,14 @@ class Projet
     private ?string $description = '';
 
     #[ORM\Column(type: 'string', enumType: StatutProjet::class)]
-    private ?StatutProjet $status = null;
+    private ?StatutProjet $status;
 
-    #[ORM\Column(name: "end_date", type: Types::DATE_MUTABLE)]
+    #[ORM\Column(name: "end_date", type: Types::DATE_MUTABLE, nullable: true)]
     #[Assert\NotBlank(message: "La date du projet est obligatoire.")]
     #[Assert\GreaterThan(propertyPath: "starterAt", message: "⚠️ La date de fin doit être postérieure à la date de début.")]
     private ?\DateTimeInterface $endDate = null;
 
-    #[ORM\Column(name: "starter_at", type: Types::DATE_MUTABLE)]
+    #[ORM\Column(name: "starter_at", type: Types::DATE_MUTABLE, nullable: true)]
     #[Assert\NotBlank(message: "La date du projet est obligatoire.")]
     #[Assert\LessThan(propertyPath: "endDate", message: "⚠️ La date de début doit être antérieure à la date de fin.")]
     private ?\DateTimeInterface $starterAt = null;
@@ -54,7 +54,7 @@ class Projet
     )]
     private ?string $abbreviation = '';
 
-    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[ORM\Column(type: 'string', length: 255)]
     #[Assert\File(
         maxSize: "5M",
         mimeTypes: ["application/pdf", "image/jpeg", "image/png"],
@@ -143,10 +143,9 @@ class Projet
         return $this->endDate;
     }
 
-    public function setEndDate(\DateTimeInterface $end_date): static
+    public function setEndDate(?\DateTimeInterface $end_date): static
     {
         $this->endDate = $end_date;
-
         return $this;
     }
 
@@ -155,10 +154,9 @@ class Projet
         return $this->starterAt;
     }
 
-    public function setStarterAt(\DateTimeInterface $starter_at): static
+    public function setStarterAt(?\DateTimeInterface $starter_at): static
     {
         $this->starterAt = $starter_at;
-
         return $this;
     }
 

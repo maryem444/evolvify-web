@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Projet;
+use App\Entity\StatutTache;
 use App\Entity\Tache;
 use Symfony\Component\HttpFoundation\Request;
 use App\Form\TacheType;
@@ -70,15 +71,32 @@ class TasksController extends AbstractController
 
       $this->addFlash('success', 'Tâche ajoutée avec succès !');
 
+      // Assurez-vous que cette route renvoie bien vers la vue Kanban
       return $this->redirectToRoute('kanban_tasks_list', ['id' => $id]);
+    }
+
+    // Si le formulaire n'est pas valide, récupérez toutes les tâches pour afficher le Kanban
+    $tacheRepository = $entityManager->getRepository(Tache::class);
+    $taches = $tacheRepository->findBy(['projet' => $projet]);
+
+    // Grouper les tâches par statut
+    $tasksByStatus = [
+      'TO_DO' => [],
+      'IN_PROGRESS' => [],
+      'DONE' => [],
+      'CANCELED' => []
+    ];
+
+    foreach ($taches as $tache) {
+      $tasksByStatus[$tache->getStatus()->value][] = $tache;
     }
 
     return $this->render('tache/kanban.html.twig', [
       'projet' => $projet,
+      'tasksByStatus' => $tasksByStatus,
       'form' => $form->createView(),
     ]);
   }
-
   #[Route('/kanban/projets/{id}/taches/supprimer/{tacheId}', name: 'kanban_task_delete', methods: ['POST'])]
   public function deleteTache(int $id, int $tacheId, TacheRepository $tacheRepository, EntityManagerInterface $entityManager): Response
   {
@@ -122,5 +140,28 @@ class TasksController extends AbstractController
       'editMode' => true,
       'projet' => $projet,
     ]);
+  }
+
+  #[Route('/kanban/projets/{id}/taches/update-status', name: 'kanban_task_update_status', methods: ['POST'])]
+  public function updateStatus(int $id, Request $request, TacheRepository $tacheRepository, EntityManagerInterface $entityManager): Response
+  {
+    $data = json_decode($request->getContent(), true);
+
+    $tache = $tacheRepository->find($data['taskId']);
+    if (!$tache || $tache->getProjet()->getId() !== $id) {
+      return $this->json(['success' => false, 'message' => 'Tâche introuvable ou non associée à ce projet.'], 400);
+    }
+
+    // Vérification des statuts valides
+    $validStatuses = ['TO_DO', 'IN_PROGRESS', 'DONE', 'CANCELED'];
+    if (!in_array($data['newStatus'], $validStatuses)) {
+      return $this->json(['success' => false, 'message' => 'Statut invalide.'], 400);
+    }
+
+    // Mise à jour du statut
+    $tache->setStatus(StatutTache::from($data['newStatus']));
+    $entityManager->flush();
+
+    return $this->json(['success' => true]);
   }
 }

@@ -61,7 +61,7 @@
 						<td>{{ projet.name }}</td>
 						<td>{{ projet.abbreviation }}</td>
 						<td>{{ projet.description }}</td>
-						<td>{{ projet.status ? projet.status|join(', ') : 'Inconnu' }}</td>
+						<td>{{ projet.status ? projet.status.value : 'Inconnu' }}</td>
 						<!-- Affichage du statut -->
 						<td>{{ projet.starterAt ? projet.starterAt|date('d/m/Y') : '-' }}</td>
 						<td>{{ projet.endDate ? projet.endDate|date('d/m/Y') : '-' }}</td>
