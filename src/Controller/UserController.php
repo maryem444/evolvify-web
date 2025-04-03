@@ -17,10 +17,17 @@ class UserController extends AbstractController
     #[Route('/users', name: 'user_index')]
     public function index(UserRepository $userRepository): Response
     {
-        $users = $userRepository->findAll();  // Récupère tous les utilisateurs
+        $users = $userRepository->findAll();
+
         return $this->render('user/index.html.twig', [
             'users' => $users,
+            'photoBaseUrl' => $this->getParameter('profile_photo_base_url')
         ]);
+    }
+    #[Route('/users/add-form', name: 'add_user_form')]
+    public function addUserForm(): Response
+    {
+        return $this->render('user/addUser.html.twig');
     }
 
     #[Route('/user/new', name: 'user_new')]
@@ -68,5 +75,35 @@ class UserController extends AbstractController
         $em->flush();
 
         return $this->redirectToRoute('user_index');
+    }
+
+    #[Route('/user/create-ajax', name: 'user_create_ajax', methods: ['POST'])]
+    public function createAjax(Request $request, EntityManagerInterface $em): Response
+    {
+        // Get data from the request
+        $data = json_decode($request->getContent(), true);
+
+        // Create new user
+        $user = new User();
+        $user->setFirstname($data['firstname'] ?? '');
+        $user->setLastname($data['lastname'] ?? '');
+        $user->setEmail($data['email'] ?? '');
+        $user->setRole($data['role'] ?? '');
+
+        // Save user to database
+        $em->persist($user);
+        $em->flush();
+
+        return $this->json([
+            'success' => true,
+            'message' => 'User created successfully',
+            'user' => [
+                'id' => $user->getId(),
+                'firstname' => $user->getFirstname(),
+                'lastname' => $user->getLastname(),
+                'email' => $user->getEmail(),
+                'role' => $user->getRole()
+            ]
+        ]);
     }
 }
