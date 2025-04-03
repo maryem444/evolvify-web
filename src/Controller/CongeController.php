@@ -5,7 +5,6 @@ namespace App\Controller;
 use App\Entity\Conge;
 use App\Entity\CongeType;
 use App\Repository\CongeRepository;
-use App\Repository\EmployeRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -13,19 +12,20 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Entity\CongeStatus;
 use App\Entity\CongeReason;
+use App\Repository\UserRepository;
 
 #[Route('/conge')]
 class CongeController extends AbstractController
 {
     #[Route('/', name: 'app_conge_index', methods: ['GET'])]
-    public function index(CongeRepository $congeRepository, EmployeRepository $employeRepository): Response
+    public function index(CongeRepository $congeRepository, UserRepository $userRepository): Response
     {
         $conges = $congeRepository->findAll();
         
         // Get employee names for each leave request
         $congesWithEmployeeNames = [];
         foreach ($conges as $conge) {
-            $employe = $employeRepository->find($conge->getIdEmploye());
+            $employe = $userRepository->find($conge->getIdEmploye());
             $employeName = $employe ? $employe->getNom() . ' ' . $employe->getPrenom() : 'Inconnu';
             
             $congesWithEmployeeNames[] = [
@@ -65,9 +65,9 @@ class CongeController extends AbstractController
     }
 
     #[Route('/{idConge}', name: 'app_conge_show', methods: ['GET'])]
-    public function show(Conge $conge, EmployeRepository $employeRepository): Response
+    public function show(Conge $conge, UserRepository $userRepository): Response
     {
-        $employe = $employeRepository->find($conge->getIdEmploye());
+        $employe = $userRepository->find($conge->getIdEmploye());
         $employeName = $employe ? $employe->getNom() . ' ' . $employe->getPrenom() : 'Inconnu';
         
         return $this->render('conge/show.html.twig', [
