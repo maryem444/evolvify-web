@@ -62,6 +62,15 @@ class Projet
     )]
     private ?string $uploaded_files = null;
 
+    #[ORM\ManyToMany(targetEntity: User::class)]
+    #[ORM\JoinTable(
+        name: 'projet_employe',
+        joinColumns: [new ORM\JoinColumn(name: 'projet_id', referencedColumnName: 'id_projet')],
+        inverseJoinColumns: [new ORM\JoinColumn(name: 'employe_id', referencedColumnName: 'id_employe')]
+    )]
+    private Collection $assignedUsers;
+
+
 
     #[ORM\OneToMany(mappedBy: "projet", targetEntity: Tache::class, cascade: ["persist", "remove"])]
     private Collection $taches;
@@ -69,6 +78,27 @@ class Projet
     public function __construct()
     {
         $this->taches = new ArrayCollection();
+        $this->assignedUsers = new ArrayCollection();
+    }
+    public function getAssignedUsers(): Collection
+    {
+        return $this->assignedUsers;
+    }
+
+    public function addAssignedUser(User $user): self
+    {
+        if (!$this->assignedUsers->contains($user)) {
+            $this->assignedUsers[] = $user;
+        }
+
+        return $this;
+    }
+
+    public function removeAssignedUser(User $user): self
+    {
+        $this->assignedUsers->removeElement($user);
+
+        return $this;
     }
 
     public function getTaches(): Collection

@@ -4,6 +4,8 @@ namespace App\Form;
 
 use App\Entity\Projet;
 use App\Entity\StatutProjet;
+use App\Entity\User;
+use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
@@ -48,6 +50,21 @@ class ProjetType extends AbstractType
         'label' => 'Date de fin',
         'attr' => ['class' => 'form-control'],
       ])
+      ->add('assignedUsers', EntityType::class, [
+        'class' => User::class,
+        'choice_label' => function ($user) {
+          return $user->getFirstname() . ' ' . $user->getLastname();
+        },
+        'multiple' => true,
+        'expanded' => false,
+        'attr' => [
+          'class' => 'form-select select2', 
+          'data-placeholder' => 'Sélectionnez les utilisateurs'
+        ],
+        'required' => false
+    ])
+    
+
       ->add('abbreviation', TextType::class, [
         'label' => 'Abréviation',
         'empty_data' => '',
