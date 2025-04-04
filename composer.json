@@ -20,9 +20,12 @@
         "symfony/doctrine-bridge": "7.2.*",
         "symfony/dotenv": "7.2.*",
         "symfony/flex": "^2",
+        "symfony/form": "6.4.*",
         "symfony/framework-bundle": "6.4",
         "symfony/runtime": "7.2.*",
+        "symfony/security-core": "6.4.*",
         "symfony/twig-bundle": "6.4",
+        "symfony/validator": "6.4.*",
         "symfony/yaml": "7.2.*"
     },
     "config": {
