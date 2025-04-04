@@ -42,6 +42,29 @@
 					<p>Users</p>
 					</a>
 				</li>
+				
+				<li class="nav-item">
+					<a data-bs-toggle="collapse" href="#projects">
+						<i class="fas fa-project-diagram"></i>
+						<p>Project Management</p>
+						<span class="caret"></span>
+					</a>
+					<div class="collapse" id="projects">
+						<ul class="nav nav-collapse">
+							<li>
+								<a href="{{ path('projets_list') }}">
+									<span class="sub-item">Projects List</span>
+								</a>
+							</li>
+							<li>
+								<a href="{{ path('projets_cards') }}">
+									<span class="sub-item">Projects Cards</span>
+								</a>
+							</li>
+						
+						</ul>
+					</div>
+				</li>
 
 
 				{# <li class="nav-item">

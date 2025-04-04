@@ -24,27 +24,27 @@ class ProjetController extends AbstractController
         // Création du formulaire de filtre
         $filterForm = $this->createForm(ProjetFilterType::class);
         $filterForm->handleRequest($request);
-        
+
         // Initialisation des filtres
         $filters = [];
-        
+
         // Si le formulaire est soumis et valide, on récupère les filtres
         if ($filterForm->isSubmitted() && $filterForm->isValid()) {
             $formData = $filterForm->getData();
-            
+
             if (!empty($formData['name'])) {
                 $filters['name'] = $formData['name'];
             }
-            
+
             if (!empty($formData['abbreviation'])) {
                 $filters['abbreviation'] = $formData['abbreviation'];
             }
-            
+
             if (!empty($formData['status'])) {
                 $filters['status'] = $formData['status'];
             }
         }
-        
+
         // Utilisation de la méthode searchProjets pour filtrer les projets
         $projets = $projetRepository->searchProjets($filters);
 
@@ -97,7 +97,9 @@ class ProjetController extends AbstractController
         ]);
     }
 
-    #[Route('/projetDelete/{id}', name: 'projet_delete', methods: ['POST'])]
+    #[Route('/projetDelete/{id}', name: 'projet_delete', methods: ['POST', 'DELETE'])]
+
+
     public function deleteProjet(Projet $projet, ManagerRegistry $doctrine): Response
     {
         $manager = $doctrine->getManager();
@@ -151,7 +153,7 @@ class ProjetController extends AbstractController
             'projet' => $projet,
         ]);
     }
-    
+
     #[Route('/projet/{id}/taches', name: 'projet_taches')]
     public function showTaches(Projet $projet, TacheRepository $tacheRepository): Response
     {

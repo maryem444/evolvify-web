@@ -51,7 +51,7 @@ class CardsController extends AbstractController
     ]);
   }
 
-  #[Route('/projets/cards/delete/{id}', name: 'projet_delete_card', methods: ['POST'])]
+  #[Route('/projets/cards/delete/{id}', name: 'projet_delete_card', methods: ['POST', 'DELETE'])]
   public function deleteProjet(Projet $projet, ManagerRegistry $doctrine): Response
   {
     $manager = $doctrine->getManager();
