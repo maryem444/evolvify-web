@@ -39,21 +39,14 @@
 
     {% block stylesheets %}{% endblock %}
 </head>
+{% block content %}{% endblock %}
 <body>
   
-    <div class="wrapper">
+    
         {% include 'includes/sidebar.html.twig' %}
 
-        <div class="main-panel">
-            {% include 'includes/header.html.twig' %}
-            
-            {% block content %}{% endblock %}
 
-            {% include 'includes/footer.html.twig' %}
-        </div>
-
-        {% include 'includes/custom_template.html.twig' %}
-    </div>
+    
 
     <!--   Core JS Files   -->
     <script src="{{ asset('assets/js/core/jquery-3.7.1.min.js') }}"></script>

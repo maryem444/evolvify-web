@@ -1,0 +1,71 @@
+{% extends 'FormDesign.html.twig' %}
+{% block content %}
+
+<div class="container-fluid vh-100 d-flex justify-content-center align-items-center">
+    <div class="card shadow-lg p-5" style="max-width: 500px; width: 100%; background: #f8f9fa; border-radius: 10px;">
+        <h3 class="text-center text-primary" style="font-size: 1.8rem;">Ajouter une Offre</h3>
+        
+        {{ form_start(form, {'attr': {'class': 'form'}}) }}
+
+        <div class="mb-4">
+            {{ form_label(form.titre, 'Titre', {'label_attr': {'class': 'form-label fw-bold text-dark'}}) }}
+            {{ form_widget(form.titre, {'attr': {'class': 'form-control border-mauve', 'style': 'font-size: 1.1rem;'}}) }}
+        </div>
+
+        <div class="mb-4">
+            {{ form_label(form.description, 'Description', {'label_attr': {'class': 'form-label fw-bold text-dark'}}) }}
+            {{ form_widget(form.description, {'attr': {'class': 'form-control border-mauve', 'style': 'font-size: 1.1rem;'}}) }}
+        </div>
+
+        <div class="mb-4">
+            {{ form_label(form.datePublication, 'Date de Publication', {'label_attr': {'class': 'form-label fw-bold text-dark'}}) }}
+            {{ form_widget(form.datePublication, {'attr': {'class': 'form-control border-mauve', 'style': 'font-size: 1.1rem;'}}) }}
+        </div>
+
+        <div class="mb-4">
+            {{ form_label(form.dateExpiration, 'Date d’Expiration', {'label_attr': {'class': 'form-label fw-bold text-dark'}}) }}
+            {{ form_widget(form.dateExpiration, {'attr': {'class': 'form-control border-blue', 'style': 'font-size: 1.1rem;'}}) }}
+        </div>
+
+        <div class="mb-4">
+            {{ form_label(form.status, 'Statut', {'label_attr': {'class': 'form-label fw-bold text-dark'}}) }}
+            {{ form_widget(form.status, {'attr': {'class': 'form-control border-mauve', 'style': 'font-size: 1.1rem;'}}) }}
+        </div>
+
+        
+
+        {{ form_end(form) }}
+    </div>
+</div>
+
+<style>
+    .border-mauve {
+        border-color: #8A2BE2; /* Mauve */
+    }
+    .border-blue {
+        border-color: #4682B4; /* Bleu */
+    }
+    .form-control {
+        margin-bottom: 2rem; /* Espacement uniforme entre les champs */
+    }
+
+    /* Centrage absolu */
+    .container-fluid {
+        position: relative;
+        height: 100vh;
+    }
+
+    .container-fluid .card {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    /* Agrandir un peu l'écriture pour les labels et inputs */
+    .form-label {
+        font-size: 1.1rem;
+    }
+</style>
+
+{% endblock %}
