@@ -275,6 +275,28 @@
 									{% endif %}
 								</div>
 
+								<div style="margin-top: 10px;">
+									<strong>Utilisateurs assignés :</strong>
+									<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px;">
+										{% for user in projet.assignedUsers %}
+											{% set initials = '' %}
+											{% if user.firstname and user.lastname %}
+												{% set initials = user.firstname|first|upper ~ user.lastname|first|upper %}
+											{% else %}
+												{% set initials = 'N/A' %}
+											{% endif %}
+
+											{% set colors = ['#007bff', '#28a745', '#dc3545', '#ffc107', '#17a2b8'] %}
+											{% set color = colors[loop.index0 % colors|length] %}
+
+											<div style="width: 35px; height: 35px; background-color: {{ color }}; color: white; display: flex; justify-content: center; align-items: center; border-radius: 50%; font-weight: bold; font-size: 13px;" title="{{ user.firstname }} {{ user.lastname }}">
+												{{ initials }}
+											</div>
+										{% endfor %}
+									</div>
+								</div>
+
+
 								<div class="project-dates">
 									<div>
 										<i class="fas fa-calendar-alt text-primary"></i>

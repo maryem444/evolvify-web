@@ -63,8 +63,6 @@
 						<td>{{ projet.abbreviation }}</td>
 						<td>{{ projet.description }}</td>
 						<td>{{ projet.status ? projet.status.value : 'Inconnu' }}</td>
-						<td>{{ projet.starterAt ? projet.starterAt|date('d/m/Y') : '-' }}</td>
-						<td>{{ projet.endDate ? projet.endDate|date('d/m/Y') : '-' }}</td>
 						<td>
 							{% for user in projet.assignedUsers %}
 								{{ user.firstname }}
@@ -73,6 +71,8 @@
 								{% endif %}
 							{% endfor %}
 						</td>
+						<td>{{ projet.starterAt ? projet.starterAt|date('d/m/Y') : '-' }}</td>
+						<td>{{ projet.endDate ? projet.endDate|date('d/m/Y') : '-' }}</td>
 					</tr>
 				{% endfor %}
 			</tbody>
