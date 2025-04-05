@@ -3,9 +3,10 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
-use App\Enum\genre;
-use App\Enum\Role;
+use App\Entity\Genre;
+use App\Entity\Role;
 #[ORM\Entity]
+#[ORM\Table(name: "users")]
 class Utilisateur
 {
     #[ORM\Id]
@@ -28,26 +29,26 @@ class Utilisateur
     #[ORM\Column(length: 20, nullable: true)]
     private ?string $num_tel = null;
 
-    #[ORM\Column(type: "date", nullable: true)]
+    #[ORM\Column(name: "birthdayDate", type: "date", nullable: true)]
     private ?\DateTimeInterface $birthdayDate = null;
 
-    #[ORM\Column(type: "date", nullable: true)]
+    #[ORM\Column(name: "joiningDate", type: "date", nullable: true)]
     private ?\DateTimeInterface $joiningDate = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
+    #[ORM\Column(name: "profilePhoto" ,length: 255, nullable: true)]
     private ?string $profilePhoto = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $uploaded_cv = null;
 
     #[ORM\Column(type: "integer")]
-    private int $tt_restants = 0;
+    private ?int $tt_restants = 0;
 
     #[ORM\Column(type: "integer")]
-    private int $conge_restant = 0;
+    private ?int $conge_restant = 0;
 
     #[ORM\Column(type: 'string', length: 20, enumType: Role::class)]
-    private ?Role $role = null;
+    private ?Role $role ;
 
     #[ORM\Column(type: 'string', length: 10, enumType: Genre::class)]
     private ?Genre $gender = Genre::HOMME; 
@@ -181,23 +182,23 @@ class Utilisateur
         return $this;
     }
 
-    public function getRole(): ?string
+    public function getRole(): ?Role
     {
         return $this->role;
     }
 
-    public function setRole(string $role): self
+    public function setRole(Role $role): self
     {
         $this->role = $role;
         return $this;
     }
 
-    public function getGender(): ?string
+    public function getGender(): ?Genre
     {
         return $this->gender;
     }
 
-    public function setGender(string $gender): self
+    public function setGender(Genre $gender): self
     {
         $this->gender = $gender;
         return $this;

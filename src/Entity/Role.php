@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Enum;
+namespace App\Entity;
 
 enum Role: string
 {
-    case RESPONSABLE_RH = 'responsable_rh';
-    case CHEF_PROJET = 'chef_projet';
-    case EMPLOYEE = 'employee';
-    case CANDIDAT = 'candidat';
+    case RESPONSABLE_RH = 'RESPONSABLE_RH';
+    case CHEF_PROJET = 'CHEF_PROJET';
+    case EMPLOYEE = 'EMPLOYEE';
+    case CONDIDAT = 'CONDIDAT';
 
     public static function getValues(): array
     {
@@ -15,7 +15,7 @@ enum Role: string
             self::RESPONSABLE_RH->value,
             self::CHEF_PROJET->value,
             self::EMPLOYEE->value,
-            self::CANDIDAT->value
+            self::CONDIDAT->value
         ];
     }
 }

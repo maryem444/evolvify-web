@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Enum;
+namespace App\Entity;
 
 enum Genre: string
 {
-    case HOMME = 'homme';
-    case FEMME = 'femme';
+    case HOMME = 'HOMME';
+    case FEMME = 'FEMME';
 
     public static function getValues(): array
     {

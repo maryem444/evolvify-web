@@ -35,7 +35,28 @@
                             <th scope="col" class="text-end">CV</th>
                           </tr>
                         </thead>
-                       
+                        <tbody>
+                             
+
+                          {% for candidate in Candidates %}
+                          <tr>
+                            <td>{{ candidate.firstname }}</td>
+                            <td class="text-end">{{ candidate.lastname }}</td>
+                            <td class="text-end" style="min-width: 120px;">{{ candidate.email }}</td>
+                            <td class="text-end" style="min-width: 250px;">{{ candidate.birthdayDate|date('d/m/Y') }}</td>
+                            <td class="text-end" style="min-width: 250px;">{{ candidate.joiningDate|date('d/m/Y') }}</td>
+                            <td class="text-end" style="min-width: 250px;">{{ candidate.getNumTel() }}</td>
+                            <td class="text-end">{{ candidate.gender.value  }}</td>
+                            <td class="text-end">
+                              <a href="{{ candidate.getUploadedCv() }}" target="_blank">Voir le CV</a>
+                            </td>
+                          </tr>
+                          {% else %}
+                              <tr>
+                                  <td colspan="6" class="text-center">Aucune Candidates  disponible</td>
+                              </tr>
+                          {% endfor %}
+                      </tbody>
                       </table>
                     </div>
                   </div>

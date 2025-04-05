@@ -25,7 +25,7 @@
                             <thead class="thead-light">
                                 <tr>
                                     <th scope="col">Titre</th>
-                                    <th scope="col" class="text-end" style="min-width: 300px;">Description</th>
+                                    <th scope="col" >Description</th>
                                     <th scope="col" class="text-end" style="min-width: 250px;">Date de Publication</th>
                                     <th scope="col" class="text-end" style="min-width: 250px;">Date d'expiration</th>
                                     <th scope="col" class="text-end">Status</th>
@@ -59,17 +59,19 @@
                                 {% for offre in offres %}
                                     <tr>
                                         <td>{{ offre.titre }}</td>
-                                        <td class="text-end">{{ offre.description }}</td>
+                                        <td >{{ offre.description }}</td>
                                         <td class="text-end">{{ offre.datePublication|date('d/m/Y') }}</td>
                                         <td class="text-end">{{ offre.dateExpiration|date('d/m/Y') }}</td>
                                         <td class="text-end">{{ offre.status.value }}</td>
                                         <td class="text-end">
                                           <div class="d-flex justify-content-end gap-2">
-                                            <a href="{{ path('offre_update', {'idOffre': offre.idOffre}) }}" class="btn btn-info btn-sm">Modifier</a>
-                                            <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal" 
-                                            data-url="{{ path('delete_Offre', {'idOffre': offre.idOffre}) }}">
-                                        Supprimer
-                                    </button>
+                                            <a href="{{ path('offre_update', {'idOffre': offre.idOffre}) }}" ><img src="{{ asset('assets/img/editIcon.png') }}" alt="Modifier" width="30" height="30"></a>
+                                            <button data-bs-toggle="modal" data-bs-target="#confirmDeleteModal"
+        data-url="{{ path('delete_Offre', {'idOffre': offre.idOffre}) }}"
+        style="border: none; background: none; padding: 0;">
+    <img src="{{ asset('assets/img/deleteIcon.png') }}" alt="Supprimer" width="30" height="30">
+</button>
+
                                           </div>
                                       </td>
                                       
