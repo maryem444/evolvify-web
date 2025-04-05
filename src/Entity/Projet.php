@@ -68,6 +68,10 @@ class Projet
         joinColumns: [new ORM\JoinColumn(name: 'projet_id', referencedColumnName: 'id_projet')],
         inverseJoinColumns: [new ORM\JoinColumn(name: 'employe_id', referencedColumnName: 'id_employe')]
     )]
+    #[Assert\Count(
+        min: 1,
+        minMessage: 'Veuillez sélectionner au moins un utilisateur.'
+    )]
     private Collection $assignedUsers;
 
 
