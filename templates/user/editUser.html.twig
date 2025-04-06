@@ -5,97 +5,420 @@
             <div class="modal-header border-0">
                 <h5 class="modal-title">
                     <span class="fw-mediumbold">Modifier</span>
-                    <span class="fw-light">Employé</span>
+                    <span class="fw-light">
+                        Employé</span>
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div id="editFormContainer">
-                    <div class="d-flex justify-content-center">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
+                <form
+                    id="editUserForm" method="POST" action="{{ path('app_admin_user_edit', {'id': user.id}) }}">
+                    <!-- First & Last Name -->
+                    <div class="row">
+                        <div class="col-md-6 pe-0">
+                            <div class="form-group form-group-default">
+                                <label for="editFirstname">Prénom</label>
+                                <input id="editFirstname" name="firstname" type="text" class="form-control" placeholder="Prénom" value="{{ user.firstname }}" required/>
+                                <div class="valid-feedback">
+                                    <i class="fas fa-check-circle"></i>
+                                    Prénom valide !
+                                </div>
+                                <div class="invalid-feedback">
+                                    Veuillez saisir un prénom.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group form-group-default">
+                                <label for="editLastname">Nom</label>
+                                <input id="editLastname" name="lastname" type="text" class="form-control" placeholder="Nom" value="{{ user.lastname }}" required/>
+                                <div class="valid-feedback">
+                                    <i class="fas fa-check-circle"></i>
+                                    Nom valide !
+                                </div>
+                                <div class="invalid-feedback">
+                                    Veuillez saisir un nom.
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
+
+                    <!-- Email & Role -->
+                    <div class="row mt-3">
+                        <div class="col-md-6 pe-0">
+                            <div class="form-group form-group-default">
+                                <label for="editEmail">Email</label>
+                                <input id="editEmail" name="email" type="email" class="form-control" placeholder="email@exemple.com" value="{{ user.email }}" required/>
+                                <div class="valid-feedback">
+                                    <i class="fas fa-check-circle"></i>
+                                    Email valide !
+                                </div>
+                                <div class="invalid-feedback">
+                                    Veuillez saisir une adresse email valide.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group form-group-default">
+                                <label for="editRole">Rôle</label>
+                                <select id="editRole" name="role" class="form-control" required>
+                                    <option value="EMPLOYEE" {{ user.role == 'EMPLOYEE' ? 'selected' : '' }}>Employé</option>
+                                    <option value="CHEF_PROJET" {{ user.role == 'CHEF_PROJET' ? 'selected' : '' }}>Chef de projet</option>
+                                    <option value="RESPONSABLE_RH" {{ user.role == 'RESPONSABLE_RH' ? 'selected' : '' }}>Responsable RH</option>
+                                    <option value="CONDIDAT" {{ user.role == 'CONDIDAT' ? 'selected' : '' }}>Candidat</option>
+                                </select>
+                                <div class="valid-feedback">
+                                    <i class="fas fa-check-circle"></i>
+                                    Rôle valide !
+                                </div>
+                                <div class="invalid-feedback">
+                                    Veuillez sélectionner un rôle.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form buttons -->
+                    <div class="modal-footer border-0 mt-3">
+                        <button type="submit" id="editUserButton" class="btn btn-primary">Enregistrer</button>
+                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Annuler</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 </div>
 
+<!-- CSS pour la validation du formulaire -->
+<style>
+    /* Base styles for validation feedback */
+    .valid-feedback,
+    .invalid-feedback {
+        display: none;
+        margin-top: 0.25rem;
+        font-size: 0.875em;
+    }
+
+    .valid-feedback {
+        color: #198754;
+    }
+
+    .invalid-feedback {
+        color: #dc3545;
+    }
+
+    /* Styling for valid fields */
+    .form-control.is-valid {
+        border-color: #198754;
+        padding-right: calc(1.5em + 0.75rem);
+        background-image: url("data:image/svg+xml, %3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%23198754' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right calc(0.375em + 0.1875rem) center;
+        background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+    }
+
+    /* Styling for invalid fields */
+    .form-control.is-invalid {
+        border-color: #dc3545;
+        padding-right: calc(1.5em + 0.75rem);
+        background-image: url("data:image/svg+xml, %3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right calc(0.375em + 0.1875rem) center;
+        background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+    }
+
+    /* Show validation feedback for valid/invalid fields */
+    .form-control.is-valid ~ .valid-feedback {
+        display: block;
+    }
+
+    .form-control.is-invalid ~ .invalid-feedback {
+        display: block;
+    }
+
+    /* Same styling for selects */
+    select.form-control.is-valid {
+        padding-right: 4.125rem;
+        background-position: right 1.75rem center, center right 2.25rem;
+        background-size: 16px 12px, calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+    }
+
+    select.form-control.is-invalid {
+        padding-right: 4.125rem;
+        background-position: right 1.75rem center, center right 2.25rem;
+        background-size: 16px 12px, calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+    }
+
+    /* Add focus styles */
+    .form-control:focus {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+
+    /* Animation for validation icons */
+    @keyframes validationAppear {
+        from {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    .valid-feedback,
+    .invalid-feedback {
+        animation: validationAppear 0.3s ease-in-out;
+    }
+
+    /* Main page alert animations */
+    @keyframes slideDown {
+        from {
+            transform: translateY(-20px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .alert-container .alert {
+        animation: slideDown 0.4s ease-out;
+    }
+
+    /* Button styles when disabled/enabled */
+    .btn-primary:disabled {
+        opacity: 0.65;
+        cursor: not-allowed;
+    }
+
+    .btn-primary:not(:disabled) {
+        transition: background-color 0.3s ease;
+    }
+
+    .btn-primary:not(:disabled):hover {
+        background-color: #0069d9;
+    }
+</style>
+
+<!-- JavaScript pour la validation -->
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
-
-    // Load form into modal
-    document.querySelectorAll('.edit-user-btn').forEach(button => {
-        button.addEventListener('click', function () {
-            const userId = this.getAttribute('data-id');
-            const container = document.getElementById('editFormContainer');
-
-            container.innerHTML = `
-                <div class="d-flex justify-content-center">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                </div>
-            `;
-
-            modal.show();
-
-            fetch(`/admin/user/edit/${userId}`)
-                .then(response => {
-                    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-                    return response.text();
-                })
-                .then(html => {
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
-                    const form = doc.querySelector('form');
-
-                    if (form) {
-                        container.innerHTML = '';
-                        container.appendChild(form);
-                        activateEditFormValidation(); // enable validation
-                    } else {
-                        container.innerHTML = `<div class="alert alert-danger">Impossible de charger le formulaire.</div>`;
-                    }
-                })
-                .catch(error => {
-                    container.innerHTML = `<div class="alert alert-danger">Erreur: ${error.message}</div>`;
-                });
-        });
+    document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('editUserForm');
+    const submitButton = document.getElementById('editUserButton');
+    const inputs = form.querySelectorAll('input, select');
+    const modal = document.getElementById('editUserModal');
+    
+    // Helper function to validate email
+    function isValidEmail(email) {
+        const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return regex.test(email);
+    }
+    
+    // Keep track of which fields have been touched by the user
+    const touchedFields = new Set();
+    
+    // Add all fields to touchedFields initially since we're editing an existing user
+    inputs.forEach(input => {
+        touchedFields.add(input.id);
     });
-
-    function activateEditFormValidation() {
-        const form = document.getElementById('editUserForm');
-        const inputs = form.querySelectorAll('input, select');
-        const submitBtn = document.getElementById('editUserButton');
-
-        // Disable submit initially
-        submitBtn.disabled = true;
-
-        function validateForm() {
-            let isValid = true;
-
-            inputs.forEach(input => {
-                if (!input.checkValidity()) {
-                    input.classList.remove('is-valid');
+    
+    // Function to validate the form
+    function validateForm() {
+        let isValid = true;
+        
+        // Check each input
+        inputs.forEach(input => {
+            // Only validate fields that have been touched
+            if (!touchedFields.has(input.id)) {
+                return;
+            }
+            
+            // Reset validation state
+            input.classList.remove('is-valid', 'is-invalid');
+            
+            // Email specific validation
+            if (input.type === 'email') {
+                if (input.value.trim() && isValidEmail(input.value.trim())) {
+                    input.classList.add('is-valid');
+                } else if (input.value.trim()) {
                     input.classList.add('is-invalid');
                     isValid = false;
                 } else {
-                    input.classList.remove('is-invalid');
+                    input.classList.add('is-invalid');
+                    isValid = false;
+                }
+                return;
+            }
+            
+            // Select element validation
+            if (input.tagName === 'SELECT') {
+                if (input.value && input.value !== '') {
                     input.classList.add('is-valid');
+                } else {
+                    input.classList.add('is-invalid');
+                    isValid = false;
+                }
+                return;
+            }
+            
+            // Text input validation
+            if (input.value.trim()) {
+                input.classList.add('is-valid');
+            } else {
+                input.classList.add('is-invalid');
+                isValid = false;
+            }
+        });
+        
+        // Check all fields to determine if form is valid
+        let allFieldsValid = true;
+        inputs.forEach(input => {
+            if (input.type === 'email') {
+                if (!input.value.trim() || !isValidEmail(input.value.trim())) {
+                    allFieldsValid = false;
+                }
+            } else if (input.tagName === 'SELECT') {
+                if (!input.value || input.value === '') {
+                    allFieldsValid = false;
+                }
+            } else if (!input.value.trim()) {
+                allFieldsValid = false;
+            }
+        });
+        
+        // Enable/disable submit button based on form validity
+        submitButton.disabled = !allFieldsValid;
+        
+        return isValid;
+    }
+    
+    // Add event listeners to each input for real-time validation
+    inputs.forEach(input => {
+        // Mark field as touched on focus out (blur)
+        input.addEventListener('blur', function() {
+            touchedFields.add(input.id);
+            validateForm();
+        });
+        
+        // Validate on input change
+        input.addEventListener('input', function() {
+            if (touchedFields.has(input.id)) {
+                validateForm();
+            }
+        });
+        
+        // Validate on change (for select elements)
+        input.addEventListener('change', function() {
+            touchedFields.add(input.id);
+            validateForm();
+        });
+    });
+    
+    // Initialize validation when modal is shown
+    modal.addEventListener('shown.bs.modal', function() {
+        // Set all fields as touched since we're editing existing data
+        inputs.forEach(input => {
+            touchedFields.add(input.id);
+        });
+        
+        // Initial validation to show valid states
+        validateForm();
+    });
+    
+    // Listen for user ID updates via data attribute when modal is opened
+    document.addEventListener('click', function(e) {
+        if (e.target && e.target.classList.contains('edit-user-btn')) {
+            const userId = e.target.getAttribute('data-id');
+            if (userId) {
+                form.action = form.action.replace(/\/\d+$/, '/' + userId);
+            }
+        }
+    });
+    
+    // Form submission with AJAX
+    form.addEventListener('submit', function(event) {
+        event.preventDefault();
+        
+        // Mark all fields as touched for final validation
+        inputs.forEach(input => {
+            touchedFields.add(input.id);
+        });
+        
+        // Final validation
+        if (!validateForm()) {
+            return false;
+        }
+        
+        // Get form data
+        const formData = new FormData(form);
+        
+        // Disable submit button during submission
+        submitButton.disabled = true;
+        
+        // AJAX form submission
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Close the modal
+            const modalInstance = bootstrap.Modal.getInstance(modal);
+            modalInstance.hide();
+            
+            // Show success message with SweetAlert
+            swal({
+                title: "Employé modifié !",
+                text: `${formData.get('firstname')} ${formData.get('lastname')} a été modifié avec succès.`,
+                icon: "success",
+                buttons: {
+                    confirm: {
+                        text: "OK",
+                        value: true,
+                        visible: true,
+                        className: "btn btn-success",
+                        closeModal: true
+                    }
+                }
+            }).then(() => {
+                // Reload the page to refresh the employee list
+                window.location.reload();
+            });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            
+            // Show error message with SweetAlert
+            swal({
+                title: "Erreur !",
+                text: "Une erreur s'est produite lors de la modification de l'employé.",
+                icon: "error",
+                buttons: {
+                    confirm: {
+                        text: "OK",
+                        value: true,
+                        visible: true,
+                        className: "btn btn-danger",
+                        closeModal: true
+                    }
                 }
             });
-
-            submitBtn.disabled = !isValid;
-        }
-
-        inputs.forEach(input => {
-            input.addEventListener('input', validateForm);
+        })
+        .finally(() => {
+            // Re-enable submit button
+            submitButton.disabled = false;
         });
-
-        validateForm(); // run once on load
-    }
+    });
 });
 </script>
