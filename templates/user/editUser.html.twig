@@ -1,0 +1,101 @@
+<!-- Edit User Modal -->
+<div class="modal fade" id="editUserModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">
+                    <span class="fw-mediumbold">Modifier</span>
+                    <span class="fw-light">Employé</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="editFormContainer">
+                    <div class="d-flex justify-content-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
+
+    // Load form into modal
+    document.querySelectorAll('.edit-user-btn').forEach(button => {
+        button.addEventListener('click', function () {
+            const userId = this.getAttribute('data-id');
+            const container = document.getElementById('editFormContainer');
+
+            container.innerHTML = `
+                <div class="d-flex justify-content-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            `;
+
+            modal.show();
+
+            fetch(`/admin/user/edit/${userId}`)
+                .then(response => {
+                    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                    return response.text();
+                })
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const form = doc.querySelector('form');
+
+                    if (form) {
+                        container.innerHTML = '';
+                        container.appendChild(form);
+                        activateEditFormValidation(); // enable validation
+                    } else {
+                        container.innerHTML = `<div class="alert alert-danger">Impossible de charger le formulaire.</div>`;
+                    }
+                })
+                .catch(error => {
+                    container.innerHTML = `<div class="alert alert-danger">Erreur: ${error.message}</div>`;
+                });
+        });
+    });
+
+    function activateEditFormValidation() {
+        const form = document.getElementById('editUserForm');
+        const inputs = form.querySelectorAll('input, select');
+        const submitBtn = document.getElementById('editUserButton');
+
+        // Disable submit initially
+        submitBtn.disabled = true;
+
+        function validateForm() {
+            let isValid = true;
+
+            inputs.forEach(input => {
+                if (!input.checkValidity()) {
+                    input.classList.remove('is-valid');
+                    input.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    input.classList.remove('is-invalid');
+                    input.classList.add('is-valid');
+                }
+            });
+
+            submitBtn.disabled = !isValid;
+        }
+
+        inputs.forEach(input => {
+            input.addEventListener('input', validateForm);
+        });
+
+        validateForm(); // run once on load
+    }
+});
+</script>

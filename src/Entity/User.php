@@ -7,7 +7,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 
-#[ORM\Entity(repositoryClass: 'App\Repository\EmployeeRepository')]
+#[ORM\Entity(repositoryClass: 'App\Repository\UserRepository')]
 #[ORM\Table(name: "users")]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
@@ -26,11 +26,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(type: 'string', length: 255, unique: true)]
     #[Assert\Email]
+    #[Assert\NotBlank]
     private string $email;
 
-    #[ORM\Column(type: 'string', length: 255)]
-    #[Assert\NotBlank]
-    private string $password;
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $password = null;
 
     #[ORM\Column(name: "profilePhoto", type: 'string', length: 255, nullable: true)]
     private ?string $profilePhoto = null;
@@ -41,8 +41,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: "joiningDate", type: 'date', nullable: true)]
     private ?\DateTimeInterface $joiningDate = null;
 
-    #[ORM\Column(name: "role", type: 'string', length: 20)]
+    #[ORM\Column(name: "role", type: "string", columnDefinition: "ENUM('RESPONSABLE_RH','CHEF_PROJET','EMPLOYEE','CONDIDAT')")]
     #[Assert\Choice(choices: ['RESPONSABLE_RH', 'CHEF_PROJET', 'EMPLOYEE', 'CONDIDAT'])]
+    #[Assert\NotBlank]
     private string $role;
 
     #[ORM\Column(name: "tt_restants", type: 'integer', nullable: true)]
@@ -57,14 +58,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: "num_tel", type: 'integer', nullable: true)]
     private ?int $num_tel = null;
 
-    #[ORM\Column(name: "gender", type: 'string', length: 8, nullable: true)]
+    #[ORM\Column(name: "gender", type: "string", columnDefinition: "ENUM('HOMME','FEMME')", nullable: true)]
     #[Assert\Choice(choices: ['HOMME', 'FEMME'])]
-    private ?string $gender = null;
+    private ?string $gender = 'HOMME';
 
-    #[ORM\Column(name: "birthdate_edited", type: 'boolean')]
+    #[ORM\Column(name: "birthdate_edited", type: 'boolean', nullable: true)]
     private bool $birthdate_edited = false;
 
-    #[ORM\Column(name: "first_login", type: 'boolean')]
+    #[ORM\Column(name: "first_login", type: 'boolean', nullable: true)]
     private bool $first_login = true;
 
     // === GETTERS & SETTERS ===
@@ -83,7 +84,22 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getPassword(): string { return $this->password; }
     public function setPassword(string $password): self { $this->password = $password; return $this; }
 
-    public function getProfilePhoto(): ?string { return $this->profilePhoto; }
+    public function getProfilePhoto(): ?string 
+    { 
+        if ($this->profilePhoto && !str_contains($this->profilePhoto, 'http://')) {
+            return 'http://localhost/evolvify/' . $this->profilePhoto;
+        }
+        return $this->profilePhoto; 
+    }
+    
+    public function getProfilePhotoFilename(): ?string
+    {
+        if ($this->profilePhoto && str_contains($this->profilePhoto, 'http://localhost/evolvify/')) {
+            return basename($this->profilePhoto);
+        }
+        return $this->profilePhoto;
+    }
+    
     public function setProfilePhoto(?string $profilePhoto): self { $this->profilePhoto = $profilePhoto; return $this; }
 
     public function getBirthdayDate(): ?\DateTimeInterface { return $this->birthdayDate; }

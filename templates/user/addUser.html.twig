@@ -1,74 +1,438 @@
+<!-- Add Employee Modal -->
 <div class="modal fade" id="addRowModal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header border-0">
-                <h5 class="modal-title">
-                    <span class="fw-mediumbold">Nouvel</span>
-                    <span class="fw-light"> Employé</span>
-                </h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <p class="small">Veuillez remplir tous les champs du formulaire</p>
-                <form id="addEmployeeForm">
-                    <div class="row">
-                        <div class="col-md-6 pe-0">
-                            <div class="form-group form-group-default">
-                                <label>Prénom</label>
-                                <input id="addFirstname" type="text" class="form-control" placeholder="Prénom"/>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group form-group-default">
-                                <label>Nom</label>
-                                <input id="addLastname" type="text" class="form-control" placeholder="Nom"/>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row mt-3">
-                        <div class="col-md-6 pe-0">
-                            <div class="form-group form-group-default">
-                                <label>Email</label>
-                                <input id="addEmail" type="email" class="form-control" placeholder="email@exemple.com"/>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group form-group-default">
-                                <label>Rôle</label>
-                                <select id="addRole" class="form-control">
-                                    <option value="RESPONSABLE">Responsable</option>
-                                    <option value="RH">RH</option>
-                                    <option value="CHEF_PROJET">Chef de projet</option>
-                                    <option value="EMPLOYEE">Employé</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row mt-3">
-                        <div class="col-md-6 pe-0">
-                            <div class="form-group form-group-default">
-                                <label>Date de naissance</label>
-                                <input id="addBirthdayDate" type="date" class="form-control"/>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group form-group-default">
-                                <label>Genre</label>
-                                <select id="addGender" class="form-control">
-                                    <option value="HOMME">Homme</option>
-                                    <option value="FEMME">Femme</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer border-0">
-                <button type="button" id="addRowButton" class="btn btn-primary">Ajouter</button>
-                <button type="button" class="btn btn-danger" data-dismiss="modal">Annuler</button>
-            </div>
-        </div>
-    </div>
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content">
+			<div class="modal-header border-0">
+				<h5 class="modal-title">
+					<span class="fw-mediumbold">Nouvel</span>
+					<span class="fw-light">
+						Employé</span>
+				</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				<form
+					id="employeeForm" method="POST" action="{{ path('app_admin_user_add') }}">
+					<!-- First & Last Name -->
+					<div class="row">
+						<div class="col-md-6 pe-0">
+							<div class="form-group form-group-default">
+								<label for="addFirstname">Prénom</label>
+								<input id="addFirstname" name="firstname" type="text" class="form-control" placeholder="Prénom" required/>
+								<div class="valid-feedback">
+									<i class="fas fa-check-circle"></i>
+									Prénom valide !
+								</div>
+								<div class="invalid-feedback">
+									Veuillez saisir un prénom.
+								</div>
+							</div>
+						</div>
+						<div class="col-md-6">
+							<div class="form-group form-group-default">
+								<label for="addLastname">Nom</label>
+								<input id="addLastname" name="lastname" type="text" class="form-control" placeholder="Nom" required/>
+								<div class="valid-feedback">
+									<i class="fas fa-check-circle"></i>
+									Nom valide !
+								</div>
+								<div class="invalid-feedback">
+									Veuillez saisir un nom.
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Email & Role -->
+					<div class="row mt-3">
+						<div class="col-md-6 pe-0">
+							<div class="form-group form-group-default">
+								<label for="addEmail">Email</label>
+								<input id="addEmail" name="email" type="email" class="form-control" placeholder="email@exemple.com" required/>
+								<div class="valid-feedback">
+									<i class="fas fa-check-circle"></i>
+									Email valide !
+								</div>
+								<div class="invalid-feedback">
+									Veuillez saisir une adresse email valide.
+								</div>
+							</div>
+						</div>
+						<div class="col-md-6">
+							<div class="form-group form-group-default">
+								<label for="addRole">Rôle</label>
+								<select id="addRole" name="role" class="form-control" required>
+									<option value="EMPLOYEE" selected>Employé</option>
+									<option value="CHEF_PROJET">Chef de projet</option>
+									<option value="RESPONSABLE_RH">Responsable RH</option>
+									<option value="CONDIDAT">Candidat</option>
+								</select>
+								<div class="valid-feedback">
+									<i class="fas fa-check-circle"></i>
+									Rôle valide !
+								</div>
+								<div class="invalid-feedback">
+									Veuillez sélectionner un rôle.
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Form buttons -->
+					<div class="modal-footer border-0 mt-3">
+						<button type="submit" id="addRowButton" class="btn btn-primary" disabled>Ajouter</button>
+						<button type="button" class="btn btn-danger" data-bs-dismiss="modal">Annuler</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
 </div>
+
+<!-- CSS pour la validation du formulaire -->
+<style>
+	/* Base styles for validation feedback */
+	.valid-feedback,
+	.invalid-feedback {
+		display: none;
+		margin-top: 0.25rem;
+		font-size: 0.875em;
+	}
+
+	.valid-feedback {
+		color: #198754;
+	}
+
+	.invalid-feedback {
+		color: #dc3545;
+	}
+
+	/* Styling for valid fields */
+	.form-control.is-valid {
+		border-color: #198754;
+		padding-right: calc(1.5em + 0.75rem);
+		background-image: url("data:image/svg+xml, %3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%23198754' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e");
+		background-repeat: no-repeat;
+		background-position: right calc(0.375em + 0.1875rem) center;
+		background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+	}
+
+	/* Styling for invalid fields */
+	.form-control.is-invalid {
+		border-color: #dc3545;
+		padding-right: calc(1.5em + 0.75rem);
+		background-image: url("data:image/svg+xml, %3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+		background-repeat: no-repeat;
+		background-position: right calc(0.375em + 0.1875rem) center;
+		background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+	}
+
+	/* Show validation feedback for valid/invalid fields */
+	.form-control.is-valid ~ .valid-feedback {
+		display: block;
+	}
+
+	.form-control.is-invalid ~ .invalid-feedback {
+		display: block;
+	}
+
+	/* Same styling for selects */
+	select.form-control.is-valid {
+		padding-right: 4.125rem;
+		background-position: right 1.75rem center, center right 2.25rem;
+		background-size: 16px 12px, calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+	}
+
+	select.form-control.is-invalid {
+		padding-right: 4.125rem;
+		background-position: right 1.75rem center, center right 2.25rem;
+		background-size: 16px 12px, calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+	}
+
+	/* Add focus styles */
+	.form-control:focus {
+		border-color: #86b7fe;
+		box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+	}
+
+	/* Animation for validation icons */
+	@keyframes validationAppear {
+		from {
+			opacity: 0;
+			transform: scale(0.8);
+		}
+		to {
+			opacity: 1;
+			transform: scale(1);
+		}
+	}
+
+	.valid-feedback,
+	.invalid-feedback {
+		animation: validationAppear 0.3s ease-in-out;
+	}
+
+	/* Main page alert animations */
+	@keyframes slideDown {
+		from {
+			transform: translateY(-20px);
+			opacity: 0;
+		}
+		to {
+			transform: translateY(0);
+			opacity: 1;
+		}
+	}
+
+	.alert-container .alert {
+		animation: slideDown 0.4s ease-out;
+	}
+
+	/* Button styles when disabled/enabled */
+	.btn-primary:disabled {
+		opacity: 0.65;
+		cursor: not-allowed;
+	}
+
+	.btn-primary:not(:disabled) {
+		transition: background-color 0.3s ease;
+	}
+
+	.btn-primary:not(:disabled):hover {
+		background-color: #0069d9;
+	}
+</style>
+
+<!-- JavaScript pour la validation -->
+<script>
+	document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('employeeForm');
+    const submitButton = document.getElementById('addRowButton');
+    const inputs = form.querySelectorAll('input, select');
+    const modal = document.getElementById('addRowModal');
+    const roleSelect = document.getElementById('addRole');
+    
+    // Set default role to "Employé"
+    if (roleSelect) {
+        // Set the default value
+        roleSelect.value = "EMPLOYEE";
+        
+        // Remove the "disabled" and "selected" attributes from the placeholder option
+        const placeholderOption = roleSelect.querySelector('option[value=""]');
+        if (placeholderOption) {
+            placeholderOption.removeAttribute('selected');
+            placeholderOption.removeAttribute('disabled');
+        }
+        
+        // Mark the "EMPLOYEE" option as selected
+        const employeeOption = roleSelect.querySelector('option[value="EMPLOYEE"]');
+        if (employeeOption) {
+            employeeOption.setAttribute('selected', 'selected');
+        }
+    }
+    
+    // Helper function to validate email
+    function isValidEmail(email) {
+        const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return regex.test(email);
+    }
+    
+    // Keep track of which fields have been touched by the user
+    const touchedFields = new Set();
+    
+    // Function to validate the form
+    function validateForm() {
+        let isValid = true;
+        
+        // Check each input
+        inputs.forEach(input => {
+            // Only validate fields that have been touched
+            if (!touchedFields.has(input.id)) {
+                return;
+            }
+            
+            // Reset validation state
+            input.classList.remove('is-valid', 'is-invalid');
+            
+            // Email specific validation
+            if (input.type === 'email') {
+                if (input.value.trim() && isValidEmail(input.value.trim())) {
+                    input.classList.add('is-valid');
+                } else if (input.value.trim()) {
+                    input.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    input.classList.add('is-invalid');
+                    isValid = false;
+                }
+                return;
+            }
+            
+            // Select element validation
+            if (input.tagName === 'SELECT') {
+                if (input.value && input.value !== '') {
+                    input.classList.add('is-valid');
+                } else {
+                    input.classList.add('is-invalid');
+                    isValid = false;
+                }
+                return;
+            }
+            
+            // Text input validation
+            if (input.value.trim()) {
+                input.classList.add('is-valid');
+            } else {
+                input.classList.add('is-invalid');
+                isValid = false;
+            }
+        });
+        
+        // Check all fields to determine if form is valid
+        // This ensures the button stays disabled until all fields are valid
+        let allFieldsValid = true;
+        inputs.forEach(input => {
+            if (input.type === 'email') {
+                if (!input.value.trim() || !isValidEmail(input.value.trim())) {
+                    allFieldsValid = false;
+                }
+            } else if (input.tagName === 'SELECT') {
+                if (!input.value || input.value === '') {
+                    allFieldsValid = false;
+                }
+            } else if (!input.value.trim()) {
+                allFieldsValid = false;
+            }
+        });
+        
+        // Enable/disable submit button based on form validity
+        submitButton.disabled = !allFieldsValid;
+        
+        return isValid;
+    }
+    
+    // Add event listeners to each input for real-time validation
+    inputs.forEach(input => {
+        // Mark field as touched on focus out (blur)
+        input.addEventListener('blur', function() {
+            touchedFields.add(input.id);
+            validateForm();
+        });
+        
+        // Validate on input change
+        input.addEventListener('input', function() {
+            if (touchedFields.has(input.id)) {
+                validateForm();
+            }
+        });
+        
+        // Validate on change (for select elements)
+        input.addEventListener('change', function() {
+            touchedFields.add(input.id);
+            validateForm();
+        });
+    });
+    
+    // Reset form and validation when modal is opened
+    modal.addEventListener('shown.bs.modal', function() {
+        touchedFields.clear();
+        inputs.forEach(input => {
+            input.classList.remove('is-valid', 'is-invalid');
+        });
+        
+        // Reset form fields
+        form.reset();
+        
+        // Set default role to "Employé"
+        if (roleSelect) {
+            roleSelect.value = "EMPLOYEE";
+        }
+        
+        // Initial check to handle the default values
+        validateForm();
+    });
+    
+    // Form submission with AJAX
+    form.addEventListener('submit', function(event) {
+        event.preventDefault();
+        
+        // Mark all fields as touched
+        inputs.forEach(input => {
+            touchedFields.add(input.id);
+        });
+        
+        // Final validation
+        if (!validateForm()) {
+            return false;
+        }
+        
+        // Get form data
+        const formData = new FormData(form);
+        
+        // Disable submit button during submission
+        submitButton.disabled = true;
+        
+        // AJAX form submission
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Close the modal
+            const modalInstance = bootstrap.Modal.getInstance(modal);
+            modalInstance.hide();
+            
+            // Show success message with SweetAlert
+            swal({
+                title: "Employé ajouté !",
+                text: `${formData.get('firstname')} ${formData.get('lastname')} a été ajouté avec succès.`,
+                icon: "success",
+                buttons: {
+                    confirm: {
+                        text: "OK",
+                        value: true,
+                        visible: true,
+                        className: "btn btn-success",
+                        closeModal: true
+                    }
+                }
+            }).then(() => {
+                // Reload the page to refresh the employee list
+                window.location.reload();
+            });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            
+            // Show error message with SweetAlert
+            swal({
+                title: "Erreur !",
+                text: "Une erreur s'est produite lors de l'ajout de l'employé.",
+                icon: "error",
+                buttons: {
+                    confirm: {
+                        text: "OK",
+                        value: true,
+                        visible: true,
+                        className: "btn btn-danger",
+                        closeModal: true
+                    }
+                }
+            });
+        })
+        .finally(() => {
+            // Re-enable submit button
+            submitButton.disabled = false;
+        });
+    });
+});
+</script>

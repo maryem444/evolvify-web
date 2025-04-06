@@ -20,6 +20,48 @@
 			margin-top: 20px;
 			justify-content: center;
 		}
+		/* Styling for the alert container */
+		.alert-container {
+			position: relative;
+			z-index: 1050;
+			padding: 1rem;
+		}
+
+		/* Animation for alert messages */
+		@keyframes slideDown {
+			from {
+				transform: translateY(-20px);
+				opacity: 0;
+			}
+			to {
+				transform: translateY(0);
+				opacity: 1;
+			}
+		}
+
+		.alert-container .alert {
+			animation: slideDown 0.4s ease-out;
+			margin-bottom: 0.75rem;
+			box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+			border-left: 4px solid;
+		}
+
+		.alert-success {
+			border-left-color: #198754 !important;
+		}
+
+		.alert-danger {
+			border-left-color: #dc3545 !important;
+		}
+
+		/* Auto-hide alerts after a delay */
+		.alert-container .alert.fade {
+			transition: opacity 0.35s linear, transform 0.35s ease-out;
+		}
+
+		.alert-container .alert.fade.show {
+			transition: opacity 0.15s linear, transform 0.15s ease-in;
+		}
 	</style>
 {% endblock %}
 
@@ -49,10 +91,29 @@ $('#addRowModal').modal('hide');
 $('#addEmployeeForm')[0].reset();
 });
 });
+
+document.addEventListener('DOMContentLoaded', function () { // Auto-hide alerts after 5 seconds
+const alerts = document.querySelectorAll('.alert');
+alerts.forEach(alert => {
+setTimeout(() => {
+const bsAlert = new bootstrap.Alert(alert);
+bsAlert.close();
+}, 5000);
+});
+
+// Optional: Code to handle page refresh after modal submission
+// This can help ensure flash messages are displayed
+if (window.location.search.includes('added=true')) {
+history.replaceState({}, document.title, window.location.pathname);
+}
+});
+
+
 	</script>
 {% endblock %}
 
 {% block content %}
+
 	<div class="col-md-12">
 		<div class="card">
 			<div class="card-header">
@@ -68,7 +129,7 @@ $('#addEmployeeForm')[0].reset();
 				class="card-body">
 				<!-- Inclusion du modal -->
 				{% include 'user/addUser.html.twig' %}
-
+				{% include 'user/editUser.html.twig' %}
 				<div class="table-responsive">
 					<table id="add-row" class="display table table-striped table-hover">
 						<thead>
@@ -109,9 +170,10 @@ $('#addEmployeeForm')[0].reset();
 									<td>{{ user.numTel ? user.numTel : 'N/A' }}</td>
 									<td>
 										<div class="form-button-action">
-											<button type="button" data-bs-toggle="tooltip" title="Edit" class="btn btn-link btn-primary btn-lg" data-original-title="Edit User" onclick="location.href='{{ path('user_edit', {'id': user.id}) }}'">
+											<button type="button" class="btn btn-link btn-primary btn-lg edit-user-btn" data-bs-toggle="modal" data-bs-target="#editUserModal" data-id="{{ user.id }}">
 												<i class="fa fa-edit"></i>
 											</button>
+
 											<button type="button" data-bs-toggle="tooltip" title="Delete" class="btn btn-link btn-danger" data-original-title="Remove" data-bs-toggle="modal" data-bs-target="#deleteModal{{ user.id }}">
 												<i class="fa fa-times"></i>
 											</button>
