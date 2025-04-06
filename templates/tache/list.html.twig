@@ -344,6 +344,13 @@
 				transform: translateY(0);
 			}
 		}
+
+		#searchInput {
+			padding: 10px;
+			border-radius: 6px;
+			border: 1px solid #ccc;
+			font-size: 14px;
+		}
 	</style>
 {% endblock %}
 
@@ -357,6 +364,11 @@
 					<i class="fas fa-plus"></i>
 					Ajouter Tâche
 				</button>
+			</div>
+		</div>
+		<div class="row mt-4 mb-3">
+			<div class="col-md-6">
+				<input type="text" id="searchInput" class="form-control" placeholder="🔍 Rechercher une tâche par nom ou statut...">
 			</div>
 		</div>
 
@@ -582,6 +594,23 @@ document.body.removeChild(confirmDialog);
 document.body.classList.remove('dialog-open');
 }
 });
+});
+});
+</script>
+<script>
+	document.getElementById("searchInput").addEventListener("keyup", function () {
+const input = this.value.toLowerCase();
+const rows = document.querySelectorAll("table tbody tr");
+
+rows.forEach(row => {
+const description = row.cells[0].textContent.toLowerCase();
+const status = row.cells[1].textContent.toLowerCase();
+
+if (description.includes(input) || status.includes(input)) {
+row.style.display = "";
+} else {
+row.style.display = "none";
+}
 });
 });
 </script>{% endblock %}

@@ -263,16 +263,13 @@
 
 		/* Style ajusté pour le bouton ajouter tâche */
 		.add-task-btn {
+			padding: 10px 15px;
 			background-color: #28a745;
 			color: white;
-			padding: 10px 15px;
-			border-radius: 5px;
+			border-radius: 6px;
 			text-decoration: none;
 			font-weight: bold;
-			display: inline-block;
-			margin-left: 1080px;
-			margin-bottom: 30px;
-			margin-top: 20px;
+
 		}
 		.add-task-btn:hover {
 			background-color: #218838;
@@ -371,15 +368,44 @@
 			color: black; /* Définir la couleur du texte à noir */
 			font-weight: bold; /* Facultatif: ajouter du poids pour rendre le texte plus visible */
 		}
+		#searchInput {
+			padding: 10px;
+			border-radius: 6px;
+			border: 1px solid #ccc;
+			font-size: 14px;
+			width: 100%;
+		}
+		.header-container {
+			display: flex;
+			flex-direction: column;
+			margin-bottom: 20px;
+		}
+
+		.top-controls {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-top: 10px;
+		}
+
+		.search-container {
+			width: 60%;
+		}
 	</style>
 {% endblock %}
 
 {% block content %}
 	<div class="container mt-4">
 
-		<h1>Projet :{{ projet.name }}</h1>
-		<a href="#" class="add-task-btn" onclick="openModal()">+ Ajouter Tâche</a>
-
+		<div class="header-container">
+			<h1>Projet :{{ projet.name }}</h1>
+			<div class="top-controls">
+				<div class="search-container">
+					<input type="text" id="searchInput" class="form-control" placeholder="🔍 Rechercher une tâche par nom ou statut...">
+				</div>
+				<a href="#" class="add-task-btn" onclick="openModal()">+ Ajouter Tâche</a>
+			</div>
+		</div>
 
 		<div class="kanban-board">
 			{% for status, columnClass in {'TO_DO': 'to-do', 'IN_PROGRESS': 'in-progress', 'DONE': 'done', 'CANCELED': 'canceled'} %}
@@ -667,4 +693,45 @@ document.body.classList.remove('dialog-open');
 });
 });
 	</script>
+	<script>
+		document.addEventListener('DOMContentLoaded', function () {
+const searchInput = document.getElementById('searchInput');
+
+searchInput.addEventListener('input', function () {
+const searchTerm = this.value.toLowerCase();
+const taskCards = document.querySelectorAll('.task-card');
+
+taskCards.forEach(function (card) {
+const description = card.querySelector('h5').textContent.toLowerCase();
+const status = card.closest('.kanban-column').querySelector('.kanban-column-header').textContent.toLowerCase();
+const priority = card.querySelector('[class^="priority-"]').textContent.toLowerCase();
+const employeeId = card.querySelector('p:nth-of-type(2)').textContent.toLowerCase();
+
+// Check if the card matches the search term
+const isMatch = description.includes(searchTerm) || status.includes(searchTerm) || priority.includes(searchTerm) || employeeId.includes(searchTerm);
+
+// Show or hide the card based on the search result
+if (isMatch) {
+card.style.display = '';
+} else {
+card.style.display = 'none';
+}
+});
+
+// Check if columns are empty and add placeholder message if needed
+document.querySelectorAll('.kanban-column-content').forEach(column => {
+const visibleCards = column.querySelectorAll('.task-card[style="display: none;"]').length;
+const totalCards = column.querySelectorAll('.task-card').length;
+
+// If all cards are hidden but column had cards initially
+if (visibleCards === totalCards && totalCards > 0) {
+column.classList.add('empty-column');
+} else {
+column.classList.remove('empty-column');
+}
+});
+});
+});
+	</script>
+
 {% endblock %}

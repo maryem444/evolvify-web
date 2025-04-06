@@ -11,6 +11,7 @@ use App\Repository\ProjetRepository;
 use App\Repository\TacheRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
+use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,8 +20,11 @@ use Symfony\Component\Routing\Annotation\Route;
 class ProjetController extends AbstractController
 {
     #[Route('/projets', name: 'projets_list')]
-    public function listProjets(Request $request, ProjetRepository $projetRepository): Response
-    {
+    public function listProjets(
+        Request $request,
+        ProjetRepository $projetRepository,
+        PaginatorInterface $paginator
+    ): Response {
         // Création du formulaire de filtre
         $filterForm = $this->createForm(ProjetFilterType::class);
         $filterForm->handleRequest($request);
@@ -45,14 +49,22 @@ class ProjetController extends AbstractController
             }
         }
 
-        // Utilisation de la méthode searchProjets pour filtrer les projets
-        $projets = $projetRepository->searchProjets($filters);
+        // On suppose que searchProjets retourne un QueryBuilder
+        $queryBuilder = $projetRepository->searchProjets($filters);
+
+        // Application de la pagination
+        $pagination = $paginator->paginate(
+            $queryBuilder,                           // Le QueryBuilder
+            $request->query->getInt('page', 1),      // Page courante (défaut : 1)
+            4                                       // Nombre d’éléments par page
+        );
 
         return $this->render('projets/list.html.twig', [
-            'projets' => $projets,
+            'projets' => $pagination,
             'filterForm' => $filterForm->createView(),
         ]);
     }
+
 
     #[Route('/projetAdd', name: 'projet_add')]
     public function addProjet(Request $request, ManagerRegistry $doctrine): Response

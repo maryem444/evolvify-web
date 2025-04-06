@@ -200,57 +200,74 @@
 								#{{ projet.id }}
 							</div>
 						</div>
-					</div>
-				</div>
-
-				{% if projet.uploadedFiles %}
-					<div class="project-section">
-						<div class="project-section-title">Document joint</div>
-						<div class="file-container">
-							{% set fileExtension = projet.uploadedFiles|split('.')|last|lower %}
-
-							{% if fileExtension == 'pdf' %}
-								<i class="fas fa-file-pdf file-icon" style="color: #F44336;"></i>
-							{% elseif fileExtension in ['jpg', 'jpeg', 'png'] %}
-								<i class="fas fa-file-image file-icon" style="color: #4CAF50;"></i>
-							{% else %}
-								<i class="fas fa-file file-icon" style="color: #2196F3;"></i>
-							{% endif %}
-
+						<div class="project-info-item">
+							<i class="fas fa-user" style="color: #3F51B5;"></i>
 							<div>
-								<div style="font-weight: bold; margin-bottom: 5px;">Document attaché</div>
-								<a href="{{ asset(projet.uploadedFiles) }}" target="_blank" class="btn btn-sm btn-primary">
-									<i class="fas fa-download"></i>
-									Télécharger
-								</a>
+								<strong>Assigné à :</strong><br>
+								{% if projet.assignedUsers|length > 0 %}
+									{% for user in projet.assignedUsers %}
+										{{ user.firstName }}
+										{{ user.lastName }}
 
-								{% if fileExtension in ['jpg', 'jpeg', 'png'] %}
-									<div style="margin-top: 15px;">
-										<img src="{{ asset(projet.uploadedFiles) }}" alt="Aperçu de l'image" style="max-width: 100%; max-height: 300px; border-radius: 4px;">
-									</div>
+										{% if not loop.last %},
+										{% endif %}
+									{% endfor %}
+								{% else %}
+									Aucun utilisateur assigné
 								{% endif %}
 							</div>
 						</div>
+
 					</div>
-				{% endif %}
 
-				<div class="actions-container">
-					<a href="{{ path('projets_cards') }}" class="btn-return">
-						<i class="fas fa-arrow-left"></i>
-						Retour à la liste
-					</a>
+					{% if projet.uploadedFiles %}
+						<div class="project-section">
+							<div class="project-section-title">Document joint</div>
+							<div class="file-container">
+								{% set fileExtension = projet.uploadedFiles|split('.')|last|lower %}
 
-					<a href="{{ path('projet_edit_card', {'id': projet.id}) }}" class="btn-edit">
-						<i class="fas fa-edit"></i>
-						Modifier
-					</a>
+								{% if fileExtension == 'pdf' %}
+									<i class="fas fa-file-pdf file-icon" style="color: #F44336;"></i>
+								{% elseif fileExtension in ['jpg', 'jpeg', 'png'] %}
+									<i class="fas fa-file-image file-icon" style="color: #4CAF50;"></i>
+								{% else %}
+									<i class="fas fa-file file-icon" style="color: #2196F3;"></i>
+								{% endif %}
 
-					<a href="{{ path('kanban_tasks_list', {'id': projet.id}) }}" class="btn-tasks">
-						<i class="fas fa-tasks"></i>
-						Voir tâches
-					</a>
+								<div>
+									<div style="font-weight: bold; margin-bottom: 5px;">Document attaché</div>
+									<a href="{{ asset(projet.uploadedFiles) }}" target="_blank" class="btn btn-sm btn-primary">
+										<i class="fas fa-download"></i>
+										Télécharger
+									</a>
+
+									{% if fileExtension in ['jpg', 'jpeg', 'png'] %}
+										<div style="margin-top: 15px;">
+											<img src="{{ asset(projet.uploadedFiles) }}" alt="Aperçu de l'image" style="max-width: 100%; max-height: 300px; border-radius: 4px;">
+										</div>
+									{% endif %}
+								</div>
+							</div>
+						</div>
+					{% endif %}
+
+					<div class="actions-container">
+						<a href="{{ path('projets_cards') }}" class="btn-return">
+							<i class="fas fa-arrow-left"></i>
+							Retour à la liste
+						</a>
+
+						<a href="{{ path('projet_edit_card', {'id': projet.id}) }}" class="btn-edit">
+							<i class="fas fa-edit"></i>
+							Modifier
+						</a>
+
+						<a href="{{ path('kanban_tasks_list', {'id': projet.id}) }}" class="btn-tasks">
+							<i class="fas fa-tasks"></i>
+							Voir tâches
+						</a>
+					</div>
 				</div>
 			</div>
 		</div>
-	</div>
-{% endblock %}
+	{% endblock %}
