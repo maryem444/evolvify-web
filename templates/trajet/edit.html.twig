@@ -1,0 +1,52 @@
+<!-- Popup de modification de trajet -->
+<div class="modal fade" id="EditModal" tabindex="-1" aria-labelledby="editTrajetLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editTrajetLabel">Modifier le Trajet</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editTrajetForm" method="POST">
+                    <input type="hidden" name="id_T" id="id_T">
+                    <div class="mb-3">
+                        <label for="point_dep" class="form-label">Point de départ</label>
+                        <input type="text" class="form-control" name="point_dep" id="point_dep" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="point_arr" class="form-label">Point d'arrivée</label>
+                        <input type="text" class="form-control" name="point_arr" id="point_arr" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="distance" class="form-label">Distance (en km)</label>
+                        <input type="number" class="form-control" name="distance" id="distance" step="0.01" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="durée_estimé" class="form-label">Durée estimée</label>
+                        <input type="time" class="form-control" name="durée_estimé" id="durée_estimé" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_moyen" class="form-label">Moyen de Transport</label>
+                        <select name="id_moyen" id="id_moyen" class="form-control" required>
+                            <!-- Options will be populated dynamically via JavaScript -->
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_employe" class="form-label">Employé</label>
+                        <input type="number" class="form-control" name="id_employe" id="id_employe" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Statut</label>
+                        <select name="status" id="status" class="form-control">
+                            <option value="PLANIFIE">PLANIFIE</option>
+                            <option value="EN_COURS">En Cours</option>
+                            <option value="TERMINE">Terminé</option>
+                            <option value="ANNULE">Annulé</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Modifier</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

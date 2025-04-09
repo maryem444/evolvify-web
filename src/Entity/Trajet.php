@@ -1,95 +1,79 @@
 <?php
 
 namespace App\Entity;
-use App\Entity\StatusTrajet;
-use App\Repository\TrajetRepositoryRepository;
 
+use App\Entity\StatusTrajet;
+use App\Repository\TrajetRepository;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: TrajetRepository::class)]
 #[ORM\Table(name: 'trajet')]
 class Trajet
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
-    private int $idT;
+    private int $id_T;
 
     #[ORM\Column(type: 'string', length: 255)]
-    private string $pointDep;
+    private string $point_dep;
 
     #[ORM\Column(type: 'string', length: 255)]
-    private string $pointArr;
+    private string $point_arr;
 
     #[ORM\Column(type: 'float')]
     private float $distance;
 
     #[ORM\Column(type: 'time')]
-    private \DateTimeInterface $duréeEstimé;
+    private \DateTimeInterface $durée_estimé;
+
+    #[ORM\ManyToOne(targetEntity: MoyenTransport::class, inversedBy: 'trajets')]
+    #[ORM\JoinColumn(name: "id_moyen", referencedColumnName: "id_moyen", nullable: false)]
+    private ?MoyenTransport $moyenTransport = null;
 
     #[ORM\Column(type: 'integer')]
-    private int $idMoyen;
-
-    #[ORM\Column(type: 'integer')]
-    private int $idEmploye;
+    private int $id_employe;
 
     #[ORM\Column(type: 'string', enumType: StatusTrajet::class)]
     private ?StatusTrajet $status = null;
 
-
-    #[ORM\ManyToOne(targetEntity: MoyenTransport::class, inversedBy: 'trajets')]
-    #[ORM\JoinColumn(name: "idMoyen", referencedColumnName: "idMoyen", nullable: false)]
-    private ?MoyenTransport $moyenTransport = null;
-
-    public function getMoyenTransport(): ?MoyenTransport
+    // Getter and Setter for id_T
+    public function getId_T(): int
     {
-        return $this->moyenTransport;
+        return $this->id_T;
     }
 
-    public function setMoyenTransport(?MoyenTransport $moyenTransport): static
+    public function setId_T(int $id_T): self
     {
-        $this->moyenTransport = $moyenTransport;
+        $this->id_T = $id_T;
         return $this;
     }
 
-    // Getter and setter methods for the properties
-
-    public function getIdT(): int
+    // Getter and Setter for point_dep
+    public function getPoint_dep(): string
     {
-        return $this->idT;
+        return $this->point_dep;
     }
 
-    public function setIdT(int $idT): self
+    public function setPoint_dep(string $point_dep): self
     {
-        $this->idT = $idT;
-
+        $this->point_dep = $point_dep;
         return $this;
     }
 
-    public function getPointDep(): string
+    // Getter and Setter for point_arr
+    public function getPoint_arr(): string
     {
-        return $this->pointDep;
+        return $this->point_arr;
     }
 
-    public function setPointDep(string $pointDep): self
+    public function setPoint_arr(string $point_arr): self
     {
-        $this->pointDep = $pointDep;
-
+        $this->point_arr = $point_arr;
         return $this;
     }
 
-    public function getPointArr(): string
-    {
-        return $this->pointArr;
-    }
-
-    public function setPointArr(string $pointArr): self
-    {
-        $this->pointArr = $pointArr;
-
-        return $this;
-    }
-
+    // Getter and Setter for distance
     public function getDistance(): float
     {
         return $this->distance;
@@ -102,51 +86,51 @@ class Trajet
         return $this;
     }
 
-    public function getDuréeEstimé(): \DateTimeInterface
+    // Getter and Setter for durée_estimé
+    public function getDurée_estimé(): \DateTimeInterface
     {
-        return $this->duréeEstimé;
+        return $this->durée_estimé;
     }
 
-    public function setDuréeEstimé(\DateTimeInterface $duréeEstimé): self
+    public function setDurée_estimé(\DateTimeInterface $durée_estimé): self
     {
-        $this->duréeEstimé = $duréeEstimé;
-
+        $this->durée_estimé = $durée_estimé;
         return $this;
     }
 
-    public function getIdMoyen(): int
+    // Getter and Setter for moyenTransport
+    public function getMoyenTransport(): ?MoyenTransport
     {
-        return $this->idMoyen;
+        return $this->moyenTransport;
     }
 
-    public function setIdMoyen(int $idMoyen): self
+    public function setMoyenTransport(MoyenTransport $moyenTransport): static
     {
-        $this->idMoyen = $idMoyen;
-
+        $this->moyenTransport = $moyenTransport;
         return $this;
     }
 
-    public function getIdEmploye(): int
+    // Getter and Setter for id_employe
+    public function getId_employe(): int
     {
-        return $this->idEmploye;
+        return $this->id_employe;
     }
 
-    public function setIdEmploye(int $idEmploye): self
+    public function setId_employe(int $id_employe): self
     {
-        $this->idEmploye = $idEmploye;
-
+        $this->id_employe = $id_employe;
         return $this;
     }
 
+    // Getter and Setter for status
     public function getStatus(): ?StatusTrajet
     {
         return $this->status;
     }
 
-    public function setStatus(StatusTrajet $status): static  // Change type hint to StatusTransport
+    public function setStatus(StatusTrajet $status): static
     {
         $this->status = $status;
         return $this;
     }
-
 }

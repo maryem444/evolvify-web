@@ -5,6 +5,11 @@
 {% block content %}
     <div class="container-fluid mt-4">
         <h1 class="mb-4">Liste des Moyens de Transport</h1>
+         <!-- Affichage des statistiques -->
+        <div class="alert alert-info">
+            <p><strong>Total des moyens de transport :</strong> {{ totalMoyens }}</p>
+            <p><strong>Moyens de transport actifs :</strong> {{ activeMoyens }}</p>
+        </div>
 
         {% if moyentransport is not empty %}
             <div class="table-responsive">

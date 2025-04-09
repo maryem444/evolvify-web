@@ -2,6 +2,7 @@
 namespace App\Repository;
 
 use App\Entity\MoyenTransport;
+use App\Entity\StatusTransport;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -25,7 +26,8 @@ class MoyenTransportRepository extends ServiceEntityRepository
     public function findAllMoyenTransport()
     {
         return $this->createQueryBuilder('m')
-            ->orderBy('m.id_moyen', 'ASC')
+            ->where('m.status = :status')
+            ->setParameter('status', StatusTransport::DISPONIBLE)
             ->getQuery()
             ->getResult();
     }

@@ -2,8 +2,10 @@
 namespace App\Entity;
 
 use App\Entity\StatusTransport;
+use App\Entity\Trajet;
 use App\Repository\MoyenTransportRepository;
-
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: MoyenTransportRepository::class)]
@@ -27,7 +29,13 @@ class MoyenTransport
     #[ORM\Column(type: 'string', enumType: StatusTransport::class)]
     private ?StatusTransport $status = null;
     
+    #[ORM\OneToMany(targetEntity: Trajet::class, mappedBy: 'moyenTransport')]
+    private Collection $trajets;
     
+    public function __construct()
+    {
+        $this->trajets = new ArrayCollection();
+    }
 
     public function getId_moyen(): ?int
     {
@@ -72,12 +80,41 @@ class MoyenTransport
         return $this->status;
     }
 
-    public function setStatus(StatusTransport $status): static  // Change type hint to StatusTransport
+    public function setStatus(StatusTransport $status): static
     {
         $this->status = $status;
         return $this;
     }
 
+    /**
+     * @return Collection<int, Trajet>
+     */
+    public function getTrajets(): Collection
+    {
+        return $this->trajets;
+    }
+
+    public function addTrajet(Trajet $trajet): self
+    {
+        if (!$this->trajets->contains($trajet)) {
+            $this->trajets->add($trajet);
+            $trajet->setMoyenTransport($this);
+        }
+        
+        return $this;
+    }
+
+    public function removeTrajet(Trajet $trajet): self
+    {
+        if ($this->trajets->removeElement($trajet)) {
+            // set the owning side to null (unless already changed)
+            if ($trajet->getMoyenTransport() === $this) {
+                //$trajet->setMoyenTransport(null);
+            }
+        }
+        
+        return $this;
+    }
   
     public function __toString(): string
     {

@@ -1,63 +1,84 @@
 <!-- Popup d'ajout d'abonnement -->
 <div class="modal fade" id="ajoutAbonnementModal" tabindex="-1" aria-labelledby="ajoutAbonnementLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="ajoutAbonnementLabel">Ajouter un Abonnement</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="ajoutAbonnementForm">
-                    <div class="mb-3">
-                        <label for="type_Ab" class="form-label">Type</label>
-                        <select id="type_Ab" name="type_Ab" class="form-control">
-                            <option value="Mensuel">Mensuel</option>
-                            <option value="Trimestriel">Trimestriel</option>
-                            <option value="Annuel">Annuel</option>
-                        </select>
+                <div class="row">
+                    <!-- Colonne du formulaire (à gauche) -->
+                    <div class="col-md-8">
+                        <form id="ajoutAbonnementForm">
+                            <!-- Vos champs de formulaire existants -->
+                            <div class="mb-3">
+                                <label for="type_Ab" class="form-label">Type</label>
+                                <select id="type_Ab" name="type_Ab" class="form-control">
+                                    <option value="Mensuel">Mensuel</option>
+                                    <option value="Trimestriel">Trimestriel</option>
+                                    <option value="Annuel">Annuel</option>
+                                </select>
+                            </div>
+
+                            <!-- Date de début automatiquement remplie -->
+                            <div class="mb-3">
+                                <label for="date_debut" class="form-label">Date de Début</label>
+                                <input type="text" id="date_debut" name="date_debut" class="form-control" readonly>
+                            </div>
+
+                            <!-- Date d'expiration -->
+                            <div class="mb-3">
+                                <label for="date_exp" class="form-label">Date d'Expiration</label>
+                                <input type="date" id="date_exp" name="date_exp" class="form-control" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="prix" class="form-label">Prix</label>
+                                <input type="number" id="prix" name="prix" class="form-control" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="id_employe" class="form-label">Employé</label>
+                                <input type="number" id="id_employe" name="id_employe" class="form-control" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="status" class="form-label">Statut</label>
+                                <select id="status" name="status" class="form-control">
+                                    <option value="ACTIF">ACTIF</option>
+                                    <option value="EXPIRE">EXPIRE</option>
+                                    <option value="SUSPENDU">SUSPENDU</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" class="btn btn-success">Enregistrer</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        </form>
                     </div>
 
-                    <!-- Date de début automatiquement remplie -->
-                    <div class="mb-3">
-                        <label for="date_debut" class="form-label">Date de Début</label>
-                        <input type="text" id="date_debut" name="date_debut" class="form-control" readonly>
-                    </div>
-
-                    <!-- Date d'expiration -->
-                    <div class="mb-3">
-                        <label for="date_exp" class="form-label">Date d'Expiration</label>
-                        <input type="date" id="date_exp" name="date_exp" class="form-control" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="prix" class="form-label">Prix</label>
-                        <input type="number" id="prix" name="prix" class="form-control" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="id_employe" class="form-label">Employé</label>
-                        <input type="number" id="id_employe" name="id_employe" class="form-control" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="status" class="form-label">Statut</label>
-                        <select id="status" name="status" class="form-control">
-                            <option value="ACTIF">ACTIF</option>
-                            <option value="EXPIRE">EXPIRE</option>
-                            <option value="SUSPENDU">SUSPENDU</option>
-                        </select>
-                    </div>
-
-                    <button type="submit" class="btn btn-success">Enregistrer</button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                </form>
+                    <!-- Colonne pour le QR code (à droite) -->
+                    <div class="col-md-4">
+    <div class="card p-3">
+        <h6 class="text-center mb-2">QR Code Abonnement</h6>
+        <div id="qrcode" class="text-center"></div>
+        <p class="text-center small mt-2">Ce QR code contient les informations de l'abonnement</p>
+        <button id="downloadQRCode" class="btn btn-primary mt-2">
+            <i class="fas fa-download"></i> Télécharger QR Code
+        </button>
+    </div>
+</div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Inclure la bibliothèque QRCode.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
 <script>
-// Fonction pour définir la date du jour au format souhaité
+// Votre script existant
 function setCurrentDate() {
     // Obtenir la date actuelle
     const currentDate = new Date();
@@ -102,6 +123,54 @@ function setCurrentDate() {
     });
 }
 
+// Variable pour stocker l'instance QR code
+let qrCodeInstance = null;
+
+// Fonction pour générer le QR code avec les données actuelles du formulaire
+function generateQRCode() {
+    // Récupérer les valeurs du formulaire
+    const type = document.getElementById('type_Ab').value;
+    const dateDebut = document.getElementById('date_debut').value;
+    const dateExp = document.getElementById('date_exp').value;
+    const prix = document.getElementById('prix').value;
+    const idEmploye = document.getElementById('id_employe').value;
+    const status = document.getElementById('status').value;
+    
+   // Créer un objet avec les données
+    const abonnementData = {
+        type: type,
+        dateDebut: dateDebut,
+        dateExp: dateExp,
+        prix: prix,
+        idEmploye: idEmploye,
+        status: status
+    };
+    
+    // Créer une URL avec les paramètres
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(abonnementData)) {
+        params.append(key, value);
+    }
+    
+    
+     // Construire l'URL (remplacez example.com par votre domaine réel)
+    const url = `https://example.com/abonnement-info?${params.toString()}`;
+    
+    // Effacer le QR code existant s'il y en a un
+    const qrContainer = document.getElementById('qrcode');
+    qrContainer.innerHTML = '';
+
+    qrCodeInstance = new QRCode(qrContainer, {
+    text: url, // au lieu de qrText
+    width: 180,
+    height: 180,
+    colorDark: "#000000",
+    colorLight: "#ffffff",
+    correctLevel: QRCode.CorrectLevel.H
+});
+
+}
+
 // Exécuter immédiatement et lors de l'ouverture de la modal
 document.addEventListener('DOMContentLoaded', function() {
     // Exécuter 100ms après le chargement pour laisser le temps aux composants de s'initialiser
@@ -112,7 +181,10 @@ document.addEventListener('DOMContentLoaded', function() {
     if (modalElement) {
         modalElement.addEventListener('shown.bs.modal', function() {
             // Exécuter avec un petit délai pour s'assurer que tous les éléments sont initialisés
-            setTimeout(setCurrentDate, 100);
+            setTimeout(() => {
+                setCurrentDate();
+                generateQRCode();
+            }, 100);
         });
     }
     
@@ -121,8 +193,18 @@ document.addEventListener('DOMContentLoaded', function() {
     modalTriggers.forEach(trigger => {
         trigger.addEventListener('click', function() {
             // Exécuter avec un délai légèrement plus long pour l'ouverture de la modal
-            setTimeout(setCurrentDate, 300);
+            setTimeout(() => {
+                setCurrentDate();
+                generateQRCode();
+            }, 300);
         });
+    });
+    
+    // Mettre à jour le QR code chaque fois qu'un champ du formulaire change
+    const formInputs = document.querySelectorAll('#ajoutAbonnementForm input, #ajoutAbonnementForm select');
+    formInputs.forEach(input => {
+        input.addEventListener('change', generateQRCode);
+        input.addEventListener('input', generateQRCode);
     });
 });
 
@@ -147,6 +229,90 @@ document.getElementById('ajoutAbonnementForm').addEventListener('submit', functi
     })
     .catch(error => {
         console.error('Erreur:', error);
+    });
+});
+// Fonction pour télécharger le QR Code
+function setupQRCodeDownload() {
+    const downloadBtn = document.getElementById('downloadQRCode');
+    if (!downloadBtn) return;
+    
+    downloadBtn.addEventListener('click', function() {
+        // Vérifier si le QR code existe
+        const qrCodeImg = document.querySelector('#qrcode img');
+        if (!qrCodeImg) {
+            alert('Veuillez d\'abord générer un QR code');
+            return;
+        }
+        
+        // Créer un canvas pour obtenir l'image
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.width = qrCodeImg.width;
+        canvas.height = qrCodeImg.height;
+        
+        // Dessiner l'image sur le canvas
+        context.drawImage(qrCodeImg, 0, 0);
+        
+        // Obtenir l'URL de données du canvas
+        const dataURL = canvas.toDataURL('image/png');
+        
+        // Créer un lien de téléchargement
+        const downloadLink = document.createElement('a');
+        downloadLink.href = dataURL;
+        
+        // Obtenir des informations pour le nom du fichier
+        const type = document.getElementById('type_Ab').value;
+        const dateDebut = document.getElementById('date_debut').value.replace(/\//g, '-');
+        
+        // Donner un nom au fichier
+        downloadLink.download = `QRCode_Abonnement_${type}_${dateDebut}.png`;
+        
+        // Déclencher le téléchargement
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+    });
+}
+
+// Ajouter l'appel à cette fonction dans votre code d'initialisation
+document.addEventListener('DOMContentLoaded', function() {
+    // Exécuter 100ms après le chargement pour laisser le temps aux composants de s'initialiser
+    setTimeout(setCurrentDate, 100);
+    
+    // Observer l'ouverture de la modal
+    const modalElement = document.getElementById('ajoutAbonnementModal');
+    if (modalElement) {
+        modalElement.addEventListener('shown.bs.modal', function() {
+            // Exécuter avec un petit délai pour s'assurer que tous les éléments sont initialisés
+            setTimeout(() => {
+                setCurrentDate();
+                generateQRCode();
+                setupQRCodeDownload(); // Nouvelle fonction
+            }, 100);
+        });
+    }
+    
+    // Surveiller également le clic sur le bouton qui ouvre la modal
+    const modalTriggers = document.querySelectorAll('[data-bs-toggle="modal"][data-bs-target="#ajoutAbonnementModal"]');
+    modalTriggers.forEach(trigger => {
+        trigger.addEventListener('click', function() {
+            // Exécuter avec un délai légèrement plus long pour l'ouverture de la modal
+            setTimeout(() => {
+                setCurrentDate();
+                generateQRCode();
+                setupQRCodeDownload(); // Nouvelle fonction
+            }, 300);
+        });
+    });
+    
+    // Configuration du téléchargement QR Code
+    setupQRCodeDownload();
+    
+    // Mettre à jour le QR code chaque fois qu'un champ du formulaire change
+    const formInputs = document.querySelectorAll('#ajoutAbonnementForm input, #ajoutAbonnementForm select');
+    formInputs.forEach(input => {
+        input.addEventListener('change', generateQRCode);
+        input.addEventListener('input', generateQRCode);
     });
 });
 </script>
