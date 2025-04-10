@@ -4,7 +4,7 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\DBAL\Types\Types;
-use App\Enum\StatusEntretien;
+use App\Entity\StatusEntretien;
 #[ORM\Entity]
 class Entretien
 {
@@ -27,6 +27,7 @@ class Entretien
     #[ORM\Column(type: Types::DATE_MUTABLE)]
     private ?\DateTimeInterface $datePostulation = null;
 
+
     #[ORM\Column(length: 100, nullable: true)]
     private ?string $nomCandidat = null;
 
@@ -35,6 +36,10 @@ class Entretien
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $titreOffre = null;
+
+
+
+
 
     // Getters et Setters
     public function getIdListOffre(): ?int
@@ -64,12 +69,12 @@ class Entretien
         return $this;
     }
 
-    public function getStatus(): Status
+    public function getStatus(): StatusEntretien
     {
         return $this->status;
     }
 
-    public function setStatus(Status $status): self
+    public function setStatus(StatusEntretien $status): self
     {
         $this->status = $status;
         return $this;

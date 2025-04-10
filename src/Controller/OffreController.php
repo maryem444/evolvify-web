@@ -3,6 +3,7 @@
 namespace App\Controller;
 use App\Entity\Offre;
 use App\Form\OffreType;
+use App\Entity\Status;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -37,10 +38,7 @@ class OffreController extends AbstractController
             $manager->persist($Offre);
             $manager->flush();
             // 🔥 Redirection vers base.html.twig après soumission
-            return $this->render('Recrutement/Offre.html.twig', [
-                'message' => 'Offre ajoutée avec succès !',
-            ]);
-            
+            return $this->redirectToRoute('app_Offre');
         }
         return $this->render('Recrutement/addOffre.html.twig',[
             
@@ -51,8 +49,8 @@ class OffreController extends AbstractController
 
     }
     #[Route('/deleteOffre/{idOffre}', name: 'delete_Offre')]
-public function deleteOffre(ManagerRegistry $mr, OffreRepository $repo, $idOffre): Response
-{
+    public function deleteOffre(ManagerRegistry $mr, OffreRepository $repo, $idOffre): Response
+    {
     $manager = $mr->getManager();
     $offre = $repo->find($idOffre);
 
@@ -64,10 +62,11 @@ public function deleteOffre(ManagerRegistry $mr, OffreRepository $repo, $idOffre
     $manager->flush();
 
     return $this->redirectToRoute("app_Offre");
-}
-#[Route('/updateOffre/{idOffre}', name: 'offre_update')]
-public function updateOffre(ManagerRegistry $mr, OffreRepository $repo, $idOffre, Request $request): Response
-{
+    }
+
+    #[Route('/updateOffre/{idOffre}', name: 'offre_update')]
+    public function updateOffre(ManagerRegistry $mr, OffreRepository $repo, $idOffre, Request $request): Response
+    {
     $manager = $mr->getManager();
 
     // Trouver l'offre par son ID
@@ -94,8 +93,25 @@ public function updateOffre(ManagerRegistry $mr, OffreRepository $repo, $idOffre
     return $this->render('Recrutement/addOffre.html.twig', [
         'form' => $form->createView(),
     ]);
+
+    }
+
+    #[Route('/recherche', name: 'recherche_offres', methods: ['GET'])]
+    public function search(Request $request, OffreRepository $offreRepository): Response
+{
+    $keyword = strtolower(trim($request->query->get('keyword', '')));
+
+    if (empty($keyword)) {
+        $offres = $offreRepository->findAll();
+    } else {
+        $offres = $offreRepository->search($keyword); // Utilise la méthode search du repository
+    }
+
+    return $this->render('Recrutement/Offre.html.twig', [
+        'offres' => $offres,
+        'keyword' => $keyword,
+    ]);
 }
 
-   
 
 }
