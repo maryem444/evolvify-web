@@ -21,6 +21,7 @@ class OffreType extends AbstractType
         ->add('description', TextareaType::class)  
         ->add('datePublication', DateType::class, [
             'widget' => 'single_text',  
+            
         ])
         ->add('dateExpiration', DateType::class, [
             'widget' => 'single_text',  
@@ -33,7 +34,7 @@ class OffreType extends AbstractType
             'label' => 'Statut'
         ])
         
-        ->add("Add", SubmitType::class)
+        ->add("Confirmer", SubmitType::class)
     ;
     }
 

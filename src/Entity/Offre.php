@@ -1,7 +1,9 @@
 <?php
 
 namespace App\Entity;
-
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
+use Symfony\Component\Validator\Constraints as Assert;
 use Doctrine\ORM\Mapping as ORM;
 use DateTimeInterface;
 use App\Entity\Status;
@@ -11,24 +13,41 @@ class Offre
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column]
-    private ?int $idOffre = null;
+    #[ORM\Column(type: 'integer')]
+    private ?int $idOffre;
 
-    
+    #[Assert\NotBlank(message: "🚨 Le titre est obligatoire.")]
+    #[Assert\Length(min: 3, minMessage: "Le titre doit contenir au moins {{ 5 }} caractères.")]
     #[ORM\Column(length: 255)]
-    private ?string $titre = null;
+    private ?string $titre ;
 
+    #[Assert\NotBlank(message: " 🚨 La description est requise.")]
+    #[Assert\Length(min: 10, minMessage: "La description doit être plus détaillée.")]
     #[ORM\Column(type: 'text')]
-    private ?string $description = null;
+    private ?string $description ;
 
+    #[Assert\NotNull(message: " 🚨 La date de publication est obligatoire.")]
     #[ORM\Column(type: 'datetime')]
-    private ?DateTimeInterface $datePublication = null;
+    private ?\DateTimeInterface $datePublication;
 
+    #[Assert\NotNull(message: " 🚨 La date d’expiration est obligatoire.")]
+    
     #[ORM\Column(type: 'datetime')]
-    private ?DateTimeInterface $dateExpiration = null;
+    private \DateTimeInterface $dateExpiration;
 
+    #[Assert\NotNull(message: "🚨  Le statut est requis.")]
     #[ORM\Column(type: 'string', enumType: Status::class)]
-    private ?Status $status = Status::ATTEND; 
+    private ?Status $status = Status::ATTEND;
+
+
+    public function __construct()
+    {
+        // Initialiser la date de publication à aujourd'hui par défaut
+        $this->datePublication = new \DateTime(); // Définit la date de publication à la date actuelle
+        $this->dateExpiration = (new \DateTime())->modify('+1 day'); // Date d'expiration = un jour après la publication
+    }
+
+
 
     public function getIdOffre(): ?int
     {
@@ -57,12 +76,12 @@ class Offre
         return $this;
     }
 
-    public function getDatePublication(): ?DateTimeInterface
+    public function getDatePublication(): ?\DateTimeInterface
     {
         return $this->datePublication;
     }
 
-    public function setDatePublication(DateTimeInterface $datePublication): static
+    public function setDatePublication(\DateTimeInterface $datePublication): static
     {
         $this->datePublication = $datePublication;
         return $this;
@@ -93,6 +112,36 @@ class Offre
     public function __toString(): string
     {
         return "Offre: {$this->titre} (" . ($this->status?->value ?? 'Aucun statut') . ")";
+    }
+
+    /**
+     * @return Collection<int, Utilisateur>
+     */
+    public function getUtilisateurs(): Collection
+    {
+        return $this->utilisateurs;
+    }
+
+    public function addUtilisateur(Utilisateur $utilisateur): static
+    {
+        if (!$this->utilisateurs->contains($utilisateur)) {
+            $this->utilisateurs->add($utilisateur);
+            $utilisateur->setOffre($this);
+        }
+
+        return $this;
+    }
+
+    public function removeUtilisateur(Utilisateur $utilisateur): static
+    {
+        if ($this->utilisateurs->removeElement($utilisateur)) {
+            // set the owning side to null (unless already changed)
+            if ($utilisateur->getOffre() === $this) {
+                $utilisateur->setOffre(null);
+            }
+        }
+
+        return $this;
     }
     
 }

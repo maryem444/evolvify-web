@@ -33,8 +33,9 @@ class OffreController extends AbstractController
         $Offre = new Offre();
         $form = $this->createForm(OffreType::class,$Offre);
         $form->handleRequest($Request);
-        if ($form->isSubmitted()) {
+        if ($form->isSubmitted() && $form->isValid()) {
             $manager = $doctrine->getManager();
+            $offre = $form->getData();
             $manager->persist($Offre);
             $manager->flush();
             // 🔥 Redirection vers base.html.twig après soumission

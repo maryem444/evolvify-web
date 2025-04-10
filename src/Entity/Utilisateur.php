@@ -56,6 +56,8 @@ class Utilisateur
     #[ORM\Column(type: "boolean")]
     private bool $firstLogin = true;
 
+
+
     public function getIdEmploye(): ?int
     {
         return $this->id_employe;
@@ -212,6 +214,18 @@ class Utilisateur
     public function setFirstLogin(bool $firstLogin): self
     {
         $this->firstLogin = $firstLogin;
+        return $this;
+    }
+
+    public function getOffre(): ?Offre
+    {
+        return $this->Offre;
+    }
+
+    public function setOffre(?Offre $Offre): static
+    {
+        $this->Offre = $Offre;
+
         return $this;
     }
 }
