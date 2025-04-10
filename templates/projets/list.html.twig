@@ -310,7 +310,6 @@
 						<tr>
 							<th>Nom</th>
 							<th>Abbreviation</th>
-							<th>Description</th>
 							<th>Statut</th>
 							<th>Assigné à</th>
 							<th>Date de début</th>
@@ -323,7 +322,6 @@
 							<tr>
 								<td>{{ projet.name }}</td>
 								<td>{{ projet.abbreviation }}</td>
-								<td>{{ projet.description }}</td>
 								<td>
 									{% if projet.status == constant('App\\Entity\\StatutProjet::IN_PROGRESS') %}
 										<span class="badge bg-warning text-dark badge-large">En cours</span>

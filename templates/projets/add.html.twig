@@ -1,207 +1,157 @@
-<!DOCTYPE html>
-<html lang="fr">
-	<head>
-		<meta charset="UTF-8">
-		<title>Ajouter un Projet</title>
-		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-		<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
-		<style>
-			/* Effet de superposition qui laisse voir la page en arrière-plan */
-			.overlay {
-				position: fixed;
-				top: 0;
-				left: 0;
-				width: 100%;
-				height: 100%;
-				background-color: rgba(0, 0, 0, 0.5); /* Noir semi-transparent */
-				display: flex;
-				justify-content: center;
-				align-items: center;
-				z-index: 1050;
-				backdrop-filter: blur(3px); /* Effet de flou léger */
-				animation: fadeIn 0.3s ease-out;
-			}
+{% extends 'base.html.twig' %}
 
-			@keyframes fadeIn {
-				from {
-					opacity: 0;
-				}
-				to {
-					opacity: 1;
-				}
-			}
+{% block stylesheets %}
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+	<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+	<style>
+		/* Ajoutez ou modifiez ces styles dans votre section CSS */
+		.modal-custom {
+			background: linear-gradient(135deg, rgba(245, 247, 250, 0.95), rgba(195, 207, 226, 0.95));
+			border-radius: 15px;
+			box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+			max-width: 850px; /* Augmenté de 700px à 850px */
+			width: 95%;
+			max-height: 90vh;
+			overflow-y: auto;
+			position: relative;
+			animation: slideIn 0.4s ease-out;
+			margin: 80px auto 30px;
+		}
+		.modal-header {
+			background: linear-gradient(to right, rgba(78, 115, 223, 0.9), rgba(34, 74, 190, 0.9));
+			color: white;
+			border-top-left-radius: 15px;
+			border-top-right-radius: 15px;
+			padding: 15px;
+			position: relative;
+		}
+		.modal-close {
+			position: absolute;
+			right: 15px;
+			top: 50%;
+			transform: translateY(-50%);
+			background: none;
+			border: none;
+			color: white;
+			font-size: 30px;
+			line-height: 1;
+			opacity: 0.7;
+			transition: all 0.3s ease;
+		}
+		.modal-close:hover {
+			opacity: 1;
+			color: #ff4444;
+			transform: translateY(-50%) rotate(90deg);
+		}
+		.valid-feedback {
+			color: green;
+			font-weight: bold;
+		}
+		.invalid-feedback {
+			color: red;
+			font-weight: bold;
+		}
+		.form-control:valid {
+			border-color: green;
+		}
+		.form-control:invalid {
+			border-color: red;
+		}
+		.form-control,
+		.form-select {
+			background-color: rgba(255, 255, 255, 0.8);
+			border-radius: 8px;
+			transition: all 0.3s ease;
+		}
+		.form-control:focus,
+		.form-select:focus {
+			background-color: white;
+			box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+			border-color: #4e73df;
+		}
+	</style>
+{% endblock %}
 
-			.modal-custom {
-				background: linear-gradient(135deg, rgba(245, 247, 250, 0.95) 0%, rgba(195, 207, 226, 0.95) 100%);
-				border-radius: 15px;
-				box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-				max-width: 700px;
-				width: 95%;
-				max-height: 90vh;
-				overflow-y: auto;
-				position: relative;
-				animation: slideIn 0.4s ease-out;
-			}
+{% block content %}
 
-			@keyframes slideIn {
-				from {
-					opacity: 0;
-					transform: translateY(-50px);
-				}
-				to {
-					opacity: 1;
-					transform: translateY(0);
-				}
-			}
+	<div class="modal-custom">
+		<div class="modal-header position-relative">
+			<h5 class="modal-title">📋 Ajouter un Nouveau Projet</h5>
+			<button type="button" class="modal-close" onclick="window.history.back()" aria-label="Fermer">&times;</button>
+		</div>
+		<div class="modal-body p-4">
+			<form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+				{{ form_start(form) }}
 
-			.modal-header {
-				background: linear-gradient(to right, rgba(78, 115, 223, 0.9) 0%, rgba(34, 74, 190, 0.9) 100%);
-				color: white;
-				border-top-left-radius: 15px;
-				border-top-right-radius: 15px;
-				padding: 15px;
-				position: relative;
-			}
+				{{ form_errors(form) }}
 
-			.modal-close {
-				position: absolute;
-				right: 15px;
-				top: 50%;
-				transform: translateY(-50%);
-				background: none;
-				border: none;
-				color: white;
-				font-size: 30px;
-				line-height: 1;
-				opacity: 0.7;
-				transition: all 0.3s ease;
-			}
-
-			.modal-close:hover {
-				opacity: 1;
-				color: #ff4444;
-				transform: translateY(-50%) rotate(90deg);
-			}
-
-			/* Validation des champs */
-			.valid-feedback {
-				color: green;
-				font-weight: bold;
-			}
-
-			.invalid-feedback {
-				color: red;
-				font-weight: bold;
-			}
-
-			.form-control:valid {
-				border-color: green;
-			}
-
-			.form-control:invalid {
-				border-color: red;
-			}
-
-			.form-control,
-			.form-select {
-				background-color: rgba(255, 255, 255, 0.8);
-				border-radius: 8px;
-				transition: all 0.3s ease;
-			}
-
-			.form-control:focus,
-			.form-select:focus {
-				background-color: white;
-				box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
-				border-color: #4e73df;
-			}
-		</style>
-	</head>
-	<body>
-		<div class="overlay">
-			<div class="modal-custom">
-				<div class="modal-header position-relative">
-					<h5 class="modal-title">📋 Ajouter un Nouveau Projet</h5>
-					<button type="button" class="modal-close" onclick="window.history.back()" aria-label="Fermer">&times;</button>
-				</div>
-				<div class="modal-body p-4">
-					<form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
-
-						{{ form_start(form) }}
-
-						<!-- Affichage des erreurs globales -->
-						{{ form_errors(form) }}
-
-						<div class="row">
-							<div class="col-md-6 mb-3">
-								{{ form_label(form.name, 'Nom du Projet', {'label_attr': {'class': 'form-label'}}) }}
-								{{ form_widget(form.name, {'attr': {'class': 'form-control'}}) }}
-								{{ form_errors(form.name) }}
-							</div>
-							<div class="col-md-6 mb-3">
-								{{ form_label(form.abbreviation, 'Abréviation', {'label_attr': {'class': 'form-label'}}) }}
-								{{ form_widget(form.abbreviation, {'attr': {'class': 'form-control'}}) }}
-								{{ form_errors(form.abbreviation) }}
-							</div>
-						</div>
-
-						<div class="mb-3">
-							{{ form_label(form.description, 'Description', {'label_attr': {'class': 'form-label'}}) }}
-							{{ form_widget(form.description, {'attr': {'class': 'form-control', 'rows': 3}}) }}
-							{{ form_errors(form.description) }}
-						</div>
-
-						<div class="row">
-							<div class="col-md-4 mb-3">
-								{{ form_label(form.status, 'Statut', {'label_attr': {'class': 'form-label'}}) }}
-								{{ form_widget(form.status, {'attr': {'class': 'form-select'}}) }}
-							</div>
-							<div class="col-md-4 mb-3">
-								{{ form_label(form.starterAt, 'Date de Début', {'label_attr': {'class': 'form-label'}}) }}
-								{{ form_widget(form.starterAt, {'attr': {'class': 'form-control'}}) }}
-								{{ form_errors(form.starterAt) }}
-								{# Ajout ici #}
-							</div>
-
-							<div class="col-md-4 mb-3">
-								{{ form_label(form.endDate, 'Date de Fin', {'label_attr': {'class': 'form-label'}}) }}
-								{{ form_widget(form.endDate, {'attr': {'class': 'form-control'}}) }}
-								{{ form_errors(form.endDate) }}
-								{# Ajout ici #}
-							</div>
-							<div class="col-md-12 mb-3">
-								{{ form_label(form.assignedUsers, 'Assigné à', {'label_attr': {'class': 'form-label'}}) }}
-								{{ form_widget(form.assignedUsers, {'attr': {'class': 'form-select'}}) }}
-								{{ form_errors(form.assignedUsers) }}
-							</div>
-
-							<div class="mb-3">
-								{{ form_label(form.uploaded_files, 'Fichiers du Projet', {'label_attr': {'class': 'form-label'}}) }}
-								{{ form_widget(form.uploaded_files, {'attr': {'class': 'form-control'}}) }}
-								{{ form_errors(form.uploaded_files) }}
-								{# Assurez-vous que ceci est présent #}
-							</div>
-
-
-							<div class="d-flex justify-content-end gap-3">
-								<a href="{{ path('projets_list') }}" class="btn btn-secondary">Annuler</a>
-								{{ form_widget(form.save, {'attr': {'class': 'btn btn-primary'}}) }}
-							</div>
-
-							{{ form_end(form) }}
-						</form>
+				<div class="row">
+					<div class="col-md-6 mb-3">
+						{{ form_label(form.name, 'Nom du Projet', {'label_attr': {'class': 'form-label'}}) }}
+						{{ form_widget(form.name, {'attr': {'class': 'form-control'}}) }}
+						{{ form_errors(form.name) }}
+					</div>
+					<div class="col-md-6 mb-3">
+						{{ form_label(form.abbreviation, 'Abréviation', {'label_attr': {'class': 'form-label'}}) }}
+						{{ form_widget(form.abbreviation, {'attr': {'class': 'form-control'}}) }}
+						{{ form_errors(form.abbreviation) }}
 					</div>
 				</div>
-			</div>
 
-			<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-		</body>
-	</body>
-</html>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script>
-	$(document).ready(function () { // Initialiser Select2 sur le champ assignedUsers
+				<div class="mb-3">
+					{{ form_label(form.description, 'Description', {'label_attr': {'class': 'form-label'}}) }}
+					{{ form_widget(form.description, {'attr': {'class': 'form-control', 'rows': 3}}) }}
+					{{ form_errors(form.description) }}
+				</div>
+
+				<div class="row">
+					<div class="col-md-4 mb-3">
+						{{ form_label(form.status, 'Statut', {'label_attr': {'class': 'form-label'}}) }}
+						{{ form_widget(form.status, {'attr': {'class': 'form-select'}}) }}
+					</div>
+					<div class="col-md-4 mb-3">
+						{{ form_label(form.starterAt, 'Date de Début', {'label_attr': {'class': 'form-label'}}) }}
+						{{ form_widget(form.starterAt, {'attr': {'class': 'form-control'}}) }}
+						{{ form_errors(form.starterAt) }}
+					</div>
+					<div class="col-md-4 mb-3">
+						{{ form_label(form.endDate, 'Date de Fin', {'label_attr': {'class': 'form-label'}}) }}
+						{{ form_widget(form.endDate, {'attr': {'class': 'form-control'}}) }}
+						{{ form_errors(form.endDate) }}
+					</div>
+				</div>
+
+				<div class="mb-3">
+					{{ form_label(form.assignedUsers, 'Assigné à', {'label_attr': {'class': 'form-label'}}) }}
+					{{ form_widget(form.assignedUsers, {'attr': {'class': 'form-select'}}) }}
+					{{ form_errors(form.assignedUsers) }}
+				</div>
+
+				<div class="mb-3">
+					{{ form_label(form.uploaded_files, 'Fichiers du Projet', {'label_attr': {'class': 'form-label'}}) }}
+					{{ form_widget(form.uploaded_files, {'attr': {'class': 'form-control'}}) }}
+					{{ form_errors(form.uploaded_files) }}
+				</div>
+
+				<div class="d-flex justify-content-end gap-3">
+					<a href="{{ path('projets_list') }}" class="btn btn-secondary">Annuler</a>
+					{{ form_widget(form.save, {'attr': {'class': 'btn btn-primary'}}) }}
+				</div>
+
+				{{ form_end(form) }}
+			</form>
+		</div>
+	</div>
+
+{% endblock %}
+
+{% block javascripts %}
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+	<script>
+		$(document).ready(function () {
 $('.form-select').select2({placeholder: "Choisir...", allowClear: true, tags: true});
 });
-</script>
+	</script>
+{% endblock %}
