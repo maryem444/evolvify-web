@@ -1,0 +1,132 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Users - Gestion RH
+{% endblock %}
+
+{% block stylesheets %}
+	{{ parent() }}
+	<style>
+		.card {
+			margin-top: 80px;
+		}
+		.card-header {
+			position: relative;
+			top: auto;
+		}
+		.table-responsive {
+			margin-top: 20px;
+		}
+		.pagination {
+			margin-top: 20px;
+			justify-content: center;
+		}
+	</style>
+{% endblock %}
+
+{% block javascripts %}
+	{{ parent() }}
+	<script>
+		$(document).ready(function () { // Initialiser DataTables avec pagination
+$('#add-row').DataTable({
+"pagingType": "full_numbers",
+"language": {
+"url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/French.json"
+},
+"pageLength": 10
+});
+
+// Gestion de l'ajout d'un employé
+$('#addRowButton').on('click', function () {
+const firstname = $('#addFirstname').val();
+const lastname = $('#addLastname').val();
+const email = $('#addEmail').val();
+const role = $('#addRole').val();
+
+// Fermer la modal
+$('#addRowModal').modal('hide');
+
+// Réinitialiser le formulaire
+$('#addEmployeeForm')[0].reset();
+});
+});
+	</script>
+{% endblock %}
+
+{% block content %}
+	<div class="col-md-12">
+		<div class="card">
+			<div class="card-header">
+				<div class="d-flex align-items-center">
+					<h4 class="card-title">Gestion des Employés</h4>
+					<button class="btn btn-primary btn-round ms-auto" data-bs-toggle="modal" data-bs-target="#addRowModal">
+						<i class="fa fa-plus"></i>
+						Ajouter un employé
+					</button>
+				</div>
+			</div>
+			<div
+				class="card-body">
+				<!-- Inclusion du modal -->
+				{% include 'user/addUser.html.twig' %}
+
+				<div class="table-responsive">
+					<table id="add-row" class="display table table-striped table-hover">
+						<thead>
+							<tr>
+								<th>Profile</th>
+								<th>First Name</th>
+								<th>Last Name</th>
+								<th>Email</th>
+								<th>Gender</th>
+								<th>Birthday Date</th>
+								<th>Joining Date</th>
+								<th>Role</th>
+								<th>Remaining Time Off</th>
+								<th>Remaining Leave</th>
+								<th>Phone Number</th>
+								<th>Actions</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for user in users %}
+								<tr>
+									<td class="text-center">
+										{% if user.profilePhoto %}
+											<img src="{{ user.profilePhoto }}" alt="{{ user.firstname }}'s profile" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+										{% else %}
+											<img src="{{ asset('assets/img/profile.png') }}" alt="Default profile" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+										{% endif %}
+									</td>
+									<td>{{ user.firstname }}</td>
+									<td>{{ user.lastname }}</td>
+									<td>{{ user.email }}</td>
+									<td>{{ user.gender }}</td>
+									<td>{{ user.birthdayDate ? user.birthdayDate|date('Y/m/d') : 'N/A' }}</td>
+									<td>{{ user.joiningDate ? user.joiningDate|date('Y/m/d') : 'N/A' }}</td>
+									<td>{{ user.role }}</td>
+									<td>{{ user.ttRestants is not null ? user.ttRestants : 'N/A' }}</td>
+									<td>{{ user.congeRestant is not null ? user.congeRestant : 'N/A' }}</td>
+									<td>{{ user.numTel ? user.numTel : 'N/A' }}</td>
+									<td>
+										<div class="form-button-action">
+											<button type="button" data-bs-toggle="tooltip" title="Edit" class="btn btn-link btn-primary btn-lg" data-original-title="Edit User" onclick="location.href='{{ path('user_edit', {'id': user.id}) }}'">
+												<i class="fa fa-edit"></i>
+											</button>
+											<button type="button" data-bs-toggle="tooltip" title="Delete" class="btn btn-link btn-danger" data-original-title="Remove" data-bs-toggle="modal" data-bs-target="#deleteModal{{ user.id }}">
+												<i class="fa fa-times"></i>
+											</button>
+										</div>
+									</td>
+								</tr>
+							{% else %}
+								<tr>
+									<td colspan="11" class="text-center">No users found</td>
+								</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+{% endblock %}

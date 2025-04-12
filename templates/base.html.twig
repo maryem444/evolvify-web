@@ -29,6 +29,8 @@
         });
     </script>
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
     <!-- CSS Files -->
     <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/plugins.min.css') }}">
@@ -36,6 +38,7 @@
 
     <!-- CSS Just for demo purpose, don't include it in your project -->
     <link rel="stylesheet" href="{{ asset('assets/css/demo.css') }}">
+
 
     {% block stylesheets %}{% endblock %}
 </head>
@@ -131,5 +134,41 @@
           });
       });
     </script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+    let currentUrl = window.location.pathname;
+    let navItems = document.querySelectorAll(".nav-item a");
+
+    let foundActive = false;
+
+    navItems.forEach(link => {
+        let linkPath = new URL(link.href, window.location.origin).pathname;
+
+        // Remove 'active' from all nav-items
+        link.closest(".nav-item").classList.remove("active");
+
+        if (linkPath === currentUrl) {
+            link.closest(".nav-item").classList.add("active");
+            foundActive = true;
+
+            // Expand the parent dropdown if inside one
+            let parentCollapse = link.closest(".collapse");
+            if (parentCollapse) {
+                parentCollapse.classList.add("show");
+                let parentNavItem = parentCollapse.closest(".nav-item");
+                if (parentNavItem) {
+                    parentNavItem.classList.add("active");
+                }
+            }
+        }
+    });
+
+    // If no link matches, keep "Dashboard" as active
+    if (!foundActive) {
+        document.querySelector(".nav-item.dashboard").classList.add("active");
+    }
+});
+</script>
+
 </body>
 </html>
