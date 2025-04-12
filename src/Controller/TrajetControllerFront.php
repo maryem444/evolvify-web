@@ -17,9 +17,9 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\ORM\EntityManagerInterface;
 
-final class TrajetController extends AbstractController
+final class TrajetControllerFront extends AbstractController
 {
-    #[Route('/trajet', name: 'trajet_list')]
+    #[Route('/trajet_front', name: 'trajet_list_front')]
     public function listTrajets(TrajetRepository $trajetRepository, MoyenTransportRepository $moyenTransportRepository): Response
     {
         $trajets = $trajetRepository->findAll();
@@ -29,7 +29,7 @@ final class TrajetController extends AbstractController
     $totalDistance = array_sum(array_map(fn($trajet) => $trajet->getDistance(), $trajets));
     $totalDuration = array_sum(array_map(fn($trajet) => $trajet->getDurée_estimé(), $trajets));
 
-        return $this->render('trajet/list.html.twig', [
+        return $this->render('trajet/list_employe.html.twig', [
             'trajets' => $trajets,
             'moyentransport' => $moyensTransport,
             'totalTrajets' => $totalTrajets,

@@ -23,14 +23,22 @@ final class MoyenTransportController extends AbstractController
         $totalMoyens = count($moyentransport);
         $activeMoyens = count(array_filter($moyentransport, function($transport) {
             // Utiliser "value" directement pour obtenir la valeur de l'énumération
-            return $transport->getStatus()->value === 'ACTIF'; // Comparer la valeur
-        }));
-    
+         return $transport->getStatus() === StatusTransport::DISPONIBLE;
+}));
+$capacities = [];
+foreach ($moyentransport as $moyen) {
+    $capacities[] = [
+        'type' => $moyen->getType_moyen(),
+        'capacité' => $moyen->getCapacité()
+    ];
+}
+
         // Passer les données à la vue
         return $this->render('moyentransport/list.html.twig', [
             'moyentransport' => $moyentransport,
             'totalMoyens' => $totalMoyens,
             'activeMoyens' => $activeMoyens,
+            'capacities' => $capacities
         ]);
     }
 

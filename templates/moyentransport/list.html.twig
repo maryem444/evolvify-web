@@ -5,11 +5,26 @@
 {% block content %}
     <div class="container-fluid mt-4">
         <h1 class="mb-4">Liste des Moyens de Transport</h1>
-         <!-- Affichage des statistiques -->
-        <div class="alert alert-info">
-            <p><strong>Total des moyens de transport :</strong> {{ totalMoyens }}</p>
-            <p><strong>Moyens de transport actifs :</strong> {{ activeMoyens }}</p>
+       <!-- Inclure Chart.js depuis CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <canvas id="doughnutChart"></canvas>
         </div>
+        <div class="col-md-4">
+            <canvas id="lineChart"></canvas>
+        </div>
+        <!-- Capacity Bar Chart -->
+        <div class="col-md-4">
+            <canvas id="capacityChart"></canvas>
+        </div>
+
+    </div>
+
+
+
 
         {% if moyentransport is not empty %}
             <div class="table-responsive">
@@ -129,4 +144,92 @@
             });
         });
     </script>
+    <script>
+    const totalMoyens = {{ totalMoyens }};
+    const activeMoyens = {{ activeMoyens }};
+    const inactiveMoyens = totalMoyens - activeMoyens;
+
+    // Doughnut chart (cercle)
+    const ctxDoughnut = document.getElementById('doughnutChart').getContext('2d');
+    new Chart(ctxDoughnut, {
+        type: 'doughnut',
+        data: {
+            labels: ['Disponibles', 'Indisponibles'],
+            datasets: [{
+                data: [activeMoyens, inactiveMoyens],
+                backgroundColor: ['#28a745', '#dc3545'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Répartition des moyens de transport'
+                }
+            }
+        }
+    });
+
+    // Line chart (courbe d’évolution simulée)
+    const ctxLine = document.getElementById('lineChart').getContext('2d');
+    new Chart(ctxLine, {
+        type: 'line',
+        data: {
+            labels: ['Semaine 1', 'Semaine 2', 'Semaine 3', 'Semaine 4'], // Exemple
+            datasets: [{
+                label: 'Moyens actifs',
+                data: [activeMoyens - 2, activeMoyens - 1, activeMoyens, activeMoyens + 1], // Exemple simulé
+                borderColor: '#007bff',
+                backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Évolution des moyens disponibles'
+                }
+            }
+        }
+    });
+</script>
+<script>
+    const capacityData = {{ capacities|json_encode|raw }};
+
+    const labels = capacityData.map(item => item.type);
+    const data = capacityData.map(item => item.capacité);
+
+    const ctxCapacity = document.getElementById('capacityChart').getContext('2d');
+    new Chart(ctxCapacity, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Capacité des moyens',
+                data: data,
+                backgroundColor: '#17a2b8'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Capacité des moyens de transport par type'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
+
 {% endblock %}
