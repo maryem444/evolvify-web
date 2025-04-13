@@ -134,4 +134,22 @@ class ProjetRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+    public function findProjectsWithDeadlineTomorrow(): array
+    {
+        $tomorrow = new \DateTime('tomorrow');
+        $tomorrow->setTime(0, 0, 0);
+        
+        $endOfTomorrow = clone $tomorrow;
+        $endOfTomorrow->setTime(23, 59, 59);
+        
+        return $this->createQueryBuilder('p')
+            ->andWhere('p.endDate >= :start_tomorrow')
+            ->andWhere('p.endDate <= :end_tomorrow')
+            ->setParameter('start_tomorrow', $tomorrow)
+            ->setParameter('end_tomorrow', $endOfTomorrow)
+            ->getQuery()
+            ->getResult();
+    }
+
+    
 }

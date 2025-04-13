@@ -234,6 +234,32 @@
 		.view-toggle a i {
 			margin-right: 5px;
 		}
+		.notification-alert {
+			animation: slide-in 0.5s ease-out forwards;
+			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+			border-left: 4px solid #ffc107;
+		}
+
+		@keyframes slide-in {
+			0% {
+				transform: translateY(-20px);
+				opacity: 0;
+			}
+			100% {
+				transform: translateY(0);
+				opacity: 1;
+			}
+		}
+
+		.notification-title {
+			font-weight: 600;
+			color: #856404;
+		}
+
+		.notification-content {
+			font-size: 14px;
+			color: #6c757d;
+		}
 	</style>
 {% endblock %}
 
@@ -241,18 +267,31 @@
 	<div class="container-fluid">
 		<div class="page-header">
 			<h1 class="page-title">🗂️ Projets</h1>
-			<div class="header-buttons">
-				<a href="{{ path('export_pdf') }}" class="btn btn-danger">
-					<i class="fas fa-file-pdf"></i>
-					Extraire PDF
-				</a>
-
+			<div
+				class="header-buttons">
+				{#<button class="btn btn-warning" onclick="showDeadlineNotification()">
+									<i class="fas fa-hourglass-half"></i> Deadline
+								</button> #}
 				<a href="{{ path('projet_add_card') }}" class="btn-add-projet">
 					<i class="fas fa-plus"></i>Ajouter Projet
 				</a>
 			</div>
 		</div>
-
+		{# Ajouter ceci juste après la div.page-header #}
+		<div id="notification-container" class="mb-4" style="display: none;">
+			<div class="alert alert-warning notification-alert" role="alert">
+				<div class="d-flex align-items-center">
+					<div class="me-3">
+						<i class="fas fa-exclamation-triangle fa-2x"></i>
+					</div>
+					<div>
+						<h5 class="notification-title mb-1"></h5>
+						<p class="notification-content mb-0"></p>
+					</div>
+					<button type="button" class="btn-close ms-auto" aria-label="Close" onclick="dismissNotification()"></button>
+				</div>
+			</div>
+		</div>
 		<div class="card">
 			<div class="card-body">
 				<div class="project-cards">
@@ -394,5 +433,68 @@ document.body.classList.remove('dialog-open');
 });
 });
 });
+	</script>
+	<script>
+		document.addEventListener('DOMContentLoaded', function () {
+// Code existant...
+
+// Charger les notifications au chargement de la page
+checkDeadlineNotifications();
+
+// Vérifier les notifications toutes les heures
+setInterval(checkDeadlineNotifications, 3600000);
+});
+
+function checkDeadlineNotifications() {
+fetch('{{ path('check_deadlines') }}').then(response => response.json()).then(data => {
+if (data.notifications && data.notifications.length > 0) { // Afficher la première notification
+showNotification(data.notifications[0]);
+
+// Stocker les autres notifications si nécessaire
+localStorage.setItem('pendingNotifications', JSON.stringify(data.notifications.slice(1)));
+}
+}).catch(error => console.error('Erreur lors de la vérification des deadlines:', error));
+}
+
+function showNotification(notification) {
+const container = document.getElementById('notification-container');
+const title = container.querySelector('.notification-title');
+const content = container.querySelector('.notification-content');
+
+title.textContent = notification.subject;
+content.textContent = notification.content;
+
+container.style.display = 'block';
+
+// Animation pour faire apparaître la notification
+container.style.opacity = '0';
+container.style.transform = 'translateY(-20px)';
+container.style.transition = 'opacity 0.5s, transform 0.5s';
+
+setTimeout(() => {
+container.style.opacity = '1';
+container.style.transform = 'translateY(0)';
+}, 50);
+}
+
+function dismissNotification() {
+const container = document.getElementById('notification-container');
+
+// Animation pour faire disparaître la notification
+container.style.opacity = '0';
+container.style.transform = 'translateY(-20px)';
+
+setTimeout(() => {
+container.style.display = 'none';
+
+// Afficher la prochaine notification s'il y en a
+const pendingNotifications = JSON.parse(localStorage.getItem('pendingNotifications') || '[]');
+if (pendingNotifications.length > 0) {
+const nextNotification = pendingNotifications.shift();
+localStorage.setItem('pendingNotifications', JSON.stringify(pendingNotifications));
+showNotification(nextNotification);
+}
+}, 500);
+}
 	</script>
 {% endblock %}
