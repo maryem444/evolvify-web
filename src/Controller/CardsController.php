@@ -96,7 +96,7 @@ class CardsController extends AbstractController
         }
       }
 
-      $entityManager->flush();
+      $this->addFlash('success', 'Projet modifié avec succès !');
 
       // Rediriger explicitement vers la vue en cartes
       return $this->redirectToRoute('projets_cards');

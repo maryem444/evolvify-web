@@ -156,7 +156,7 @@ class ProjetController extends AbstractController
                 }
             }
 
-            $entityManager->flush();
+            $this->addFlash('success', 'Projet modifié avec succès !');
             return $this->redirectToRoute('projets_list');
         }
 
