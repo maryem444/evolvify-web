@@ -391,6 +391,24 @@
 		.search-container {
 			width: 60%;
 		}
+		.actions-buttons {
+			display: flex;
+			gap: 10px;
+		}
+
+		.download-report-btn {
+			padding: 10px 15px;
+			background-color: #6610f2;
+			color: white;
+			border-radius: 6px;
+			text-decoration: none;
+			font-weight: bold;
+		}
+
+		.download-report-btn:hover {
+			background-color: #520dc2;
+			color: white;
+		}
 	</style>
 {% endblock %}
 
@@ -404,6 +422,7 @@
 					<input type="text" id="searchInput" class="form-control" placeholder="🔍 Rechercher une tâche par nom ou statut...">
 				</div>
 				<a href="#" class="add-task-btn" onclick="openModal()">+ Ajouter Tâche</a>
+				<a href="#" class="download-report-btn" onclick="generateReport()">📊 Télécharger Rapport</a>
 			</div>
 		</div>
 
@@ -733,5 +752,287 @@ column.classList.remove('empty-column');
 });
 });
 	</script>
+	<script>
+		function generateReport() { // Inclure la bibliothèque jsPDF si elle n'est pas déjà chargée
+if (typeof jsPDF === 'undefined') {
+const script = document.createElement('script');
+script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+script.onload = function () {
+const fontScript = document.createElement('script');
+fontScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js';
+fontScript.onload = actuallyGenerateReport;
+document.head.appendChild(fontScript);
+};
+document.head.appendChild(script);
+} else {
+actuallyGenerateReport();
+}
 
+function actuallyGenerateReport() { // Récupérer les données du projet
+const projectName = "{{ projet.name }}";
+const today = new Date().toLocaleDateString();
+
+// Structure de données pour les tâches
+let tasksByStatus = {
+'TO_DO': 0,
+'IN_PROGRESS': 0,
+'DONE': 0,
+'CANCELED': 0
+};
+let tasksByPriority = {
+high: 0,
+medium: 0,
+low: 0
+};
+let tasksList = [];
+
+// Collecter les tâches directement depuis les colonnes Kanban
+const columns = document.querySelectorAll('.kanban-column');
+
+columns.forEach(column => { // Extraire le statut de la colonne
+const headerElement = column.querySelector('.kanban-column-header');
+if (! headerElement) 
+return;
+
+
+const status = headerElement.textContent.trim();
+const normalizedStatus = normalizeStatus(status);
+
+// Sélectionner toutes les tâches de cette colonne
+const taskCards = column.querySelectorAll('.task-card');
+
+taskCards.forEach(task => { // Extraire les informations de la tâche
+const descriptionEl = task.querySelector('h5');
+const dateEl = task.querySelector('p:nth-of-type(1)');
+const employeeEl = task.querySelector('p:nth-of-type(2)');
+const priorityEl = task.querySelector('[class^="priority-"]');
+
+if (! descriptionEl) 
+return;
+ // Ignorer les tâches sans description
+
+const description = descriptionEl.textContent.replace('Description :', '').trim();
+const date = dateEl ? dateEl.textContent.replace('Date :', '').trim() : 'N/A';
+const employee = employeeEl ? employeeEl.textContent.replace('Employé ID :', '').trim() : 'N/A';
+
+// Déterminer la priorité
+let priority = 'Basse';
+let priorityLevel = 'low';
+
+if (priorityEl) {
+priority = priorityEl.textContent.replace('Priorité :', '').trim();
+
+if (task.classList.contains('priority-high') || priority.toLowerCase().includes('haute') || priority.toLowerCase().includes('high')) {
+priorityLevel = 'high';
+} else if (task.classList.contains('priority-medium') || priority.toLowerCase().includes('moyenne') || priority.toLowerCase().includes('medium')) {
+priorityLevel = 'medium';
+}
+}
+
+// Mettre à jour les compteurs
+tasksByStatus[normalizedStatus] = (tasksByStatus[normalizedStatus] || 0) + 1;
+tasksByPriority[priorityLevel]++;
+
+// Ajouter la tâche à la liste
+tasksList.push({
+description: description,
+status: normalizedStatus,
+priority: priority,
+date: date,
+employee: employee
+});
+});
+});
+
+// Calculer le nombre total de tâches (à partir des tâches réellement trouvées)
+const totalTasks = tasksList.length;
+
+// Calculer les pourcentages
+const completionRate = totalTasks > 0 ? ((tasksByStatus['DONE'] || 0) / totalTasks * 100).toFixed(1) : 0;
+const progressRate = totalTasks > 0 ? ((tasksByStatus['IN_PROGRESS'] || 0) / totalTasks * 100).toFixed(1) : 0;
+const todoRate = totalTasks > 0 ? ((tasksByStatus['TO_DO'] || 0) / totalTasks * 100).toFixed(1) : 0;
+const cancelledRate = totalTasks > 0 ? ((tasksByStatus['CANCELED'] || 0) / totalTasks * 100).toFixed(1) : 0;
+
+// Créer le PDF
+const {jsPDF} = window.jspdf;
+const doc = new jsPDF();
+
+// Ajouter le titre
+doc.setFontSize(20);
+doc.setTextColor(33, 150, 243);
+doc.text (`Rapport d'avancement du projet: ${projectName}`, 20, 20);
+
+// Ajouter la date
+doc.setFontSize(12);
+doc.setTextColor(100);
+doc.text (`Généré le: ${today}`, 20, 30);
+
+// Ajouter un résumé
+doc.setFontSize(16);
+doc.setTextColor(0);
+doc.text('Résumé', 20, 45);
+
+doc.setFontSize(12);
+doc.text (`Tâches totales: ${totalTasks}`, 25, 55);
+doc.text (`Taux d'achèvement: ${completionRate}%`, 25, 62);
+doc.text (`Tâches en cours: ${progressRate}%`, 25, 69);
+doc.text (`Tâches à faire: ${todoRate}%`, 25, 76);
+doc.text (`Tâches annulées: ${cancelledRate}%`, 25, 83);
+
+// Ajouter un tableau de répartition par statut
+doc.setFontSize(16);
+doc.text('Répartition par statut', 20, 100);
+
+doc.autoTable({
+startY: 105,
+head: [
+['Statut', 'Nombre', 'Pourcentage']
+],
+body: [
+[
+'À faire', tasksByStatus['TO_DO'] || 0,
+`${todoRate}%`
+],
+[
+'En cours', tasksByStatus['IN_PROGRESS'] || 0,
+`${progressRate}%`
+],
+[
+'Terminé', tasksByStatus['DONE'] || 0,
+`${completionRate}%`
+],
+[
+'Annulé', tasksByStatus['CANCELED'] || 0,
+`${cancelledRate}%`
+]
+],
+theme: 'striped',
+headStyles: {
+fillColor: [33, 150, 243]
+}
+});
+
+// Ajouter un tableau de répartition par priorité
+doc.setFontSize(16);
+doc.text('Répartition par priorité', 20, doc.autoTable.previous.finalY + 20);
+
+const highPriorityRate = totalTasks > 0 ? (tasksByPriority.high / totalTasks * 100).toFixed(1) : 0;
+const mediumPriorityRate = totalTasks > 0 ? (tasksByPriority.medium / totalTasks * 100).toFixed(1) : 0;
+const lowPriorityRate = totalTasks > 0 ? (tasksByPriority.low / totalTasks * 100).toFixed(1) : 0;
+
+doc.autoTable({
+startY: doc.autoTable.previous.finalY + 25,
+head: [
+['Priorité', 'Nombre', 'Pourcentage']
+],
+body: [
+[
+'Haute', tasksByPriority.high, `${highPriorityRate}%`
+],
+[
+'Moyenne', tasksByPriority.medium, `${mediumPriorityRate}%`
+],
+[
+'Basse', tasksByPriority.low, `${lowPriorityRate}%`
+]
+],
+theme: 'striped',
+headStyles: {
+fillColor: [255, 152, 0]
+}
+});
+
+// Ajouter une analyse
+doc.setFontSize(16);
+doc.text('Analyse', 20, doc.autoTable.previous.finalY + 20);
+
+doc.setFontSize(12);
+const analysis = completionRate >= 75 ? "Le projet progresse très bien avec la majorité des tâches terminées." : completionRate >= 50 ? "Le projet avance à un bon rythme avec environ la moitié des tâches terminées." : completionRate >= 25 ? "Le projet est en cours avec quelques tâches terminées." : "Le projet est en phase initiale avec peu de tâches terminées.";
+
+const priorityWarning = tasksByPriority.high > tasksByPriority.medium + tasksByPriority.low ? "Attention: Le projet comporte un nombre élevé de tâches à haute priorité." : "";
+
+doc.text(analysis, 20, doc.autoTable.previous.finalY + 30);
+if (priorityWarning) {
+doc.text(priorityWarning, 20, doc.autoTable.previous.finalY + 40);
+}
+
+// Ajouter une nouvelle page pour la liste des tâches
+doc.addPage();
+doc.setFontSize(16);
+doc.setTextColor(0);
+doc.text('Liste des tâches', 20, 20);
+
+// Préparer les données pour le tableau des tâches
+const tasksTableBody = tasksList.map(task => [
+task.description,
+task.status,
+task.priority,
+task.date,
+task.employee
+]);
+
+doc.autoTable({
+startY: 30,
+head: [
+[
+'Description',
+'Statut',
+'Priorité',
+'Date',
+'Employé ID'
+]
+],
+body: tasksTableBody,
+theme: 'striped',
+headStyles: {
+fillColor: [76, 175, 80]
+},
+styles: {
+overflow: 'linebreak'
+},
+columnStyles: {
+0: {
+cellWidth: 60
+},
+1: {
+cellWidth: 30
+},
+2: {
+cellWidth: 30
+},
+3: {
+cellWidth: 30
+},
+4: {
+cellWidth: 30
+}
+}
+});
+
+// Sauvegarder le PDF
+doc.save(`rapport-projet-${
+projectName.replace(/\s+/g, '-').toLowerCase()
+}-${
+new Date().toISOString().slice(0, 10)
+}.pdf`);
+}
+
+// Fonction pour normaliser un statut
+function normalizeStatus(status) {
+const upperStatus = status.toUpperCase();
+
+if (upperStatus.includes('TO_DO') || upperStatus.includes('TODO') || upperStatus.includes('À FAIRE')) {
+return 'TO_DO';
+} else if (upperStatus.includes('IN_PROGRESS') || upperStatus.includes('EN COURS')) {
+return 'IN_PROGRESS';
+} else if (upperStatus.includes('DONE') || upperStatus.includes('TERMINÉ')) {
+return 'DONE';
+} else if (upperStatus.includes('CANCELED') || upperStatus.includes('ANNULÉ')) {
+return 'CANCELED';
+}
+
+return upperStatus;
+}
+}
+	</script>
 {% endblock %}
