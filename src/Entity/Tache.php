@@ -30,8 +30,9 @@ class Tache
     #[ORM\Column(type: 'date')]
     private ?\DateTimeInterface $created_at;
 
-    #[ORM\Column(type: 'integer')]
-    private ?int $id_employe;
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(name: "id_employe", referencedColumnName: "id_employe", nullable: false)]
+    private ?User $user;
 
     #[ORM\Column(type: 'string', enumType: Priorite::class)]
     private ?Priorite $priority;
@@ -43,7 +44,6 @@ class Tache
     #[ORM\ManyToOne(targetEntity: Projet::class, inversedBy: "taches")]
     #[ORM\JoinColumn(name: "id_projet", referencedColumnName: "id_projet")]
     private ?Projet $projet;
-
 
     // Getters et Setters
     public function getIdTache(): ?int
@@ -84,16 +84,29 @@ class Tache
         return $this;
     }
 
-    public function getIdEmploye(): ?int
+    public function getUser(): ?User
     {
-        return $this->id_employe;
+        return $this->user;
     }
 
-    public function setIdEmploye(?int $id_employe): static
+    public function setUser(?User $user): static
     {
-        $this->id_employe = $id_employe;
+        $this->user = $user;
         return $this;
     }
+
+    // Helper method to get the employee ID
+    public function getIdEmploye(): ?int
+    {
+        return $this->user ? $this->user->getId() : null;
+    }
+
+    // Helper method to get the employee's full name
+    public function getEmployeFullName(): ?string
+    {
+        return $this->user ? $this->user->getFirstname() . ' ' . $this->user->getLastname() : null;
+    }
+
     public function getProjet(): ?Projet
     {
         return $this->projet;
@@ -104,7 +117,6 @@ class Tache
         $this->projet = $projet;
         return $this;
     }
-
 
     public function getPriority(): ?Priorite
     {
@@ -131,9 +143,10 @@ class Tache
     public function __toString(): string
     {
         return sprintf(
-            "%s (%s)",
+            "%s (%s) - Créé par: %s",
             $this->description,
-            $this->status ? (string) $this->status->getLabel() : 'Statut inconnu'
+            $this->status ? (string) $this->status->getLabel() : 'Statut inconnu',
+            $this->getEmployeFullName() ?? 'Employé inconnu'
         );
     }
 }

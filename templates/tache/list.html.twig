@@ -402,10 +402,16 @@
 									</span>
 								</td>
 								<td>{{ tache.location ?? '-' }}</td>
-								<td>{{ tache.idEmploye ?? '-' }}</td>
+								<td>{{ tache.user ? (tache.user.firstname ~ ' ' ~ tache.user.lastname) : '-' }}</td>
 								<td>
 									<div class="btn-group" role="group">
-										<a href="#" onclick="openModal({{ tache.idTache }}, '{{ tache.description }}','{{ tache.location }}','{{ tache.priority.getLabel() }}')" title="Modifier">
+										<a href="#" onclick="openModal(
+											    {{ tache.idTache }},
+											    '{{ tache.description }}',
+											    '{{ tache.location }}',
+											    '{{ tache.priority.getLabel() }}',
+											    '{{ tache.status.getLabel() }}'
+											)" title="Modifier">
 											<i class="fas fa-edit"></i>
 										</a>
 
@@ -510,7 +516,7 @@
 	</div>
 </div>
 <script>
-	function openModal(tacheId = null, description = '', location = '') {
+	function openModal(tacheId = null, description = '', location = '', priority = '', status = '') {
 let form = document.querySelector("#overlay form");
 
 if (tacheId) { // Mode édition
@@ -518,6 +524,28 @@ form.action = "{{ path('taches_edit', {'id': projet.id, 'tacheId': 'PLACEHOLDER'
 document.querySelector("#overlay h5").innerText = "Modifier une Tâche";
 document.querySelector("#tache_description").value = description;
 document.querySelector("#tache_location").value = location;
+
+// Définir la priorité sélectionnée
+const prioritySelect = document.querySelector("#tache_priority");
+if (prioritySelect) { // Trouver l'option qui correspond à la priorité
+for (let i = 0; i < prioritySelect.options.length; i++) {
+if (prioritySelect.options[i].text === priority) {
+prioritySelect.selectedIndex = i;
+break;
+}
+}
+}
+
+// Définir le statut sélectionné
+const statusSelect = document.querySelector("#tache_status");
+if (statusSelect) { // Trouver l'option qui correspond au statut
+for (let i = 0; i < statusSelect.options.length; i++) {
+if (statusSelect.options[i].text === status) {
+statusSelect.selectedIndex = i;
+break;
+}
+}
+}
 } else { // Mode ajout
 form.action = "{{ path('taches_add', {'id': projet.id}) }}";
 document.querySelector("#overlay h5").innerText = "Ajouter une Tâche";

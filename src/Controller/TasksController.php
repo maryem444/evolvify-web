@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Projet;
 use App\Entity\StatutTache;
 use App\Entity\Tache;
+use App\Entity\User;
 use Symfony\Component\HttpFoundation\Request;
 use App\Form\TacheType;
 use App\Repository\TacheRepository;
@@ -65,7 +66,17 @@ class TasksController extends AbstractController
     if ($form->isSubmitted() && $form->isValid()) {
       $tache->setCreatedAt(new \DateTime());
       $tache->setProjet($projet);
-      $tache->setIdEmploye($idEmploye);
+      $user = $entityManager->getRepository(User::class)->find($idEmploye);
+
+      // Ensuite, associez l'utilisateur à la tâche
+      if ($user) {
+        $tache->setUser($user);
+      } else {
+        // Gérer le cas où l'utilisateur n'est pas trouvé
+        $this->addFlash('error', 'Utilisateur non trouvé !');
+        return $this->redirectToRoute('taches_list', ['id' => $id]);
+      }
+
       $entityManager->persist($tache);
       $entityManager->flush();
 

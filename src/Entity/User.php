@@ -2,6 +2,8 @@
 
 namespace App\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -67,6 +69,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: "first_login", type: 'boolean')]
     private bool $first_login = true;
 
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Tache::class)]
+    private Collection $taches;
+
+    public function __construct()
+    {
+        $this->taches = new ArrayCollection();
+    }
+
     // === GETTERS & SETTERS ===
 
     public function getId(): ?int { return $this->id_employe; }
@@ -115,6 +125,33 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function isFirstLogin(): bool { return $this->first_login; }
     public function setFirstLogin(bool $first_login): self { $this->first_login = $first_login; return $this; }
+
+    public function getTaches(): Collection
+    {
+        return $this->taches;
+    }
+
+    public function addTache(Tache $tache): self
+    {
+        if (!$this->taches->contains($tache)) {
+            $this->taches->add($tache);
+            $tache->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeTache(Tache $tache): self
+    {
+        if ($this->taches->removeElement($tache)) {
+            // set the owning side to null (unless already changed)
+            if ($tache->getUser() === $this) {
+                $tache->setUser(null);
+            }
+        }
+
+        return $this;
+    }
 
     // === USER INTERFACE METHODS ===
 

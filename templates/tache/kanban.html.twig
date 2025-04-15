@@ -449,11 +449,16 @@
 										{{ task.description }}</h5>
 									<p>Date :
 										{{ task.createdAt|date('Y-m-d') }}</p>
-									<p>Employé ID :
-										{{ task.idEmploye }}</p>
+									<p>Employé :
+										{{ task.user.firstname }}
+										{{ task.user.lastname }}</p>
 									<p class="priority-{{ task.priority.getLabel()}}">Priorité :
 										{{ task.priority.getLabel() }}</p>
 
+									<a href="#" onclick="openModal(
+																				{{ task.idTache }},'{{ task.description }}','{{ task.location }}','{{ task.priority.getLabel() }}','{{ task.status.getLabel() }}')" title="Modifier">
+										<i class="fas fa-edit"></i>
+									</a>
 									<form action="{{ path('kanban_task_delete', { 'id': projet.id, 'tacheId': task.getIdTache }) }}" method="post" class="delete-form" style="display:inline;">
 										<button type="submit" style="border: none; background: none; padding: 0;">
 											<i class="fas fa-trash" title="Supprimer" style="color: #F44336; cursor: pointer;"></i>
@@ -625,7 +630,7 @@ progressBarFill.className = 'progress-bar-fill done';
 	</script>
 
 	<script>
-		function openModal(tacheId = null, description = '', location = '') {
+		function openModal(tacheId = null, description = '', location = '', priority = '', status = '') {
 let form = document.querySelector("#overlay form");
 
 if (tacheId) { // Mode édition
@@ -633,6 +638,28 @@ form.action = "{{ path('kanban_task_edit', {'id': projet.id, 'tacheId': 'PLACEHO
 document.querySelector("#overlay h5").innerText = "Modifier une Tâche";
 document.querySelector("#tache_description").value = description;
 document.querySelector("#tache_location").value = location;
+
+// Définir la priorité sélectionnée
+const prioritySelect = document.querySelector("#tache_priority");
+if (prioritySelect) { // Trouver l'option qui correspond à la priorité
+for (let i = 0; i < prioritySelect.options.length; i++) {
+if (prioritySelect.options[i].text === priority) {
+prioritySelect.selectedIndex = i;
+break;
+}
+}
+}
+
+// Définir le statut sélectionné
+const statusSelect = document.querySelector("#tache_status");
+if (statusSelect) { // Trouver l'option qui correspond au statut
+for (let i = 0; i < statusSelect.options.length; i++) {
+if (statusSelect.options[i].text === status) {
+statusSelect.selectedIndex = i;
+break;
+}
+}
+}
 } else { // Mode ajout
 form.action = "{{ path('kanban_task_add', {'id': projet.id}) }}";
 document.querySelector("#overlay h5").innerText = "Ajouter une Tâche";
@@ -795,6 +822,7 @@ if (! headerElement)
 return;
 
 
+
 const status = headerElement.textContent.trim();
 const normalizedStatus = normalizeStatus(status);
 
@@ -809,7 +837,10 @@ const priorityEl = task.querySelector('[class^="priority-"]');
 
 if (! descriptionEl) 
 return;
- // Ignorer les tâches sans description
+
+
+
+// Ignorer les tâches sans description
 
 const description = descriptionEl.textContent.replace('Description :', '').trim();
 const date = dateEl ? dateEl.textContent.replace('Date :', '').trim() : 'N/A';
