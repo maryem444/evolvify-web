@@ -456,7 +456,7 @@
 										{{ task.priority.getLabel() }}</p>
 
 									<a href="#" onclick="openModal(
-																				{{ task.idTache }},'{{ task.description }}','{{ task.location }}','{{ task.priority.getLabel() }}','{{ task.status.getLabel() }}')" title="Modifier">
+																														{{ task.idTache }},'{{ task.description }}','{{ task.location }}','{{ task.priority.getLabel() }}','{{ task.status.getLabel() }}')" title="Modifier">
 										<i class="fas fa-edit"></i>
 									</a>
 									<form action="{{ path('kanban_task_delete', { 'id': projet.id, 'tacheId': task.getIdTache }) }}" method="post" class="delete-form" style="display:inline;">
