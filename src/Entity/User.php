@@ -7,7 +7,7 @@ use App\Entity\Genre;
 use App\Entity\Role;
 #[ORM\Entity]
 #[ORM\Table(name: "users")]
-class Utilisateur
+class User
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]

@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Controller;
-use App\Entity\Utilisateur;
+use App\Entity\User;
 use App\Entity\Role;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -19,7 +19,7 @@ class CandidatesController extends AbstractController
     public function listCandidates(EntityManagerInterface $entityManager): Response
     {  
         // Récupérer toutes les offres depuis la base de données
-        $Candidates = $entityManager->getRepository(Utilisateur::class)->findAll();
+        $Candidates = $entityManager->getRepository(User::class)->findAll();
        // Filter out the candidates who have the 'CONDIDAT' role
        $filteredCandidates = array_filter($Candidates, function($candidate) {
         // Comparer avec la valeur de l'énum Role::CONDIDAT->value
