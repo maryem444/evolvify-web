@@ -4,6 +4,7 @@
 		<div class="modal-content">
 			<div class="modal-header border-0">
 				<h5 class="modal-title">
+					<i class="fa-solid fa-user-plus"></i>
 					<span class="fw-mediumbold">Nouvel</span>
 					<span class="fw-light">
 						Employé</span>
@@ -24,6 +25,7 @@
 									Prénom valide !
 								</div>
 								<div class="invalid-feedback">
+									<i class="fa-solid fa-circle-xmark"></i>
 									Veuillez saisir un prénom.
 								</div>
 							</div>
@@ -37,6 +39,7 @@
 									Nom valide !
 								</div>
 								<div class="invalid-feedback">
+									<i class="fa-solid fa-circle-xmark"></i>
 									Veuillez saisir un nom.
 								</div>
 							</div>
@@ -54,6 +57,7 @@
 									Email valide !
 								</div>
 								<div class="invalid-feedback">
+									<i class="fa-solid fa-circle-xmark"></i>
 									Veuillez saisir une adresse email valide.
 								</div>
 							</div>
@@ -72,6 +76,7 @@
 									Rôle valide !
 								</div>
 								<div class="invalid-feedback">
+									<i class="fa-solid fa-circle-xmark"></i>
 									Veuillez sélectionner un rôle.
 								</div>
 							</div>
@@ -205,234 +210,294 @@
 
 <!-- JavaScript pour la validation -->
 <script>
-	document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('employeeForm');
-    const submitButton = document.getElementById('addRowButton');
-    const inputs = form.querySelectorAll('input, select');
-    const modal = document.getElementById('addRowModal');
-    const roleSelect = document.getElementById('addRole');
-    
-    // Set default role to "Employé"
-    if (roleSelect) {
-        // Set the default value
-        roleSelect.value = "EMPLOYEE";
-        
-        // Remove the "disabled" and "selected" attributes from the placeholder option
-        const placeholderOption = roleSelect.querySelector('option[value=""]');
-        if (placeholderOption) {
-            placeholderOption.removeAttribute('selected');
-            placeholderOption.removeAttribute('disabled');
-        }
-        
-        // Mark the "EMPLOYEE" option as selected
-        const employeeOption = roleSelect.querySelector('option[value="EMPLOYEE"]');
-        if (employeeOption) {
-            employeeOption.setAttribute('selected', 'selected');
-        }
-    }
-    
-    // Helper function to validate email
-    function isValidEmail(email) {
-        const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return regex.test(email);
-    }
-    
-    // Keep track of which fields have been touched by the user
-    const touchedFields = new Set();
-    
-    // Function to validate the form
-    function validateForm() {
-        let isValid = true;
-        
-        // Check each input
-        inputs.forEach(input => {
-            // Only validate fields that have been touched
-            if (!touchedFields.has(input.id)) {
-                return;
-            }
-            
-            // Reset validation state
-            input.classList.remove('is-valid', 'is-invalid');
-            
-            // Email specific validation
-            if (input.type === 'email') {
-                if (input.value.trim() && isValidEmail(input.value.trim())) {
-                    input.classList.add('is-valid');
-                } else if (input.value.trim()) {
-                    input.classList.add('is-invalid');
-                    isValid = false;
-                } else {
-                    input.classList.add('is-invalid');
-                    isValid = false;
-                }
-                return;
-            }
-            
-            // Select element validation
-            if (input.tagName === 'SELECT') {
-                if (input.value && input.value !== '') {
-                    input.classList.add('is-valid');
-                } else {
-                    input.classList.add('is-invalid');
-                    isValid = false;
-                }
-                return;
-            }
-            
-            // Text input validation
-            if (input.value.trim()) {
-                input.classList.add('is-valid');
-            } else {
-                input.classList.add('is-invalid');
-                isValid = false;
-            }
-        });
-        
-        // Check all fields to determine if form is valid
-        // This ensures the button stays disabled until all fields are valid
-        let allFieldsValid = true;
-        inputs.forEach(input => {
-            if (input.type === 'email') {
-                if (!input.value.trim() || !isValidEmail(input.value.trim())) {
-                    allFieldsValid = false;
-                }
-            } else if (input.tagName === 'SELECT') {
-                if (!input.value || input.value === '') {
-                    allFieldsValid = false;
-                }
-            } else if (!input.value.trim()) {
-                allFieldsValid = false;
-            }
-        });
-        
-        // Enable/disable submit button based on form validity
-        submitButton.disabled = !allFieldsValid;
-        
-        return isValid;
-    }
-    
-    // Add event listeners to each input for real-time validation
-    inputs.forEach(input => {
-        // Mark field as touched on focus out (blur)
-        input.addEventListener('blur', function() {
-            touchedFields.add(input.id);
-            validateForm();
-        });
-        
-        // Validate on input change
-        input.addEventListener('input', function() {
-            if (touchedFields.has(input.id)) {
-                validateForm();
-            }
-        });
-        
-        // Validate on change (for select elements)
-        input.addEventListener('change', function() {
-            touchedFields.add(input.id);
-            validateForm();
-        });
-    });
-    
-    // Reset form and validation when modal is opened
-    modal.addEventListener('shown.bs.modal', function() {
-        touchedFields.clear();
-        inputs.forEach(input => {
-            input.classList.remove('is-valid', 'is-invalid');
-        });
-        
-        // Reset form fields
-        form.reset();
-        
-        // Set default role to "Employé"
-        if (roleSelect) {
-            roleSelect.value = "EMPLOYEE";
-        }
-        
-        // Initial check to handle the default values
-        validateForm();
-    });
-    
-    // Form submission with AJAX
-    form.addEventListener('submit', function(event) {
-        event.preventDefault();
-        
-        // Mark all fields as touched
-        inputs.forEach(input => {
-            touchedFields.add(input.id);
-        });
-        
-        // Final validation
-        if (!validateForm()) {
-            return false;
-        }
-        
-        // Get form data
-        const formData = new FormData(form);
-        
-        // Disable submit button during submission
-        submitButton.disabled = true;
-        
-        // AJAX form submission
-        fetch(form.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            // Close the modal
-            const modalInstance = bootstrap.Modal.getInstance(modal);
-            modalInstance.hide();
-            
-            // Show success message with SweetAlert
-            swal({
-                title: "Employé ajouté !",
-                text: `${formData.get('firstname')} ${formData.get('lastname')} a été ajouté avec succès.`,
-                icon: "success",
-                buttons: {
-                    confirm: {
-                        text: "OK",
-                        value: true,
-                        visible: true,
-                        className: "btn btn-success",
-                        closeModal: true
-                    }
-                }
-            }).then(() => {
-                // Reload the page to refresh the employee list
-                window.location.reload();
-            });
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            
-            // Show error message with SweetAlert
-            swal({
-                title: "Erreur !",
-                text: "Une erreur s'est produite lors de l'ajout de l'employé.",
-                icon: "error",
-                buttons: {
-                    confirm: {
-                        text: "OK",
-                        value: true,
-                        visible: true,
-                        className: "btn btn-danger",
-                        closeModal: true
-                    }
-                }
-            });
-        })
-        .finally(() => {
-            // Re-enable submit button
-            submitButton.disabled = false;
-        });
-    });
+	document.addEventListener('DOMContentLoaded', function () { // Configure DataTables to use HTTPS for language files
+if ($.fn.dataTable !== undefined) {
+$.extend(true, $.fn.dataTable.defaults, {
+language: {
+"sEmptyTable": "Aucune donnée disponible dans le tableau",
+"sInfo": "Affichage de l'élément _START_ à _END_ sur _TOTAL_ éléments",
+"sInfoEmpty": "Affichage de l'élément 0 à 0 sur 0 élément",
+"sInfoFiltered": "(filtré à partir de _MAX_ éléments au total)",
+"sInfoPostFix": "",
+"sInfoThousands": ",",
+"sLengthMenu": "Afficher _MENU_ éléments",
+"sLoadingRecords": "Chargement...",
+"sProcessing": "Traitement...",
+"sSearch": "Rechercher :",
+"sZeroRecords": "Aucun élément correspondant trouvé",
+"oPaginate": {
+"sFirst": "Premier",
+"sLast": "Dernier",
+"sNext": "Suivant",
+"sPrevious": "Précédent"
+},
+"oAria": {
+"sSortAscending": ": activer pour trier la colonne par ordre croissant",
+"sSortDescending": ": activer pour trier la colonne par ordre décroissant"
+},
+"select": {
+"rows": {
+"_": "%d lignes sélectionnées",
+"0": "Aucune ligne sélectionnée",
+"1": "1 ligne sélectionnée"
+}
+}
+}
+});
+}
+form = document.getElementById('employeeForm');
+const submitButton = document.getElementById('addRowButton');
+const inputs = form.querySelectorAll('input, select');
+const modal = document.getElementById('addRowModal');
+const roleSelect = document.getElementById('addRole');
+
+// Set default role to "Employé"
+if (roleSelect) {
+roleSelect.value = "EMPLOYEE";
+
+// Remove the "disabled" and "selected" attributes from the placeholder option
+const placeholderOption = roleSelect.querySelector('option[value=""]');
+if (placeholderOption) {
+placeholderOption.removeAttribute('selected');
+placeholderOption.removeAttribute('disabled');
+}
+
+// Mark the "EMPLOYEE" option as selected
+const employeeOption = roleSelect.querySelector('option[value="EMPLOYEE"]');
+if (employeeOption) {
+employeeOption.setAttribute('selected', 'selected');
+}
+}
+
+// Helper function to validate email
+function isValidEmail(email) {
+const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+return regex.test(email);
+}
+
+// Keep track of which fields have been touched by the user
+const touchedFields = new Set();
+
+// Function to validate the form
+function validateForm() {
+let isValid = true;
+
+// Check each input
+inputs.forEach(input => { // Only validate fields that have been touched
+if (! touchedFields.has(input.id)) {
+return;
+}
+
+// Reset validation state
+input.classList.remove('is-valid', 'is-invalid');
+
+// Email specific validation
+if (input.type === 'email') {
+if (input.value.trim() && isValidEmail(input.value.trim())) {
+input.classList.add('is-valid');
+} else if (input.value.trim()) {
+input.classList.add('is-invalid');
+isValid = false;
+} else {
+input.classList.add('is-invalid');
+isValid = false;
+}
+return;
+}
+
+// Select element validation
+if (input.tagName === 'SELECT') {
+if (input.value && input.value !== '') {
+input.classList.add('is-valid');
+} else {
+input.classList.add('is-invalid');
+isValid = false;
+}
+return;
+}
+
+// Text input validation
+if (input.value.trim()) {
+input.classList.add('is-valid');
+} else {
+input.classList.add('is-invalid');
+isValid = false;
+}
+});
+
+// Check all fields to determine if form is valid
+let allFieldsValid = true;
+inputs.forEach(input => {
+if (input.type === 'email') {
+if (!input.value.trim() || ! isValidEmail(input.value.trim())) {
+allFieldsValid = false;
+}
+} else if (input.tagName === 'SELECT') {
+if (!input.value || input.value === '') {
+allFieldsValid = false;
+}
+} else if (!input.value.trim()) {
+allFieldsValid = false;
+}
+});
+
+// Enable/disable submit button based on form validity
+submitButton.disabled = ! allFieldsValid;
+
+return isValid;
+}
+
+// Add event listeners to each input for real-time validation
+inputs.forEach(input => { // Mark field as touched on focus out (blur)
+input.addEventListener('blur', function () {
+touchedFields.add(input.id);
+validateForm();
+});
+
+// Validate on input change
+input.addEventListener('input', function () {
+if (touchedFields.has(input.id)) {
+validateForm();
+}
+});
+
+// Validate on change (for select elements)
+input.addEventListener('change', function () {
+touchedFields.add(input.id);
+validateForm();
+});
+});
+
+// Reset form and validation when modal is opened
+if (modal) {
+modal.addEventListener('shown.bs.modal', function () {
+touchedFields.clear();
+inputs.forEach(input => {
+input.classList.remove('is-valid', 'is-invalid');
+});
+
+// Reset form fields
+form.reset();
+
+// Set default role to "Employé"
+if (roleSelect) {
+roleSelect.value = "EMPLOYEE";
+}
+
+// Initial check to handle the default values
+validateForm();
+});
+}
+
+// Form submission with AJAX
+if (form) {
+form.addEventListener('submit', function (event) {
+event.preventDefault();
+
+// Mark all fields as touched
+inputs.forEach(input => {
+touchedFields.add(input.id);
+});
+
+// Final validation
+if (! validateForm()) {
+return false;
+}
+
+// Get form data
+const formData = new FormData(form);
+
+// Disable submit button during submission
+submitButton.disabled = true;
+
+// AJAX form submission
+fetch(form.action, {
+method: 'POST',
+body: formData,
+headers: {
+'X-Requested-With': 'XMLHttpRequest'
+}
+}).then(response => { // Check content type
+const contentType = response.headers.get('content-type');
+if (contentType && contentType.includes('application/json')) {
+return response.json().then(data => {
+if (!response.ok) {
+throw new Error(data.message || 'Network response was not ok');
+}
+return data;
+});
+} else { // If not JSON, it's probably an HTML error page
+return response.text().then(text => {
+console.error('Réponse non-JSON reçue:', text.substring(0, 500));
+throw new Error('Erreur serveur - vérifiez les logs');
+});
+}
+}).then(data => { // Close the modal if it exists
+if (modal) {
+const modalInstance = bootstrap.Modal.getInstance(modal);
+if (modalInstance) {
+modalInstance.hide();
+}
+}
+
+// Show success message with SweetAlert
+if (typeof swal === 'function') {
+swal({
+title: "Employé ajouté !",
+text: `${
+formData.get('firstname')
+} ${
+formData.get('lastname')
+} a été ajouté avec succès.`,
+icon: "success",
+buttons: {
+confirm: {
+text: "OK",
+value: true,
+visible: true,
+className: "btn btn-success",
+closeModal: true
+}
+}
+}).then(() => { // Reload the page to refresh the employee list
+window.location.reload();
+});
+} else {
+alert(`${
+formData.get('firstname')
+} ${
+formData.get('lastname')
+} a été ajouté avec succès.`);
+window.location.reload();
+}
+}).catch(error => {
+console.error('Error:', error);
+
+// Show error message with SweetAlert or standard alert
+if (typeof swal === 'function') {
+swal({
+title: "Erreur !",
+text: error.message || "Une erreur s'est produite lors de l'ajout de l'employé.",
+icon: "error",
+buttons: {
+confirm: {
+text: "OK",
+value: true,
+visible: true,
+className: "btn btn-danger",
+closeModal: true
+}
+}
+});
+} else {
+alert("Erreur: " + (
+error.message || "Une erreur s'est produite lors de l'ajout de l'employé."
+));
+}
+}). finally(() => { // Re-enable submit button
+submitButton.disabled = false;
+});
+});
+}
 });
 </script>

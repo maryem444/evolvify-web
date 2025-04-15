@@ -8,26 +8,62 @@
 	<style>
 		.card {
 			margin-top: 80px;
+			border-radius: 10px;
+			box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+			border: none;
 		}
+
 		.card-header {
 			position: relative;
-			top: auto;
+			border-radius: 10px 10px 0 0;
+			background-color: #fff;
+			padding: 1.5rem;
+			border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 		}
+
 		.table-responsive {
-			margin-top: 20px;
+			margin-top: 0;
+			position: relative !important;
+            overflow-x: auto !important;
 		}
+
 		.pagination {
 			margin-top: 20px;
 			justify-content: center;
 		}
-		/* Styling for the alert container */
+
+		.pagination .page-item .page-link {
+			border-radius: 4px;
+			margin: 0 3px;
+			color: #3a86ff !important; /* Force color for non-active pagination */
+			border: 1px solid #e9ecef;
+			position: relative;
+			z-index: 1; /* Ensure it's above background */
+		}
+
+		.pagination .page-item.active .page-link {
+			background-color: #3a86ff;
+			border-color: #3a86ff;
+			color: white !important; /* Force white text color */
+		}
+		.pagination-container {
+			position: sticky;
+			left: 0;
+			right: 0;
+			width: 100%;
+			display: flex;
+			justify-content: center;
+			background-color: #fff;
+			padding: 15px 0;
+			z-index: 10;
+		}
+
 		.alert-container {
 			position: relative;
 			z-index: 1050;
 			padding: 1rem;
 		}
 
-		/* Animation for alert messages */
 		@keyframes slideDown {
 			from {
 				transform: translateY(-20px);
@@ -54,7 +90,6 @@
 			border-left-color: #dc3545 !important;
 		}
 
-		/* Auto-hide alerts after a delay */
 		.alert-container .alert.fade {
 			transition: opacity 0.35s linear, transform 0.35s ease-out;
 		}
@@ -62,37 +97,522 @@
 		.alert-container .alert.fade.show {
 			transition: opacity 0.15s linear, transform 0.15s ease-in;
 		}
+
+		/* Fixed sticky controls to ensure visibility */
+		.sticky-controls {
+			position: relative; /* Changed from sticky to ensure it works */
+			z-index: 10;
+			background-color: #f8f9fa;
+			padding: 15px;
+			border-radius: 8px;
+			box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+			margin-bottom: 20px;
+			display: flex;
+			flex-wrap: wrap;
+			gap: 15px;
+			align-items: center;
+		}
+
+		/* Nouveau style pour la section des filtres */
+		.filter-dashboard {
+			background-color: #f8f9fa;
+			border-radius: 10px;
+			padding: 20px;
+			box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+			margin-bottom: 25px;
+			transition: all 0.3s ease;
+		}
+
+		.filter-dashboard:hover {
+			box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+		}
+
+		.search-bar .input-group {
+			box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+			border-radius: 8px;
+			overflow: hidden;
+			transition: all 0.3s ease;
+			height: 45px;
+		}
+
+		.search-bar .input-group:focus-within {
+			box-shadow: 0 4px 12px rgba(58, 134, 255, 0.15);
+		}
+
+		.search-bar .input-group-text {
+			border-right: none;
+			background-color: white;
+			padding-left: 15px;
+			padding-right: 15px;
+			display: flex;
+			align-items: center;
+		}
+
+		.search-bar .form-control {
+			border-left: none;
+			height: 45px;
+			padding-left: 5px;
+		}
+
+		.search-bar .form-control:focus {
+			box-shadow: none;
+			border-color: #ced4da;
+		}
+
+		.filter-item {
+			position: relative;
+		}
+
+		/* Update styling for input groups with icons */
+		.filter-item .input-group {
+			box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+			border-radius: 8px;
+			overflow: hidden;
+			transition: all 0.3s ease;
+			height: 45px;
+		}
+
+		.filter-item .input-group:focus-within {
+			box-shadow: 0 4px 12px rgba(58, 134, 255, 0.15);
+		}
+
+		.filter-item .input-group-text {
+			border-right: none;
+			background-color: white;
+			padding-left: 15px;
+			padding-right: 15px;
+			display: flex;
+			align-items: center;
+		}
+
+		/* Keep the original styling for standalone select elements */
+		.filter-item .form-select {
+			height: 45px;
+			padding-left: 15px;
+			border-radius: 8px;
+			box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+			cursor: pointer;
+			transition: all 0.3s ease;
+			background-position: right 15px center;
+		}
+
+		/* Override for select elements within input groups */
+		.filter-item .input-group .form-select {
+			border-left: none;
+			border-radius: 0 8px 8px 0;
+			box-shadow: none !important;
+			height: 45px;
+			padding-left: 5px;
+		}
+
+		.filter-item .form-select:focus {
+			box-shadow: 0 4px 12px rgba(58, 134, 255, 0.15);
+			border-color: #3a86ff;
+		}
+
+		/* Ensure consistent height for all filter elements */
+		.search-bar .input-group,
+		.filter-item .input-group {
+			height: 45px;
+		}
+
+		/* Make the icon color consistent */
+		.input-group-text .fa {
+			color: #3a86ff;
+		}
+
+		.active-filters {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 10px;
+			padding-top: 10px;
+		}
+
+		.filter-badge {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			padding: 6px 12px;
+			background-color: #e9ecef;
+			border-radius: 20px;
+			font-size: 13px;
+			transition: all 0.2s ease;
+		}
+
+		.filter-badge:hover {
+			background-color: #dee2e6;
+		}
+
+		.filter-badge .badge-label {
+			font-weight: 500;
+			color: #495057;
+		}
+
+		.filter-badge .badge-value {
+			font-weight: 600;
+			color: #3a86ff;
+		}
+
+		.filter-badge .badge-remove {
+			cursor: pointer;
+			width: 18px;
+			height: 18px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			border-radius: 50%;
+			background-color: #ced4da;
+			color: #495057;
+			font-size: 10px;
+			line-height: 1;
+			margin-left: 2px;
+			transition: all 0.2s ease;
+		}
+
+		.filter-badge .badge-remove:hover {
+			background-color: #dc3545;
+			color: white;
+		}
+
+		/* Styles pour mobile - empilage responsive */
+		@media(max-width: 768px) {
+			.filter-dashboard {
+				padding: 15px;
+			}
+
+			.row.align-items-center > div {
+				margin-bottom: 10px;
+			}
+		}
+
+		/* Animation pour les badges de filtre */
+		@keyframes badgeAppear {
+			from {
+				transform: translateY(-10px);
+				opacity: 0;
+			}
+			to {
+				transform: translateY(0);
+				opacity: 1;
+			}
+		}
+
+		.filter-badge {
+			animation: badgeAppear 0.3s ease forwards;
+		}
+
+		/* Make sure search container is visible */
+		.search-container {
+			flex-grow: 1;
+			position: relative;
+			display: block !important; /* Force display */
+			min-width: 200px; /* Ensure minimum width */
+		}
+
+		/* Search styling */
+		.search-container input,
+		.dataTables_filter input {
+			width: 100% !important;
+			padding: 8px 12px 8px 35px !important;
+			border: 1px solid #ced4da !important;
+			border-radius: 4px !important;
+			transition: all 0.2s ease;
+			background-color: white !important;
+			display: block !important;
+		}
+
+		.search-container input:focus {
+			border-color: #80bdff;
+			box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+		}
+
+		.search-container::before {
+			content: "\f002";
+			font-family: "Font Awesome 5 Free";
+			font-weight: 900;
+			position: absolute;
+			left: 12px;
+			top: 50%;
+			transform: translateY(-50%);
+			color: #6c757d;
+		}
+
+		/* Force display of filter elements */
+		.dataTables_filter,
+		#add-row_filter,
+		#dataTable_filter {
+			display: block !important; /* Force display */
+		}
+
+		/* Make sure length selector is visible */
+		.dataTables_length,
+		#add-row_length,
+		#dataTable_length {
+			display: block !important; /* Force display */
+		}
+
+		/* Year filter styling */
+		#yearFilter {
+			min-width: 120px !important;
+			cursor: pointer;
+			background-color: white !important;
+			display: inline-block !important;
+		}
+
+		/* Length control styling */
+		#add-row_length select {
+			min-width: 80px !important;
+			cursor: pointer;
+			background-color: white !important;
+		}
+
+		/* Explicitly style select dropdowns to ensure they work */
+		select.form-select,
+		.dataTables_length select {
+			appearance: auto !important; /* Restore browser dropdown behavior */
+			-webkit-appearance: auto !important;
+			-moz-appearance: auto !important;
+			padding-right: 25px !important;
+			background-color: white !important;
+			min-width: 80px !important;
+		}
+
+		/* Badge styling for filters */
+		.active-filter-badge {
+			display: inline-block;
+			padding: 4px 8px;
+			font-size: 12px;
+			font-weight: 600;
+			border-radius: 20px;
+			background-color: #e9ecef;
+			color: #495057;
+			margin-right: 8px;
+		}
+
+		/* Add some animation to table rows */
+		#add-row tbody tr {
+			transition: background-color 0.2s ease;
+		}
+
+		#add-row tbody tr:hover {
+			background-color: rgba(58, 134, 255, 0.05);
+		}
+
+		/* Style the action buttons better */
+		.form-button-action {
+			display: flex;
+			gap: 5px;
+			justify-content: center;
+		}
+
+		.form-button-action button {
+			border-radius: 6px;
+			width: 36px;
+			height: 36px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: 0;
+			transition: all 0.2s ease;
+		}
+
+		.form-button-action button:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+		}
+
+		.form-button-action .btn-primary {
+			color: #3a86ff;
+		}
+
+		.form-button-action .btn-danger {
+			color: #dc3545;
+		}
+
+		/* Add button styling */
+		.btn-primary.btn-round {
+			border-radius: 50px;
+			padding: 10px 20px;
+			font-weight: 500;
+			transition: all 0.3s ease;
+			background-color: #3a86ff;
+			border-color: #3a86ff;
+		}
+
+		.btn-primary.btn-round:hover {
+			background-color: #2a75ff;
+			transform: translateY(-2px);
+			box-shadow: 0 4px 10px rgba(58, 134, 255, 0.3);
+		}
+
+		/* Responsive adjustments */
+		@media(max-width: 768px) {
+			.sticky-controls {
+				flex-direction: column;
+				align-items: stretch;
+			}
+
+			.search-container {
+				order: -1;
+				margin-bottom: 10px;
+			}
+		}
+
+		/* Enhanced table styles */
+		#add-row thead th {
+			background-color: #f8f9fa;
+			color: #495057;
+			font-weight: 600;
+			border-top: none;
+			padding: 12px 15px;
+		}
+
+		#add-row {
+			border-collapse: separate;
+			border-spacing: 0;
+		}
 	</style>
 {% endblock %}
 
 {% block javascripts %}
 	{{ parent() }}
 	<script>
-		$(document).ready(function () { // Initialiser DataTables avec pagination
-$('#add-row').DataTable({
-"pagingType": "full_numbers",
-"language": {
-"url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/French.json"
+		$(document).ready(function () { // Initialisation de DataTables
+let table = $('#add-row').DataTable({
+pagingType: "full_numbers",
+language: {
+url: "//cdn.datatables.net/plug-ins/1.10.24/i18n/French.json"
 },
-"pageLength": 10
+pageLength: 10,
+dom: '<"top"<"float-end"l>><"clear">rt<"bottom"ip>',
+initComplete: function () {
+console.log('DataTable initialized');
+},
+// Cacher la recherche par défaut de DataTables
+searching: true
 });
 
-// Gestion de l'ajout d'un employé
-$('#addRowButton').on('click', function () {
-const firstname = $('#addFirstname').val();
-const lastname = $('#addLastname').val();
-const email = $('#addEmail').val();
-const role = $('#addRole').val();
+// Connecter le champ de recherche personnalisé à DataTables
+$('#employee-search').on('keyup', function () {
+table.search(this.value).draw();
+updateActiveBadges();
+});
 
-// Fermer la modal
-$('#addRowModal').modal('hide');
+// Filtrage personnalisé pour l'année d'embauche
+$.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+const selectedYear = $('#yearFilter').val();
+// La colonne 6 est la date d'embauche (index 0-based)
+const joiningDate = data[6];
 
-// Réinitialiser le formulaire
-$('#addEmployeeForm')[0].reset();
+// Aucun filtre d'année sélectionné
+if (! selectedYear) 
+return true;
+
+
+
+// Pas de date d'embauche
+if (joiningDate === 'N/A') 
+return false;
+
+
+
+// Extraire l'année de la date d'embauche (format YYYY/MM/DD)
+const year = joiningDate.split('/')[0];
+return year === selectedYear;
+});
+
+// Filtrage personnalisé pour le rôle
+$.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+const selectedRole = $('#roleFilter').val();
+// La colonne 7 est le rôle (index 0-based)
+const role = data[7];
+
+// Aucun filtre de rôle sélectionné
+if (! selectedRole) 
+return true;
+
+
+
+return role === selectedRole;
+});
+
+// Appliquer les filtres quand les sélecteurs changent
+$('#yearFilter, #roleFilter').on('change', function () {
+table.draw();
+updateActiveBadges();
+});
+
+// Fonction pour mettre à jour les badges des filtres actifs
+function updateActiveBadges() {
+const badgesContainer = $('#active-filter-badges');
+badgesContainer.empty();
+
+// Recherche
+const searchValue = $('#employee-search').val();
+if (searchValue) {
+addBadge('Recherche', searchValue, function () {
+$('#employee-search').val('').trigger('keyup');
+});
+}
+
+// Année
+const yearValue = $('#yearFilter').val();
+if (yearValue) {
+addBadge('Année', yearValue, function () {
+$('#yearFilter').val('').trigger('change');
+});
+}
+
+// Rôle
+const roleValue = $('#roleFilter').val();
+if (roleValue) {
+const roleText = $('#roleFilter option:selected').text();
+addBadge('Rôle', roleText, function () {
+$('#roleFilter').val('').trigger('change');
+});
+}
+
+// Fonction pour ajouter un badge
+function addBadge(label, value, removeCallback) {
+const badge = $(`
+                <div class="filter-badge">
+                    <span class="badge-label">${label}:</span>
+                    <span class="badge-value">${value}</span>
+                    <span class="badge-remove"><i class="fa fa-times"></i></span>
+                </div>
+            `);
+
+badge.find('.badge-remove').on('click', removeCallback);
+badgesContainer.append(badge);
+}
+}
+
+// Réinitialiser tous les filtres
+$('#reset-filters').on('click', function () {
+$('#employee-search').val('');
+$('#yearFilter').val('');
+$('#roleFilter').val('');
+table.search('').columns().search('').draw();
+updateActiveBadges();
 });
 });
 
-document.addEventListener('DOMContentLoaded', function () { // Auto-hide alerts after 5 seconds
+// Dynamiser les interactions utilisateur
+document.addEventListener('DOMContentLoaded', function () { // Animations pour les filtres
+const filterItems = document.querySelectorAll('.filter-item');
+filterItems.forEach(item => {
+const select = item.querySelector('select');
+if (select) {
+select.addEventListener('focus', () => {
+item.classList.add('is-focused');
+});
+select.addEventListener('blur', () => {
+item.classList.remove('is-focused');
+});
+}
+});
+
+// Gérer les alertes
 const alerts = document.querySelectorAll('.alert');
 alerts.forEach(alert => {
 setTimeout(() => {
@@ -100,38 +620,89 @@ const bsAlert = new bootstrap.Alert(alert);
 bsAlert.close();
 }, 5000);
 });
-
-// Optional: Code to handle page refresh after modal submission
-// This can help ensure flash messages are displayed
-if (window.location.search.includes('added=true')) {
-history.replaceState({}, document.title, window.location.pathname);
-}
 });
-
-
 	</script>
 {% endblock %}
 
 {% block content %}
-
 	<div class="col-md-12">
 		<div class="card">
 			<div class="card-header">
 				<div class="d-flex align-items-center">
 					<h4 class="card-title">Gestion des Employés</h4>
 					<button class="btn btn-primary btn-round ms-auto" data-bs-toggle="modal" data-bs-target="#addRowModal">
-						<i class="fa fa-plus"></i>
+						<i class="fa fa-plus me-2"></i>
 						Ajouter un employé
 					</button>
 				</div>
 			</div>
-			<div
-				class="card-body">
-				<!-- Inclusion du modal -->
+			<div class="card-body">
 				{% include 'user/addUser.html.twig' %}
 				{% include 'user/editUser.html.twig' %}
+				{% include 'user/deleteUser.html.twig' %}
+
+				<!-- Nouvelle section des filtres améliorée -->
+				<div class="filter-dashboard mb-4">
+					<div class="row align-items-center g-3">
+						<div class="col-lg-6">
+							<div class="search-bar">
+								<label for="yearFilter" class="form-label mb-1 small text-muted"></label>
+
+								<div class="input-group">
+									<span class="input-group-text bg-white">
+										<i class="fa fa-search text-primary"></i>
+									</span>
+									<input type="text" id="employee-search" class="form-control border-start-0" placeholder="Rechercher un employé...">
+								</div>
+							</div>
+						</div>
+						<div class="col-lg-3">
+							<div class="filter-item">
+								<label for="yearFilter" class="form-label mb-1 small text-muted">Année d'embauche</label>
+								<div class="input-group">
+									<span class="input-group-text bg-white">
+										<i class="fa fa-calendar text-primary"></i>
+									</span>
+									<select id="yearFilter" class="form-select border-start-0">
+										<option value="">Tous</option>
+										<option value="2025">2025</option>
+										<option value="2024">2024</option>
+										<option value="2023">2023</option>
+										<option value="2022">2022</option>
+										<option value="2021">2021</option>
+										<option value="2020">2020</option>
+									</select>
+								</div>
+							</div>
+						</div>
+						<div class="col-lg-3">
+							<div class="filter-item">
+								<label for="roleFilter" class="form-label mb-1 small text-muted">Rôle</label>
+								<div class="input-group">
+									<span class="input-group-text bg-white">
+										<i class="fa fa-user-tag text-primary"></i>
+									</span>
+									<select id="roleFilter" class="form-select border-start-0">
+										<option value="">Tous les rôles</option>
+										<option value="EMPLOYEE">Employé</option>
+										<option value="CHEF_PROJET">Chef de projet</option>
+										<option value="RESPONSABLE_RH">Responsable RH</option>
+										<option value="MANAGER">Manager</option>
+									</select>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Indicateurs des filtres actifs -->
+					<div
+						class="active-filters mt-3" id="active-filter-badges"><!-- Les badges des filtres actifs seront ajoutés ici via JS -->
+					</div>
+				</div>
+
+				<!-- Table responsive -->
 				<div class="table-responsive">
-					<table id="add-row" class="display table table-striped table-hover">
+					<table id="add-row" class="display table table-striped table-hover w-100">
 						<thead>
 							<tr>
 								<th>Profile</th>
@@ -164,25 +735,34 @@ history.replaceState({}, document.title, window.location.pathname);
 									<td>{{ user.gender }}</td>
 									<td>{{ user.birthdayDate ? user.birthdayDate|date('Y/m/d') : 'N/A' }}</td>
 									<td>{{ user.joiningDate ? user.joiningDate|date('Y/m/d') : 'N/A' }}</td>
-									<td>{{ user.role }}</td>
+									<td>
+										{% set roleDisplay = {
+                                            'RESPONSABLE_RH': 'Responsable RH',
+                                            'CHEF_PROJET': 'Chef de projet',
+                                            'EMPLOYEE': 'Employé',
+                                            'CONDIDAT': 'Candidat'
+                                        } %}
+										{{ roleDisplay[user.role] ?? user.role }}
+									</td>
 									<td>{{ user.ttRestants is not null ? user.ttRestants : 'N/A' }}</td>
 									<td>{{ user.congeRestant is not null ? user.congeRestant : 'N/A' }}</td>
 									<td>{{ user.numTel ? user.numTel : 'N/A' }}</td>
 									<td>
 										<div class="form-button-action">
 											<button type="button" class="btn btn-link btn-primary btn-lg edit-user-btn" data-bs-toggle="modal" data-bs-target="#editUserModal" data-id="{{ user.id }}">
-												<i class="fa fa-edit"></i>
+												<i class="fa-solid fa-user-pen fa-2x"></i>
+												<!-- Slightly bigger size fa-lg -->
 											</button>
-
-											<button type="button" data-bs-toggle="tooltip" title="Delete" class="btn btn-link btn-danger" data-original-title="Remove" data-bs-toggle="modal" data-bs-target="#deleteModal{{ user.id }}">
-												<i class="fa fa-times"></i>
+											<button type="button" class="btn btn-link btn-danger delete-user-btn" data-bs-toggle="modal" data-bs-target="#deleteUserModal" data-user-id="{{ user.id }}" data-user-name="{{ user.firstname }} {{ user.lastname }}">
+												<i class="fa-solid fa-trash fa-2x"></i>
+												<!-- Slightly bigger size -->
 											</button>
 										</div>
 									</td>
 								</tr>
 							{% else %}
 								<tr>
-									<td colspan="11" class="text-center">No users found</td>
+									<td colspan="12" class="text-center">No users found</td>
 								</tr>
 							{% endfor %}
 						</tbody>
