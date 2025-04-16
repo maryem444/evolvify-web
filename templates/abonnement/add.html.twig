@@ -494,4 +494,88 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+// Fonction pour télécharger le QR Code
+function setupQRCodeDownload() {
+    const downloadBtn = document.getElementById('downloadQRCode');
+    if (!downloadBtn) return;
+    
+    downloadBtn.addEventListener('click', function() {
+        // Vérifier si le QR code existe
+        const qrCodeImg = document.querySelector('#qrcode img');
+        if (!qrCodeImg) {
+            alert('Veuillez d\'abord générer un QR code');
+            return;
+        }
+        
+        // Créer un canvas pour obtenir l'image
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.width = qrCodeImg.width;
+        canvas.height = qrCodeImg.height;
+        
+        // Dessiner l'image sur le canvas
+        context.drawImage(qrCodeImg, 0, 0);
+        
+        // Obtenir l'URL de données du canvas
+        const dataURL = canvas.toDataURL('image/png');
+        
+        // Créer un lien de téléchargement
+        const downloadLink = document.createElement('a');
+        downloadLink.href = dataURL;
+        
+        // Obtenir des informations pour le nom du fichier
+        const type = document.getElementById('type_Ab').value;
+        const dateDebut = document.getElementById('date_debut').value.replace(/\//g, '-');
+        
+        // Donner un nom au fichier
+        downloadLink.download = `QRCode_Abonnement_${type}_${dateDebut}.png`;
+        
+        // Déclencher le téléchargement
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+    });
+}
+
+// Ajouter l'appel à cette fonction dans votre code d'initialisation
+document.addEventListener('DOMContentLoaded', function() {
+    // Exécuter 100ms après le chargement pour laisser le temps aux composants de s'initialiser
+    setTimeout(setCurrentDate, 100);
+    
+    // Observer l'ouverture de la modal
+    const modalElement = document.getElementById('ajoutAbonnementModal');
+    if (modalElement) {
+        modalElement.addEventListener('shown.bs.modal', function() {
+            // Exécuter avec un petit délai pour s'assurer que tous les éléments sont initialisés
+            setTimeout(() => {
+                setCurrentDate();
+                generateQRCode();
+                setupQRCodeDownload(); // Nouvelle fonction
+            }, 100);
+        });
+    }
+    
+    // Surveiller également le clic sur le bouton qui ouvre la modal
+    const modalTriggers = document.querySelectorAll('[data-bs-toggle="modal"][data-bs-target="#ajoutAbonnementModal"]');
+    modalTriggers.forEach(trigger => {
+        trigger.addEventListener('click', function() {
+            // Exécuter avec un délai légèrement plus long pour l'ouverture de la modal
+            setTimeout(() => {
+                setCurrentDate();
+                generateQRCode();
+                setupQRCodeDownload(); // Nouvelle fonction
+            }, 300);
+        });
+    });
+    
+    // Configuration du téléchargement QR Code
+    setupQRCodeDownload();
+    
+    // Mettre à jour le QR code chaque fois qu'un champ du formulaire change
+    const formInputs = document.querySelectorAll('#ajoutAbonnementForm input, #ajoutAbonnementForm select');
+    formInputs.forEach(input => {
+        input.addEventListener('change', generateQRCode);
+        input.addEventListener('input', generateQRCode);
+    });
+});
 </script>
