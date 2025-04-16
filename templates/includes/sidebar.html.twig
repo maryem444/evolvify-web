@@ -42,8 +42,26 @@
 					<p>Users</p>
 					</a>
 				</li>
+				
 
-
+<li class="nav-item">
+          <a data-bs-toggle="collapse" href="#conges">
+            <i class="fa fa-calendar"></i>
+            <p>Conge Management</p>
+            <span class="caret"></span>
+          </a>
+          <div class="collapse" id="conges">
+            <ul class="nav nav-collapse">
+              <li>
+                <a href="{{ path('app_conge_index') }}">
+                  <span class="sub-item">Conge RH</span>
+                </a>
+              </li>
+			  </ul>
+			  </div>
+			  </li>
+              
+			  
 				{# <li class="nav-item">
 					<a data-bs-toggle="collapse" href="#sidebarLayouts">
 						<i class="fas fa-th-list"></i>

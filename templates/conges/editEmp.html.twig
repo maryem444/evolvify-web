@@ -3,7 +3,8 @@
 {% block title %}Modifier Demande de Congé{% endblock %}
 
 {% block content %}
-    <div class="container mt-4">
+    <div class="container-fluid" style="margin-top: 6rem;">
+
         <div class="row">
             <div class="col-md-8 offset-md-2">
                 <div class="card">
@@ -11,17 +12,21 @@
                         <h4 class="mb-0">Modifier Demande de Congé</h4>
                     </div>
                     <div class="card-body">
-                        <form action="{{ path('app_conge_edit', {'id': conge.id}) }}" method="post">
+                        <form action="{{ path('app_employe_conge_edit', {'id': conge.id}) }}" method="post">
                             <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label for="idEmploye" class="form-label">Employé ID</label>
-                                    <input type="number" class="form-control" id="idEmploye" name="idEmploye" value="{{ conge.idEmploye }}" readonly>
-                                </div>
                                 <div class="col-md-6">
                                     <label for="type" class="form-label">Type de Congé</label>
                                     <select class="form-select" id="type" name="type" required>
                                         {% for value, label in types %}
-                                            <option value="{{ value }}" {% if conge.type.value == value %}selected{% endif %}>{{ label }}</option>
+                                            <option value="{{ value }}" {% if conge.type and conge.type.value == value %}selected{% endif %}>{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="reason" class="form-label">Raison</label>
+                                    <select class="form-select" id="reason" name="reason" required>
+                                        {% for value, label in reasons %}
+                                            <option value="{{ value }}" {% if conge.reason and conge.reason.value == value %}selected{% endif %}>{{ label }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
@@ -39,17 +44,8 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="reason" class="form-label">Raison</label>
-                                <select class="form-select" id="reason" name="reason" required>
-                                    {% for value, label in reasons %}
-                                        <option value="{{ value }}" {% if conge.reason.value == value %}selected{% endif %}>{{ label }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="description" class="form-label">Description</label>
-                                <textarea class="form-control" id="description" name="description" rows="3">{{ conge.description }}</textarea>
+                                <label for="description" class="form-label">Description / Commentaire</label>
+                                <textarea class="form-control" id="description" name="description" rows="4">{{ conge.description }}</textarea>
                                 <div class="form-text">Veuillez fournir des détails supplémentaires si nécessaire.</div>
                             </div>
 
@@ -57,9 +53,13 @@
                                 <div class="col-md-6">
                                     <label class="form-label">Statut actuel</label>
                                     <div>
-                                        <span class="badge rounded-pill bg-{{ conge.status.value == 'ACCEPTE' ? 'success' : (conge.status.value == 'REFUSE' ? 'danger' : (conge.status.value == 'EN_COURS' ? 'warning' : 'secondary')) }} p-2">
-                                            {{ conge.status.label }}
-                                        </span>
+                                        {% if conge.status %}
+                                            <span class="badge rounded-pill bg-{{ conge.status.value == 'ACCEPTE' ? 'success' : (conge.status.value == 'REFUSE' ? 'danger' : (conge.status.value == 'EN_COURS' ? 'warning' : 'secondary')) }} p-2">
+                                                {{ conge.status.label }}
+                                            </span>
+                                        {% else %}
+                                            <span class="badge rounded-pill bg-secondary p-2">Non défini</span>
+                                        {% endif %}
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -71,7 +71,7 @@
                             </div>
 
                             <div class="d-flex justify-content-between mt-4">
-                                <a href="{{ path('app_conge_index') }}" class="btn btn-secondary">
+                                <a href="{{ path('app_employe_conge_index') }}" class="btn btn-secondary">
                                     <i class="fas fa-arrow-left"></i> Retour
                                 </a>
                                 <button type="submit" class="btn btn-success">
@@ -90,11 +90,10 @@
     {{ parent() }}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Date validation
             const leaveStart = document.getElementById('leaveStart');
             const leaveEnd = document.getElementById('leaveEnd');
-            
-            leaveStart.addEventListener('change', function() {
+
+            leaveStart.addEventListener('change', function () {
                 leaveEnd.min = leaveStart.value;
                 if (leaveEnd.value && leaveEnd.value < leaveStart.value) {
                     leaveEnd.value = leaveStart.value;
