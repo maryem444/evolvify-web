@@ -59,6 +59,8 @@
 											<span class="sub-item">Projects List</span>
 										</a>
 									</li>
+								{% endif %}
+								{% if app.user.role == 'CHEF_PROJET' or app.user.role == 'EMPLOYEE' %}
 									<li>
 										<a href="{{ path('projets_cards') }}">
 											<span class="sub-item">Projects Cards</span>
