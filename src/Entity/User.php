@@ -2,6 +2,8 @@
 
 namespace App\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -52,8 +54,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: "conge_restant", type: 'integer', nullable: true)]
     private ?int $conge_restant = null;
 
-    #[ORM\Column(name: "uploaded_cv", type: 'blob', nullable: true)]
-    private $uploaded_cv;
+    #[ORM\Column(name: "uploaded_cv", type: 'string', length: 255, nullable: true)]
+    private ?string $uploaded_cv = null;
 
     #[ORM\Column(name: "num_tel", type: 'integer', nullable: true)]
     private ?int $num_tel = null;
@@ -67,6 +69,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(name: "first_login", type: 'boolean', nullable: true)]
     private bool $first_login = true;
+
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Tache::class)]
+    private Collection $taches;
+
+    public function __construct()
+    {
+        $this->taches = new ArrayCollection();
+    }
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private ?string $resetToken = null;

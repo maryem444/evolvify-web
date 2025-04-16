@@ -1,0 +1,548 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Liste des Projets
+{% endblock %}
+{% block stylesheets %}
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+	<style>
+		.invalid-feedback {
+			color: #dc3545 !important;
+			background-color: #f8d7da;
+			padding: 6px 10px;
+			border-radius: 4px;
+			font-size: 0.85rem;
+		}
+
+		.custom-confirm-dialog {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background-color: rgba(0, 0, 0, 0.5);
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			z-index: 9999;
+		}
+
+		.confirm-content {
+			width: 380px;
+			background-color: #fff3cd;
+			border: 2px solid #ffc107;
+			border-radius: 10px;
+			padding: 20px;
+			box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+			text-align: center;
+			animation: fadeIn 0.2s ease-out;
+		}
+
+		.confirm-header {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			margin-bottom: 15px;
+		}
+
+		.warning-icon {
+			color: #856404;
+			font-size: 40px;
+			margin-bottom: 10px;
+		}
+
+		.confirm-header h3 {
+			color: #856404;
+			font-size: 15px;
+			font-weight: bold;
+			margin: 5px 0;
+		}
+
+		.confirm-message {
+			color: #856404;
+			font-size: 13px;
+			margin-bottom: 20px;
+		}
+
+		.confirm-buttons {
+			display: flex;
+			justify-content: center;
+			gap: 15px;
+		}
+
+		.btn-cancel,
+		.btn-confirm {
+			padding: 8px 16px;
+			border-radius: 8px;
+			font-size: 13px;
+			border: none;
+			cursor: pointer;
+			transition: background-color 0.2s;
+		}
+
+		.btn-cancel {
+			background-color: #dddddd;
+			color: #333;
+		}
+
+		.btn-confirm {
+			background-color: #dc3545;
+			color: white;
+		}
+
+		.btn-cancel:hover {
+			background-color: #c8c8c8;
+		}
+
+		.btn-confirm:hover {
+			background-color: #c82333;
+		}
+
+		body.dialog-open {
+			overflow: hidden;
+		}
+
+		@keyframes fadeIn {
+			from {
+				opacity: 0;
+				transform: translateY(-20px);
+			}
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
+		}
+		.page-header {
+			margin-top: 90px;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+		}
+		.page-title {
+			margin: 0;
+			font-size: 24px;
+			color: #034694; /* Bleu marine */
+			font-weight: bold;
+		}
+		.header-buttons {
+			display: flex;
+			align-items: center;
+			gap: 10px; /* This adds space between the buttons */
+		}
+		.btn-add-projet {
+			background: linear-gradient(to right, #4CAF50, #2196F3);
+			color: white;
+			border: none;
+			padding: 8px 16px;
+			border-radius: 4px;
+			font-size: 14px;
+			font-weight: 500;
+			text-transform: uppercase;
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			text-decoration: none;
+			transition: opacity 0.3s ease;
+		}
+
+
+		.btn-add-projet:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+		}
+
+		.btn-add-projet i {
+			margin-right: 5px;
+		}
+
+		.table thead {
+			background-color: rgb(169, 243, 240) !important;
+			color: white;
+		}
+
+		.btn-group {
+			display: flex;
+			gap: 10px;
+		}
+
+		.btn-group i {
+			cursor: pointer;
+			transition: color 0.3s ease;
+		}
+
+		.btn-group .fa-edit {
+			color: #4CAF50;
+		}
+
+		.btn-group .fa-trash {
+			color: #F44336;
+		}
+
+		.btn-group .fa-edit:hover {
+			color: #45a049;
+		}
+
+		.btn-group .fa-trash:hover {
+			color: #d32f2f;
+		}
+
+		.btn-add-projet i,
+		.btn-export-pdf i {
+			margin-right: 5px;
+		}
+		.filter-panel {
+			background-color: #f8f9fa;
+			padding: 15px;
+			border-radius: 8px;
+			margin-bottom: 20px;
+			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+		}
+		.filter-form {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 15px;
+			align-items: flex-end;
+		}
+		.filter-form .form-group {
+			flex: 1;
+			min-width: 200px;
+		}
+		.filter-form label {
+			display: block;
+			margin-bottom: 5px;
+			font-weight: 500;
+			color: #555;
+		}
+		.filter-reset {
+			background-color: #6c757d;
+			color: white;
+			border: none;
+			padding: 8px 16px;
+			border-radius: 4px;
+			margin-left: 10px;
+			text-decoration: none;
+		}
+		.filter-reset:hover {
+			background-color: #5a6268;
+			color: white;
+			text-decoration: none;
+		}
+		.user-profile {
+			display: inline-block;
+			position: relative;
+			margin-right: 10px;
+		}
+
+		.user-photo {
+			width: 40px;
+			height: 40px;
+			border-radius: 50%;
+			object-fit: cover;
+			cursor: pointer;
+			transition: transform 0.3s ease;
+		}
+
+		.user-photo:hover {
+			transform: scale(1.1); /* Agrandir l'image légèrement au survol */
+		}
+
+		.user-photo[title] {
+			position: relative;
+		}
+
+		.user-photo[title]:hover::after {
+			content: attr(title);
+			position: absolute;
+			top: 110%;
+			left: 50%;
+			transform: translateX(-50%);
+			background-color: rgba(0, 0, 0, 0.7);
+			color: white;
+			padding: 5px;
+			border-radius: 5px;
+			font-size: 14px;
+			white-space: nowrap;
+			z-index: 10;
+		}
+		.badge-large {
+			font-size: 1rem;
+			padding: 0.5em 0.8em;
+			border-radius: 0.5rem;
+		}
+		.flash-message {
+			position: fixed;
+			top: 20px;
+			right: 20px;
+			padding: 15px 20px;
+			border-radius: 8px;
+			color: white;
+			box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+			z-index: 9999;
+			display: flex;
+			align-items: center;
+			animation: slideIn 0.3s ease-out forwards, fadeOut 0.5s ease-in 4s forwards;
+		}
+
+		.flash-success {
+			background-color: #28a745;
+			border-left: 5px solid #1e7e34;
+		}
+
+		.flash-error {
+			background-color: #dc3545;
+			border-left: 5px solid #bd2130;
+		}
+
+		.flash-warning {
+			background-color: #ffc107;
+			border-left: 5px solid #d39e00;
+			color: #333;
+		}
+
+		.flash-info {
+			background-color: #17a2b8;
+			border-left: 5px solid #117a8b;
+		}
+
+		.flash-message i {
+			margin-right: 10px;
+			font-size: 18px;
+		}
+
+		@keyframes slideIn {
+			from {
+				transform: translateX(100%);
+				opacity: 0;
+			}
+			to {
+				transform: translateX(0);
+				opacity: 1;
+			}
+		}
+
+		@keyframes fadeOut {
+			from {
+				opacity: 1;
+			}
+			to {
+				opacity: 0;
+				visibility: hidden;
+			}
+		}
+	</style>
+{% endblock %}
+
+{% block content %}
+	<div class="container-fluid">
+		{% for label, messages in app.flashes %}
+			{% for message in messages %}
+				<div class="flash-message flash-{{ label }}" id="flash-message-{{ loop.index }}">
+					{% if label == 'success' %}
+						<i class="fas fa-check-circle"></i>
+					{% elseif label == 'error' %}
+						<i class="fas fa-exclamation-circle"></i>
+					{% elseif label == 'warning' %}
+						<i class="fas fa-exclamation-triangle"></i>
+					{% elseif label == 'info' %}
+						<i class="fas fa-info-circle"></i>
+					{% endif %}
+					{{ message }}
+				</div>
+			{% endfor %}
+		{% endfor %}
+		<div class="page-header">
+			<h1 class="page-title">📋 Liste des Projets</h1>
+			<div class="header-buttons">
+				<a href="{{ path('export_pdf') }}" class="btn btn-danger">
+					<i class="fas fa-file-pdf"></i>
+					Extraire PDF
+				</a>
+				<a href="{{ path('projet_add') }}" class="btn-add-projet">
+					<i class="fas fa-plus"></i>Ajouter Projet
+				</a>
+			</div>
+		</div>
+		<div class="filter-panel">
+			<h5>
+				<i class="fas fa-filter"></i>
+				Filtrer les projets</h5>
+			{{ form_start(filterForm, {'attr': {'class': 'filter-form'}}) }}
+			<div class="form-group">
+				{{ form_label(filterForm.name) }}
+				{{ form_widget(filterForm.name) }}
+			</div>
+			<div class="form-group">
+				{{ form_label(filterForm.abbreviation) }}
+				{{ form_widget(filterForm.abbreviation) }}
+			</div>
+			<div class="form-group">
+				{{ form_label(filterForm.status) }}
+				{{ form_widget(filterForm.status) }}
+			</div>
+			<div class="form-group">
+				{{ form_widget(filterForm.submit) }}
+				<a href="{{ path('projets_list') }}" class="filter-reset">
+					<i class="fas fa-undo"></i>
+					Réinitialiser
+				</a>
+			</div>
+			{{ form_end(filterForm) }}
+		</div>
+		<div class="card">
+			<div class="card-body">
+				<table class="table table-striped table-bordered">
+					<thead>
+						<tr>
+							<th>Nom</th>
+							<th>Abbreviation</th>
+							<th>Statut</th>
+							<th>Assigné à</th>
+							<th>Date de début</th>
+							<th>Date de fin</th>
+							<th>Actions</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for projet in projets %}
+							<tr>
+								<td>{{ projet.name }}</td>
+								<td>{{ projet.abbreviation }}</td>
+								<td>
+									{% if projet.status == constant('App\\Entity\\StatutProjet::IN_PROGRESS') %}
+										<span class="badge bg-warning text-dark badge-large">En cours</span>
+									{% else %}
+										<span class="badge bg-success badge-large">Terminé</span>
+									{% endif %}
+								</td>
+								<td>
+									<div style="display: flex; flex-wrap: wrap; gap: 5px;">
+										{% for user in projet.assignedUsers %}
+											{% set initials = '' %}
+											{% if user.firstname and user.lastname %}
+												{% set initials = user.firstname|first|upper ~ user.lastname|first|upper %}
+											{% else %}
+												{% set initials = 'N/A' %}
+											{% endif %}
+
+											{% set colors = ['#007bff', '#28a745', '#dc3545', '#ffc107', '#17a2b8'] %}
+											{% set color = colors[loop.index0 % colors|length] %}
+
+											<div style="width: 32px; height: 32px; background-color: {{ color }}; color: white; display: flex; justify-content: center; align-items: center; border-radius: 50%; font-size: 12px; margin-bottom: 2px;" title="{{ user.firstname }} {{ user.lastname }}">
+												{{ initials }}
+											</div>
+										{% endfor %}
+									</div>
+								</td>
+
+
+								<td>{{ projet.starterAt ? projet.starterAt|date('d/m/Y') : '-' }}</td>
+								<td>{{ projet.endDate ? projet.endDate|date('d/m/Y') : '-' }}</td>
+								<td>
+									<div class="project-card-footer">
+										<div class="project-card-actions">
+											<a href="{{ path('projet_edit', {'id': projet.id, 'returnTo': 'list'}) }}" title="Modifier">
+												<i class="fas fa-edit" style="color: #4CAF50;"></i>
+											</a>
+											<a href="{{ path('taches_list', {'id': projet.id}) }}">
+												<i class="fa fa-tasks" title="Taches" style="color:rgb(199, 43, 238); cursor: pointer;"></i>
+											</a>
+											<form action="{{ path('projet_delete', {'id': projet.id}) }}" method="post" class="delete-form" style="display:inline;">
+												<button type="submit" style="border: none; background: none; padding: 0;">
+													<i class="fas fa-trash" title="Supprimer" style="color: #F44336; cursor: pointer;"></i>
+												</button>
+											</form>
+
+										</div>
+									</div>
+								</td>
+							</tr>
+						{% else %}
+							<tr>
+								<td colspan="7" class="text-center">Aucun projet trouvé</td>
+							</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+				<div class="pagination d-flex justify-content-center mt-4">
+					{{ knp_pagination_render(projets, '@KnpPaginator/Pagination/bootstrap_v5_pagination.html.twig') }}
+				</div>
+			</div>
+		</div>
+	</div>
+	<script>
+		document.addEventListener('DOMContentLoaded', function () { // Sélectionner tous les formulaires de suppression
+var deleteForms = document.querySelectorAll('.delete-form');
+
+deleteForms.forEach(function (form) {
+form.addEventListener('submit', function (event) {
+event.preventDefault();
+
+// Créer une div pour notre boîte de dialogue personnalisée
+var confirmDialog = document.createElement('div');
+confirmDialog.className = 'custom-confirm-dialog';
+
+confirmDialog.innerHTML = `
+                        <div class="confirm-content">
+                            <div class="confirm-header">
+                                <i class="fas fa-exclamation-triangle warning-icon"></i>
+                                <h3>Attention !</h3>
+                            </div>
+                            <p class="confirm-message">Êtes-vous sûr de vouloir supprimer ce projet ?</p>
+                            <div class="confirm-buttons">
+                                <button type="button" class="btn-cancel">Annuler</button>
+                                <button type="button" class="btn-confirm">Supprimer</button>
+                            </div>
+                        </div>
+                    `;
+
+// Ajouter la boîte de dialogue au body
+document.body.appendChild(confirmDialog);
+document.body.classList.add('dialog-open');
+
+// Gestionnaire pour le bouton Annuler
+confirmDialog.querySelector('.btn-cancel').addEventListener('click', function () {
+closeDialog();
+});
+
+// Gestionnaire pour le bouton Supprimer
+confirmDialog.querySelector('.btn-confirm').addEventListener('click', function () {
+closeDialog();
+form.submit();
+});
+
+// Fermer si on clique en dehors
+confirmDialog.addEventListener('click', function (e) {
+if (e.target === confirmDialog) {
+closeDialog();
+}
+});
+
+function closeDialog() {
+document.body.removeChild(confirmDialog);
+document.body.classList.remove('dialog-open');
+}
+});
+});
+});
+	</script>
+	<script>
+		// Gestion des flash messages
+document.addEventListener('DOMContentLoaded', function () {
+const flashMessages = document.querySelectorAll('.flash-message');
+
+flashMessages.forEach(function (message) { // Suppression automatique après 5 secondes
+setTimeout(function () {
+if (message && message.parentNode) {
+message.parentNode.removeChild(message);
+}
+}, 5000);
+
+// Permettre la fermeture manuelle en cliquant
+message.addEventListener('click', function () {
+if (message.parentNode) {
+message.parentNode.removeChild(message);
+}
+});
+});
+});
+	</script>
+{% endblock %}
