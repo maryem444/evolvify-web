@@ -33,13 +33,13 @@
 					<span class="sidebar-mini-icon">
 						<i class="fa fa-ellipsis-h"></i>
 					</span>
-					<h4 class="text-section">Components</h4>
+					<h4 class="text-section">Composants</h4>
 				</li>
 
 			{% if app.user is defined and app.user and app.user.role is defined and app.user.role == 'RESPONSABLE_RH' %}				<li class="nav-item">
 					<a href="{{ path('user_index') }}">
                     <i class="fa-solid fa-users"></i>
-					<p>Users</p>
+					<p>Gestion des utilisateurs</p>
 					</a>
 				</li>
 			{% endif %}
