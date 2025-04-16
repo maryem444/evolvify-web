@@ -28,7 +28,9 @@
                     <div class="mb-3">
                         <label for="id_moyen" class="form-label">Moyen de Transport</label>
                         <select name="id_moyen" id="id_moyen" class="form-control" required>
-                            <!-- Options will be populated dynamically via JavaScript -->
+                            {% for moyen in moyentransport %}
+                                <option value="{{ moyen.id_moyen }}">{{ moyen.type_moyen }} ({{ moyen.immatriculation }})</option>
+                            {% endfor %}
                         </select>
                     </div>
                     <div class="mb-3">
@@ -50,3 +52,104 @@
         </div>
     </div>
 </div>
+<script>
+// Gestion de l'édition des trajets
+document.addEventListener('DOMContentLoaded', function() {
+    const editModal = document.getElementById('EditModal');
+    const editForm = document.getElementById('editTrajetForm');
+    
+    if (editModal) {
+        // Récupérer les moyens de transport disponibles
+        const populateMoyensTransport = function() {
+            const moyenSelect = document.getElementById('id_moyen');
+            // Cette partie est déjà gérée par votre boucle Twig
+        };
+        
+        // Lorsque le modal est sur le point d'être affiché
+        editModal.addEventListener('show.bs.modal', function(event) {
+            // Bouton qui a déclenché le modal
+            const button = event.relatedTarget;
+            
+            // Extraire les informations des attributs data-*
+            const id = button.getAttribute('data-id');
+            const depart = button.getAttribute('data-depart');
+            const arrivee = button.getAttribute('data-arrivee');
+            const distance = button.getAttribute('data-distance');
+            const duree = button.getAttribute('data-duree');
+            const moyen = button.getAttribute('data-moyen');
+            const employe = button.getAttribute('data-employe');
+            const status = button.getAttribute('data-status');
+            
+            // Mettre à jour le titre du modal
+            const modalTitle = editModal.querySelector('.modal-title');
+            modalTitle.textContent = 'Modifier le Trajet #' + id;
+            
+            // Remplir les champs du formulaire avec les données du trajet
+            document.getElementById('id_T').value = id;
+            document.getElementById('point_dep').value = depart;
+            document.getElementById('point_arr').value = arrivee;
+            document.getElementById('distance').value = distance;
+            document.getElementById('durée_estimé').value = duree;
+            document.getElementById('id_employe').value = employe;
+            
+            // Pour le select du moyen de transport
+            const moyenSelect = document.getElementById('id_moyen');
+            for (let i = 0; i < moyenSelect.options.length; i++) {
+                if (moyenSelect.options[i].value === moyen) {
+                    moyenSelect.options[i].selected = true;
+                    break;
+                }
+            }
+            
+            // Pour le statut
+            const statusSelect = document.getElementById('status');
+            for (let i = 0; i < statusSelect.options.length; i++) {
+                if (statusSelect.options[i].value === status) {
+                    statusSelect.options[i].selected = true;
+                    break;
+                }
+            }
+            
+            // Mise à jour de l'action du formulaire pour pointer vers l'URL correcte
+            const form = document.getElementById('editTrajetForm');
+            form.action = `/trajet/edit/${id}`;
+        });
+        
+        // Gestion de la soumission du formulaire avec AJAX pour la redirection
+        if (editForm) {
+            editForm.addEventListener('submit', function(e) {
+                e.preventDefault(); // Empêche la soumission normale du formulaire
+                
+                // Créer un objet FormData à partir du formulaire
+                const formData = new FormData(this);
+                
+                // Récupérer l'URL d'action du formulaire
+                const url = this.action;
+                
+                // Envoyer la requête AJAX
+                fetch(url, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        // Si succès, rediriger vers la page de liste
+                        window.location.href = '/trajet_front';
+                    } else if (data.error) {
+                        // Afficher l'erreur 
+                        alert('Erreur: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    alert('Une erreur est survenue lors de la mise à jour');
+                });
+            });
+        }
+        
+        // Appeler la fonction pour charger les moyens de transport
+        populateMoyensTransport();
+    }
+});
+</script>
