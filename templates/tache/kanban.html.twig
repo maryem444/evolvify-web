@@ -385,7 +385,7 @@
 			display: flex;
 			justify-content: space-between;
 			align-items: center;
-			margin-top: 10px;
+			margin-top: 20px;
 		}
 
 		.search-container {
@@ -532,7 +532,7 @@
 										{{ task.priority.getLabel() }}</p>
 
 									<a href="#" onclick="openModal(
-																																																		{{ task.idTache }},'{{ task.description }}','{{ task.location }}','{{ task.priority.getLabel() }}','{{ task.status.getLabel() }}')" title="Modifier">
+																																																																																{{ task.idTache }},'{{ task.description }}','{{ task.location }}','{{ task.priority.getLabel() }}','{{ task.status.getLabel() }}')" title="Modifier">
 										<i class="fas fa-edit"></i>
 									</a>
 									<form action="{{ path('kanban_task_delete', { 'id': projet.id, 'tacheId': task.getIdTache }) }}" method="post" class="delete-form" style="display:inline;">
@@ -620,7 +620,7 @@
 						{% endif %}
 					</div>
 
-					{{ form_widget(form.idEmploye) }}
+					{#{{ form_widget(form.idEmploye) }}#}
 
 					<div class="modal-footer">
 						<button type="button" class="btn btn-secondary" onclick="closeModal()">Annuler</button>

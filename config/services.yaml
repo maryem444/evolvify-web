@@ -25,7 +25,7 @@ services:
       - "../src/Kernel.php"
 
     # Explicitly define the custom authenticator service
-    App\Security\CustomAuthenticator:
+  App\Security\CustomAuthenticator:
         arguments:
             $urlGenerator: '@router'
 

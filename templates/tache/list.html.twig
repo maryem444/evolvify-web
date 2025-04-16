@@ -6,7 +6,7 @@
 {% block stylesheets %}
 	<style>
 		.page-header {
-			margin-top: 80px;
+			margin-top: 120px;
 			display: flex;
 			justify-content: space-between;
 			align-items: center;
@@ -483,12 +483,12 @@
 								<td>
 									<div class="btn-group" role="group">
 										<a href="#" onclick="openModal(
-																						    {{ tache.idTache }},
-																						    '{{ tache.description }}',
-																						    '{{ tache.location }}',
-																						    '{{ tache.priority.getLabel() }}',
-																						    '{{ tache.status.getLabel() }}'
-																						)" title="Modifier">
+																																	    {{ tache.idTache }},
+																																	    '{{ tache.description }}',
+																																	    '{{ tache.location }}',
+																																	    '{{ tache.priority.getLabel() }}',
+																																	    '{{ tache.status.getLabel() }}'
+																																	)" title="Modifier">
 											<i class="fas fa-edit"></i>
 										</a>
 
@@ -581,7 +581,7 @@
 					{% endif %}
 				</div>
 
-				{{ form_widget(form.idEmploye) }}
+				{#{{ form_widget(form.idEmploye) }}#}
 
 				<div class="modal-footer">
 					<button type="button" class="btn btn-secondary" onclick="closeModal()">Annuler</button>

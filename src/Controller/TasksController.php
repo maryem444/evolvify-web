@@ -58,7 +58,14 @@ class TasksController extends AbstractController
       throw $this->createNotFoundException('Projet introuvable.');
     }
 
-    $idEmploye = 87; // Remplacer avec l'ID réel de l'employé connecté
+    /** @var User|null $user */
+    $user = $this->getUser();
+
+    if (!$user) {
+      $this->addFlash('error', 'Utilisateur non connecté.');
+      return $this->redirectToRoute('kanban_tasks_list', ['id' => $id]);
+    }
+
     $tache = new Tache();
     $form = $this->createForm(TacheType::class, $tache);
     $form->handleRequest($request);
@@ -66,31 +73,19 @@ class TasksController extends AbstractController
     if ($form->isSubmitted() && $form->isValid()) {
       $tache->setCreatedAt(new \DateTime());
       $tache->setProjet($projet);
-      $user = $entityManager->getRepository(User::class)->find($idEmploye);
-
-      // Ensuite, associez l'utilisateur à la tâche
-      if ($user) {
-        $tache->setUser($user);
-      } else {
-        // Gérer le cas où l'utilisateur n'est pas trouvé
-        $this->addFlash('error', 'Utilisateur non trouvé !');
-        return $this->redirectToRoute('taches_list', ['id' => $id]);
-      }
+      $tache->setUser($user);
 
       $entityManager->persist($tache);
       $entityManager->flush();
 
       $this->addFlash('success', 'Tâche ajoutée avec succès !');
 
-      // Assurez-vous que cette route renvoie bien vers la vue Kanban
       return $this->redirectToRoute('kanban_tasks_list', ['id' => $id]);
     }
 
-    // Si le formulaire n'est pas valide, récupérez toutes les tâches pour afficher le Kanban
     $tacheRepository = $entityManager->getRepository(Tache::class);
     $taches = $tacheRepository->findBy(['projet' => $projet]);
 
-    // Grouper les tâches par statut
     $tasksByStatus = [
       'TO_DO' => [],
       'IN_PROGRESS' => [],
@@ -108,13 +103,24 @@ class TasksController extends AbstractController
       'form' => $form->createView(),
     ]);
   }
-  #[Route('/kanban/projets/{id}/taches/supprimer/{tacheId}', name: 'kanban_task_delete', methods: ['POST'])]
-  public function deleteTache(int $id, int $tacheId, TacheRepository $tacheRepository, EntityManagerInterface $entityManager): Response
-  {
-    $tache = $tacheRepository->find($tacheId);
 
-    if (!$tache || $tache->getProjet()->getId() !== $id) {
-      $this->addFlash('error', 'Tâche introuvable ou non associée à ce projet.');
+  #[Route('/kanban/projets/{id}/taches/supprimer/{tacheId}', name: 'kanban_task_delete', methods: ['POST'])]
+  public function deleteTache(
+    int $id,
+    int $tacheId,
+    TacheRepository $tacheRepository,
+    EntityManagerInterface $entityManager
+  ): Response {
+    $tache = $tacheRepository->find($tacheId);
+    $user = $this->getUser();
+
+    if (
+      !$tache ||
+      $tache->getProjet()->getId() !== $id ||
+      !$user ||
+      $tache->getUser() !== $user // 🔐 L'utilisateur doit être le créateur
+    ) {
+      $this->addFlash('error', 'Suppression non autorisée.');
       return $this->redirectToRoute('kanban_tasks_list', ['id' => $id]);
     }
 
@@ -125,14 +131,30 @@ class TasksController extends AbstractController
     return $this->redirectToRoute('kanban_tasks_list', ['id' => $id]);
   }
 
+
   #[Route('/kanban/projets/{id}/taches/edit/{tacheId}', name: 'kanban_task_edit', methods: ['GET', 'POST'])]
-  public function edit(int $id, int $tacheId, Request $request, TacheRepository $tacheRepository, ProjetRepository $projetRepository, EntityManagerInterface $entityManager): Response
-  {
+  public function edit(
+    int $id,
+    int $tacheId,
+    Request $request,
+    TacheRepository $tacheRepository,
+    ProjetRepository $projetRepository,
+    EntityManagerInterface $entityManager
+  ): Response {
     $tache = $tacheRepository->find($tacheId);
     $projet = $projetRepository->find($id);
 
-    if (!$tache || !$projet || $tache->getProjet()->getId() !== $id) {
-      $this->addFlash('error', 'Tâche ou projet introuvable.');
+    /** @var User|null $user */
+    $user = $this->getUser();
+
+    if (
+      !$tache ||
+      !$projet ||
+      $tache->getProjet()->getId() !== $id ||
+      !$user ||
+      $tache->getUser() !== $user
+    ) {
+      $this->addFlash('error', 'accès non autorisé pour modifier cette tâche.');
       return $this->redirectToRoute('kanban_tasks_list', ['id' => $id]);
     }
 
@@ -152,6 +174,7 @@ class TasksController extends AbstractController
       'projet' => $projet,
     ]);
   }
+
 
   #[Route('/kanban/projets/{id}/taches/update-status', name: 'kanban_task_update_status', methods: ['POST'])]
   public function updateStatus(int $id, Request $request, TacheRepository $tacheRepository, EntityManagerInterface $entityManager): Response

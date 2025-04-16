@@ -43,34 +43,30 @@ class TacheController extends AbstractController
         if (!$projet) {
             throw $this->createNotFoundException('Projet introuvable.');
         }
-        $idEmploye = 87;
+
+        /** @var User|null $user */
+        $user = $this->getUser();
+        if (!$user) {
+            $this->addFlash('error', 'Utilisateur non connecté.');
+            return $this->redirectToRoute('taches_list', ['id' => $id]);
+        }
+
         $tache = new Tache();
         $form = $this->createForm(TacheType::class, $tache);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $tache->setCreatedAt(new \DateTime());
-            $tache->setProjet($projet); // Associer la tâche au projet
-            // D'abord, récupérez l'objet User à partir de l'ID
-$user = $entityManager->getRepository(User::class)->find($idEmploye);
+            $tache->setProjet($projet);
+            $tache->setUser($user); // ✅ associer l'utilisateur connecté
 
-// Ensuite, associez l'utilisateur à la tâche
-if ($user) {
-    $tache->setUser($user);
-} else {
-    // Gérer le cas où l'utilisateur n'est pas trouvé
-    $this->addFlash('error', 'Utilisateur non trouvé !');
-    return $this->redirectToRoute('taches_list', ['id' => $id]);
-}
-
-$entityManager->persist($tache);
-$entityManager->flush();
+            $entityManager->persist($tache);
+            $entityManager->flush();
 
             $this->addFlash('success', 'Tâche ajoutée avec succès !');
             return $this->redirectToRoute('taches_list', ['id' => $id]);
         }
 
-        // Si le formulaire n'est pas valide, récupérer les tâches existantes
         $taches = $tacheRepository->findBy(['projet' => $projet]);
 
         return $this->render('tache/list.html.twig', [
@@ -79,40 +75,60 @@ $entityManager->flush();
             'form' => $form->createView(),
         ]);
     }
-    #[Route('/projets/{id}/taches/supprimer/{tacheId}', name: 'taches_delete', methods: ['POST'])]
-    public function deleteTache(int $id, int $tacheId, TacheRepository $tacheRepository, EntityManagerInterface $entityManager): Response
-    {
-        $tache = $tacheRepository->find($tacheId);
 
-        if (!$tache || $tache->getProjet()->getId() !== $id) {
-            $this->addFlash('error', 'Tâche introuvable ou non associée à ce projet.');
+    #[Route('/projets/{id}/taches/supprimer/{tacheId}', name: 'taches_delete', methods: ['POST'])]
+    public function deleteTache(
+        int $id,
+        int $tacheId,
+        TacheRepository $tacheRepository,
+        EntityManagerInterface $entityManager
+    ): Response {
+        $tache = $tacheRepository->find($tacheId);
+        $user = $this->getUser();
+    
+        if (
+            !$tache ||
+            $tache->getProjet()->getId() !== $id ||
+            !$user ||
+            $tache->getUser() !== $user // ✅ Vérifie que l'utilisateur est le créateur
+        ) {
+            $this->addFlash('error', 'Suppression non autorisée.');
             return $this->redirectToRoute('taches_list', ['id' => $id]);
         }
-
+    
         $entityManager->remove($tache);
         $entityManager->flush();
         $this->addFlash('success', 'Tâche supprimée avec succès.');
-
+    
         return $this->redirectToRoute('taches_list', ['id' => $id]);
     }
+    
 
     #[Route('/projets/{id}/taches/edit/{tacheId}', name: 'taches_edit', methods: ['GET', 'POST'])]
-    public function edit(int $id, int $tacheId, Request $request, TacheRepository $tacheRepository, ProjetRepository $projetRepository, EntityManagerInterface $entityManager): Response
-    {
-        // Récupérer la tâche et le projet
+    public function edit(
+        int $id,
+        int $tacheId,
+        Request $request,
+        TacheRepository $tacheRepository,
+        ProjetRepository $projetRepository,
+        EntityManagerInterface $entityManager
+    ): Response {
         $tache = $tacheRepository->find($tacheId);
         $projet = $projetRepository->find($id);
+        $user = $this->getUser();
 
-        // Vérifier si la tâche et le projet existent et si la tâche est bien associée au projet
-        if (!$tache || !$projet || $tache->getProjet()->getId() !== $id) {
-            $this->addFlash('error', 'Tâche ou projet introuvable.');
+        if (
+            !$tache ||
+            !$projet ||
+            $tache->getProjet()->getId() !== $id ||
+            !$user ||
+            $tache->getUser() !== $user // ✅ l'utilisateur connecté est bien l'auteur ?
+        ) {
+            $this->addFlash('error', 'accès non autorisé pour modifier cette tâche.');
             return $this->redirectToRoute('taches_list', ['id' => $id]);
         }
 
-        // Récupérer toutes les tâches associées au projet
         $taches = $tacheRepository->findBy(['projet' => $projet]);
-
-        // Créer le formulaire d'édition
         $form = $this->createForm(TacheType::class, $tache);
         $form->handleRequest($request);
 
