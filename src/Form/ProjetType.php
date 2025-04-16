@@ -58,12 +58,12 @@ class ProjetType extends AbstractType
         'multiple' => true,
         'expanded' => false,
         'attr' => [
-          'class' => 'form-select select2', 
-          'data-placeholder' => 'Sélectionnez les utilisateurs'
+          'class' => 'form-select select2',
+          'data-placeholder' => 'choisir utilisateurs'
         ],
         'required' => false
-    ])
-    
+      ])
+
 
       ->add('abbreviation', TextType::class, [
         'label' => 'Abréviation',

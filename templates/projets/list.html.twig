@@ -261,86 +261,86 @@
 			border-radius: 0.5rem;
 		}
 		.flash-message {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    padding: 15px 20px;
-    border-radius: 8px;
-    color: white;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-    z-index: 9999;
-    display: flex;
-    align-items: center;
-    animation: slideIn 0.3s ease-out forwards, fadeOut 0.5s ease-in 4s forwards;
-}
+			position: fixed;
+			top: 20px;
+			right: 20px;
+			padding: 15px 20px;
+			border-radius: 8px;
+			color: white;
+			box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+			z-index: 9999;
+			display: flex;
+			align-items: center;
+			animation: slideIn 0.3s ease-out forwards, fadeOut 0.5s ease-in 4s forwards;
+		}
 
-.flash-success {
-    background-color: #28a745;
-    border-left: 5px solid #1e7e34;
-}
+		.flash-success {
+			background-color: #28a745;
+			border-left: 5px solid #1e7e34;
+		}
 
-.flash-error {
-    background-color: #dc3545;
-    border-left: 5px solid #bd2130;
-}
+		.flash-error {
+			background-color: #dc3545;
+			border-left: 5px solid #bd2130;
+		}
 
-.flash-warning {
-    background-color: #ffc107;
-    border-left: 5px solid #d39e00;
-    color: #333;
-}
+		.flash-warning {
+			background-color: #ffc107;
+			border-left: 5px solid #d39e00;
+			color: #333;
+		}
 
-.flash-info {
-    background-color: #17a2b8;
-    border-left: 5px solid #117a8b;
-}
+		.flash-info {
+			background-color: #17a2b8;
+			border-left: 5px solid #117a8b;
+		}
 
-.flash-message i {
-    margin-right: 10px;
-    font-size: 18px;
-}
+		.flash-message i {
+			margin-right: 10px;
+			font-size: 18px;
+		}
 
-@keyframes slideIn {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
+		@keyframes slideIn {
+			from {
+				transform: translateX(100%);
+				opacity: 0;
+			}
+			to {
+				transform: translateX(0);
+				opacity: 1;
+			}
+		}
 
-@keyframes fadeOut {
-    from {
-        opacity: 1;
-    }
-    to {
-        opacity: 0;
-        visibility: hidden;
-    }
-}
+		@keyframes fadeOut {
+			from {
+				opacity: 1;
+			}
+			to {
+				opacity: 0;
+				visibility: hidden;
+			}
+		}
 	</style>
 {% endblock %}
 
 {% block content %}
 	<div class="container-fluid">
-	{% for label, messages in app.flashes %}
-            {% for message in messages %}
-                <div class="flash-message flash-{{ label }}" id="flash-message-{{ loop.index }}">
-                    {% if label == 'success' %}
-                        <i class="fas fa-check-circle"></i>
-                    {% elseif label == 'error' %}
-                        <i class="fas fa-exclamation-circle"></i>
-                    {% elseif label == 'warning' %}
-                        <i class="fas fa-exclamation-triangle"></i>
-                    {% elseif label == 'info' %}
-                        <i class="fas fa-info-circle"></i>
-                    {% endif %}
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endfor %}
+		{% for label, messages in app.flashes %}
+			{% for message in messages %}
+				<div class="flash-message flash-{{ label }}" id="flash-message-{{ loop.index }}">
+					{% if label == 'success' %}
+						<i class="fas fa-check-circle"></i>
+					{% elseif label == 'error' %}
+						<i class="fas fa-exclamation-circle"></i>
+					{% elseif label == 'warning' %}
+						<i class="fas fa-exclamation-triangle"></i>
+					{% elseif label == 'info' %}
+						<i class="fas fa-info-circle"></i>
+					{% endif %}
+					{{ message }}
+				</div>
+			{% endfor %}
+		{% endfor %}
 		<div class="page-header">
 			<h1 class="page-title">📋 Liste des Projets</h1>
 			<div class="header-buttons">
@@ -517,25 +517,24 @@ document.body.classList.remove('dialog-open');
 });
 	</script>
 	<script>
-    // Gestion des flash messages
-    document.addEventListener('DOMContentLoaded', function() {
-        const flashMessages = document.querySelectorAll('.flash-message');
-        
-        flashMessages.forEach(function(message) {
-            // Suppression automatique après 5 secondes
-            setTimeout(function() {
-                if (message && message.parentNode) {
-                    message.parentNode.removeChild(message);
-                }
-            }, 5000);
-            
-            // Permettre la fermeture manuelle en cliquant
-            message.addEventListener('click', function() {
-                if (message.parentNode) {
-                    message.parentNode.removeChild(message);
-                }
-            });
-        });
-    });
-</script>
+		// Gestion des flash messages
+document.addEventListener('DOMContentLoaded', function () {
+const flashMessages = document.querySelectorAll('.flash-message');
+
+flashMessages.forEach(function (message) { // Suppression automatique après 5 secondes
+setTimeout(function () {
+if (message && message.parentNode) {
+message.parentNode.removeChild(message);
+}
+}, 5000);
+
+// Permettre la fermeture manuelle en cliquant
+message.addEventListener('click', function () {
+if (message.parentNode) {
+message.parentNode.removeChild(message);
+}
+});
+});
+});
+	</script>
 {% endblock %}
