@@ -28,11 +28,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(type: 'string', length: 255, unique: true)]
     #[Assert\Email]
+    #[Assert\NotBlank]
     private string $email;
 
-    #[ORM\Column(type: 'string', length: 255)]
-    #[Assert\NotBlank]
-    private string $password;
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $password = null;
 
     #[ORM\Column(name: "profilePhoto", type: 'string', length: 255, nullable: true)]
     private ?string $profilePhoto = null;
@@ -43,8 +43,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: "joiningDate", type: 'date', nullable: true)]
     private ?\DateTimeInterface $joiningDate = null;
 
-    #[ORM\Column(name: "role", type: 'string', length: 20)]
+    #[ORM\Column(name: "role", type: "string", columnDefinition: "ENUM('RESPONSABLE_RH','CHEF_PROJET','EMPLOYEE','CONDIDAT')")]
     #[Assert\Choice(choices: ['RESPONSABLE_RH', 'CHEF_PROJET', 'EMPLOYEE', 'CONDIDAT'])]
+    #[Assert\NotBlank]
     private string $role;
 
     #[ORM\Column(name: "tt_restants", type: 'integer', nullable: true)]
@@ -59,14 +60,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: "num_tel", type: 'integer', nullable: true)]
     private ?int $num_tel = null;
 
-    #[ORM\Column(name: "gender", type: 'string', length: 8, nullable: true)]
+    #[ORM\Column(name: "gender", type: "string", columnDefinition: "ENUM('HOMME','FEMME')", nullable: true)]
     #[Assert\Choice(choices: ['HOMME', 'FEMME'])]
-    private ?string $gender = null;
+    private ?string $gender = 'HOMME';
 
-    #[ORM\Column(name: "birthdate_edited", type: 'boolean')]
+    #[ORM\Column(name: "birthdate_edited", type: 'boolean', nullable: true)]
     private bool $birthdate_edited = false;
 
-    #[ORM\Column(name: "first_login", type: 'boolean')]
+    #[ORM\Column(name: "first_login", type: 'boolean', nullable: true)]
     private bool $first_login = true;
 
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Tache::class)]
@@ -76,6 +77,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $this->taches = new ArrayCollection();
     }
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $resetToken = null;
+
+    #[ORM\Column(type: 'datetime', nullable: true)]
+    private ?\DateTimeInterface $resetTokenExpiration = null;
 
     // === GETTERS & SETTERS ===
 
@@ -124,10 +131,23 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    // UPDATED METHOD: Just return the filename stored in the database
     public function getProfilePhoto(): ?string
     {
         return $this->profilePhoto;
     }
+
+    // Method to get the full URL for display in templates
+    public function getProfilePhotoUrl(): ?string
+    {
+        if (!$this->profilePhoto) {
+            return null;
+        }
+
+        // The path is already relative to public directory
+        return '/' . $this->profilePhoto;
+    }
+
     public function setProfilePhoto(?string $profilePhoto): self
     {
         $this->profilePhoto = $profilePhoto;
@@ -234,29 +254,26 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getTaches(): Collection
+    public function getResetToken(): ?string
     {
-        return $this->taches;
+        return $this->resetToken;
     }
 
-    public function addTache(Tache $tache): self
+    public function setResetToken(?string $resetToken): self
     {
-        if (!$this->taches->contains($tache)) {
-            $this->taches->add($tache);
-            $tache->setUser($this);
-        }
+        $this->resetToken = $resetToken;
 
         return $this;
     }
 
-    public function removeTache(Tache $tache): self
+    public function getResetTokenExpiration(): ?\DateTimeInterface
     {
-        if ($this->taches->removeElement($tache)) {
-            // set the owning side to null (unless already changed)
-            if ($tache->getUser() === $this) {
-                $tache->setUser(null);
-            }
-        }
+        return $this->resetTokenExpiration;
+    }
+
+    public function setResetTokenExpiration(?\DateTimeInterface $resetTokenExpiration): self
+    {
+        $this->resetTokenExpiration = $resetTokenExpiration;
 
         return $this;
     }
@@ -269,8 +286,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
     public function getRoles(): array
     {
-        return [$this->role];
+        return ['ROLE_' . strtoupper($this->role)];
     }
+
     public function eraseCredentials(): void {}
 
     // === UTILS ===

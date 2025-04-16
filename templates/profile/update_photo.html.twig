@@ -1,0 +1,42 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Update Profile Photo{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card shadow">
+        <div class="card-header">
+          <h4 class="card-title text-center">Update Profile Photo</h4>
+        </div>
+        <div class="card-body">
+          {% for label, messages in app.flashes %}
+            {% for message in messages %}
+              <div class="alert alert-{{ label }}">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endfor %}
+
+          {{ form_start(form) }}
+            <div class="mb-3">
+              {{ form_label(form.photo, 'Choose a new photo') }}
+              {{ form_widget(form.photo, {'attr': {'class': 'form-control'}}) }}
+              {{ form_errors(form.photo) }}
+            </div>
+
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary">Upload</button>
+            </div>
+          {{ form_end(form) }}
+
+          <div class="text-center mt-3">
+            <a href="{{ path('app_profile') }}" class="btn btn-secondary btn-sm">Back to Profile</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

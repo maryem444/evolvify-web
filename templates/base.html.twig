@@ -1,53 +1,128 @@
 <!DOCTYPE html>
 <html lang="fr">
-	<head>
-		<meta charset="UTF-8">
-		<meta http-equiv="X-UA-Compatible" content="IE=edge">
-		<title>
-			{% block title %}Kaiadmin - Gestion RH
-			{% endblock %}
-		</title>
-		<meta
-		name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>{% block title %}Kaiadmin - Gestion RH{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    
+    {# Add security headers to prevent caching of authenticated pages #}
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="{{ asset('assets/img/logo1.png') }}" type="image/x-icon">
 
-		<!-- Favicon -->
-		<link
-		rel="icon" href="{{ asset('assets/img/kaiadmin/favicon.ico') }}" type="image/x-icon">
-
-		<!-- Fonts and Icons -->
-		<script src="{{ asset('assets/js/plugin/webfont/webfont.min.js') }}"></script>
-		<script>
-			WebFont.load({
-google: {
-families: ["Public Sans:300,400,500,600,700"]
-},
-custom: {
-families: [
-"Font Awesome 5 Solid", "Font Awesome 5 Regular", "Font Awesome 5 Brands", "simple-line-icons"
-],
-urls: ["{{ asset('assets/css/fonts.min.css') }}"]
-},
-active: function () {
-sessionStorage.fonts = true;
-}
-});
-		</script>
+    <!-- Fonts and Icons -->
+    <script src="{{ asset('assets/js/plugin/webfont/webfont.min.js') }}"></script>
+    
+    <script>
+        WebFont.load({
+            google: { families: ["Public Sans:300,400,500,600,700"] },
+            custom: {
+                families: [
+                    "Font Awesome 5 Solid",
+                    "Font Awesome 5 Regular",
+                    "Font Awesome 5 Brands",
+                    "simple-line-icons"
+                ],
+                urls: ["{{ asset('assets/css/fonts.min.css') }}"]
+            },
+            active: function () {
+                sessionStorage.fonts = true;
+            }
+        });
+    </script>
 
 		<link
 		rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-		<!-- CSS Files -->
-		<link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}">
-		<link rel="stylesheet" href="{{ asset('assets/css/plugins.min.css') }}">
-		<link
-		rel="stylesheet" href="{{ asset('assets/css/kaiadmin.min.css') }}">
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/plugins.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/kaiadmin.min.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
-		<!-- CSS Just for demo purpose, don't include it in your project -->
-		<link rel="stylesheet" href="{{ asset('assets/css/demo.css') }}"> {% block stylesheets %}{% endblock %}
-		</head>
-		<body>
-			<div class="wrapper">
-				{% include 'includes/sidebar.html.twig' %}
+    <!-- CSS Just for demo purpose, don't include it in your project -->
+    <link rel="stylesheet" href="{{ asset('assets/css/demo.css') }}">
+
+
+    {% block stylesheets %}
+    <style>
+        .breadcrumb {
+            padding: 0.5rem 1rem;
+            background-color: transparent;
+            display: flex;
+        }
+        .breadcrumb-item {
+            font-size: 0.9rem;
+        }
+        .breadcrumb-item:before {
+            content: "/";
+            margin: 0 0.5rem;
+        }
+        .breadcrumb-item:first-child:before {
+            content: "";
+            margin: 0;
+        }
+    </style>
+    {% endblock %}
+</head>
+<body>
+    {# Session check for back button after logout #}
+    {% if app.user %}
+    <script>
+        // Check if we're restored from cache (back button after logout)
+        function checkSession() {
+            if (performance.navigation.type === 2 || document.visibilityState === 'visible') {
+                fetch('/api/verify-session', {
+                    method: 'GET',
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        window.location.href = "{{ path('app_login') }}";
+                    }
+                })
+                .catch(() => {
+                    window.location.href = "{{ path('app_login') }}";
+                });
+            }
+        }
+        
+        // Listen for page visibility changes (catches back button navigation)
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'visible') {
+                checkSession();
+            }
+        });
+        
+        // Also check on page load and when restored from cache
+        document.addEventListener('DOMContentLoaded', checkSession);
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted) {
+                checkSession();
+            }
+        });
+        
+        // Store minimal user info in sessionStorage (not localStorage)
+        // This is just for UI purposes, all security relies on server-side session
+        sessionStorage.setItem('user_logged_in', 'true');
+        sessionStorage.setItem('username', "{{ app.user.username|default(app.user.email)|e('js') }}");
+        {% if app.user.roles is defined %}
+        sessionStorage.setItem('user_role', "{{ app.user.roles[0]|e('js') }}");
+        {% endif %}
+    </script>
+    {% endif %}
+
+    <div class="wrapper">
+        {% include 'includes/sidebar.html.twig' %}
 
 				<div class="main-panel">
 					{% include 'includes/header.html.twig' %}
@@ -83,9 +158,9 @@ sessionStorage.fonts = true;
 			<!-- Bootstrap Notify -->
 			<script src="{{ asset('assets/js/plugin/bootstrap-notify/bootstrap-notify.min.js') }}"></script>
 
-			<!-- jQuery Vector Maps -->
-			<script src="{{ asset('assets/js/plugin/jsvectormap/jsvectormap.min.js') }}"></script>
-			<script src="{{ asset('assets/js/plugin/jsvectormap/world.js') }}"></script>
+    <!-- jQuery Vector Maps -->
+    {# // <script src="{{ asset('assets/js/plugin/jsvectormap/jsvectormap.min.js') }}"></script> #}
+    {# // <script src="{{ asset('assets/js/plugin/jsvectormap/world.js') }}"></script> #}
 
 			<!-- Sweet Alert -->
 			<script src="{{ asset('assets/js/plugin/sweetalert/sweetalert.min.js') }}"></script>
@@ -93,9 +168,17 @@ sessionStorage.fonts = true;
 			<!-- Kaiadmin JS -->
 			<script src="{{ asset('assets/js/kaiadmin.min.js') }}"></script>
 
-			<!-- Kaiadmin DEMO methods, don't include it in your project! -->
-			<script src="{{ asset('assets/js/setting-demo.js') }}"></script>
-			<script src="{{ asset('assets/js/demo.js') }}"></script>
+    <!-- Kaiadmin DEMO methods, don't include it in your project! -->
+    <script src="{{ asset('assets/js/setting-demo.js') }}"></script>
+    {# // <script src="{{ asset('assets/js/demo.js') }}"></script> #}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 
 			{% block javascripts %}{% endblock %}
 
@@ -135,57 +218,52 @@ lineColor: "#f3545d",
 fillColor: "rgba(243, 84, 93, .14)"
 });
 
-$("#lineChart3").sparkline([
-105,
-103,
-123,
-100,
-95,
-105,
-115
-], {
-type: "line",
-height: "70",
-width: "100%",
-lineWidth: "2",
-lineColor: "#ffa534",
-fillColor: "rgba(255, 165, 52, .14)"
-});
-});
-			</script>
-			<script>
-				document.addEventListener("DOMContentLoaded", function () {
-let currentUrl = window.location.pathname;
-let navItems = document.querySelectorAll(".nav-item a");
+          $("#lineChart3").sparkline([105, 103, 123, 100, 95, 105, 115], {
+            type: "line",
+            height: "70",
+            width: "100%",
+            lineWidth: "2",
+            lineColor: "#ffa534",
+            fillColor: "rgba(255, 165, 52, .14)",
+          });
+      });
+    </script>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+        let currentUrl = window.location.pathname;
+        let navItems = document.querySelectorAll(".nav-item a");
 
-let foundActive = false;
+        let foundActive = false;
 
-navItems.forEach(link => {
-let linkPath = new URL(link.href, window.location.origin).pathname;
+        navItems.forEach(link => {
+            let linkPath = new URL(link.href, window.location.origin).pathname;
 
-// Remove 'active' from all nav-items
-link.closest(".nav-item").classList.remove("active");
+            // Remove 'active' from all nav-items
+            link.closest(".nav-item").classList.remove("active");
 
-if (linkPath === currentUrl) {
-link.closest(".nav-item").classList.add("active");
-foundActive = true;
+            if (linkPath === currentUrl) {
+                link.closest(".nav-item").classList.add("active");
+                foundActive = true;
 
-// Expand the parent dropdown if inside one
-let parentCollapse = link.closest(".collapse");
-if (parentCollapse) {
-parentCollapse.classList.add("show");
-let parentNavItem = parentCollapse.closest(".nav-item");
-if (parentNavItem) {
-parentNavItem.classList.add("active");
-}
-}
-}
-});
+                // Expand the parent dropdown if inside one
+                let parentCollapse = link.closest(".collapse");
+                if (parentCollapse) {
+                    parentCollapse.classList.add("show");
+                    let parentNavItem = parentCollapse.closest(".nav-item");
+                    if (parentNavItem) {
+                        parentNavItem.classList.add("active");
+                    }
+                }
+            }
+        });
 
-// If no link matches, keep "Dashboard" as active
-if (! foundActive) {
-document.querySelector(".nav-item.dashboard").classList.add("active");
-}
-});
-			</script>
-			<script document.addEventListener('DOMContentLoaded', function() { // Sélection des éléments du DOM const deadlineIcon = document.getElementById('deadlineDropdown'); const deadlineNotifCenter = document.querySelector('.deadline-notif-center'); const notificationCount = document.querySelector('.deadline-notification-count'); // Fonction pour vérifier si un projet a une échéance proche function hasUpcomingDeadline(project) { if (!project.endDate) return false; const endDate = new Date(project.endDate); const now = new Date(); // Calculer la différence en jours const diffTime = endDate - now; const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); // Retourner true si la deadline est dans les 3 prochains jours // mais pas déjà passée return diffDays >= 0 && diffDays <= 3; } // Fonction pour récupérer tous les projets (à adapter selon votre structure) function getAllProjects() { // Cette partie devrait récupérer vos projets depuis une API ou le localStorage // Exemple avec localStorage: return JSON.parse(localStorage.getItem('projects') || '[]'); } // Fonction pour obtenir les notifications de deadline à jour function getUpcomingDeadlines() { const projects = getAllProjects(); const ignoredProjects = JSON.parse(localStorage.getItem('ignoredDeadlines') || '[]'); // Filtrer pour ne garder que les projets avec une échéance proche // et qui ne sont pas dans la liste des projets ignorés return projects .filter(project => hasUpcomingDeadline(project)) .filter(project => !ignoredProjects.includes(project.id)); } // Mettre à jour l'affichage des notifications function updateNotificationDisplay() { const upcomingDeadlines = getUpcomingDeadlines(); // Mettre à jour le compteur if (upcomingDeadlines.length > 0) { notificationCount.textContent = upcomingDeadlines.length; notificationCount.style.display = 'block'; } else { notificationCount.style.display = 'none'; } return upcomingDeadlines; } // Initialiser l'affichage updateNotificationDisplay(); // Quand on clique sur l'icône de deadline deadlineIcon.addEventListener('click', function() { const upcomingDeadlines = updateNotificationDisplay(); // Vider le conteneur de notifications deadlineNotifCenter.innerHTML = ''; if (upcomingDeadlines.length > 0) { // Ajouter chaque notification au conteneur upcomingDeadlines.forEach(project => { const endDate = new Date(project.endDate); const notifElement = document.createElement('a'); notifElement.href = '#'; notifElement.className = 'dropdown-item'; notifElement.innerHTML = ` <div class="notif-content p-2"> <strong>${project.name}</strong> <p class="mb-0">Date limite: ${endDate.toLocaleDateString()}</p> <button class="btn btn-sm btn-outline-danger mt-1 dismiss-deadline" data-project-id="${project.id}">Ignorer</button> </div> `; deadlineNotifCenter.appendChild(notifElement); }); // Ajouter les gestionnaires d'événements pour les boutons "Ignorer" document.querySelectorAll('.dismiss-deadline').forEach(button => { button.addEventListener('click', function(e) { e.preventDefault(); e.stopPropagation(); const projectId = this.getAttribute('data-project-id'); const ignoredProjects = JSON.parse(localStorage.getItem('ignoredDeadlines') || '[]'); // Ajouter ce projet à la liste des ignorés if (!ignoredProjects.includes(projectId)) { ignoredProjects.push(projectId); localStorage.setItem('ignoredDeadlines', JSON.stringify(ignoredProjects)); } // Mettre à jour l'affichage updateNotificationDisplay(); // Supprimer l'élément du DOM this.closest('.dropdown-item').remove(); // Si plus de notifications, afficher message "Aucune deadline" if (deadlineNotifCenter.children.length === 0) { deadlineNotifCenter.innerHTML = '<div class="text-center p-3">Aucune deadline proche</div>'; } }); }); } else { // Aucune notification deadlineNotifCenter.innerHTML = '<div class="text-center p-3">Aucune deadline proche</div>'; } }); // Fonction pour réinitialiser une notification ignorée si la date change window.updateProjectDeadline = function(projectId, newEndDate) { // Récupérer les projets et mettre à jour la date const projects = getAllProjects(); const projectIndex = projects.findIndex(p => p.id === projectId); if (projectIndex !== -1) { projects[projectIndex].endDate = newEndDate; localStorage.setItem('projects', JSON.stringify(projects)); // Supprimer ce projet de la liste des ignorés // car la date a changé const ignoredProjects = JSON.parse(localStorage.getItem('ignoredDeadlines') || '[]'); const updatedIgnored = ignoredProjects.filter(id => id !== projectId); localStorage.setItem('ignoredDeadlines', JSON.stringify(updatedIgnored)); // Mettre à jour l'affichage updateNotificationDisplay(); } }; }); </script> </body> </html>
+        // If no link matches, keep "Dashboard" as active
+        if (!foundActive) {
+            document.querySelector(".nav-item.dashboard").classList.add("active");
+        }
+    });
+    </script>
+
+</body>
+</html>

@@ -47,24 +47,6 @@
 						</form>
 					</ul>
 				</li>
-
-				<li class="nav-item topbar-icon dropdown hidden-caret">
-					<a class="nav-link dropdown-toggle" href="#" id="deadlineDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-						<i class="fa fa-clock"></i>
-						<span class="notification deadline-notification-count" style="display: none;">0</span>
-					</a>
-					<ul class="dropdown-menu deadline-notif-box animated fadeIn" aria-labelledby="deadlineDropdown">
-						<li>
-							<div class="deadline-notif-scroll scrollbar-outer">
-								<div
-									class="deadline-notif-center"><!-- Les notifications seront insérées ici dynamiquement -->
-								</div>
-							</div>
-						</li>
-					</ul>
-				</li>
-
-
 				<li class="nav-item topbar-icon dropdown hidden-caret">
 					<a class="nav-link dropdown-toggle" href="#" id="messageDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 						<i class="fa fa-envelope"></i>
@@ -76,7 +58,6 @@
 								<a href="#" class="small">Mark all as read</a>
 							</div>
 						</li>
-
 						<li>
 							<div class="message-notif-scroll scrollbar-outer">
 								<div class="notif-center">
@@ -273,11 +254,15 @@
 				<li class="nav-item topbar-user dropdown hidden-caret">
 					<a class="dropdown-toggle profile-pic" data-bs-toggle="dropdown" href="#" aria-expanded="false">
 						<div class="avatar-sm">
-							<img src="assets/img/profile.jpg" alt="..." class="avatar-img rounded-circle"/>
+							{% if app.user.profilePhoto %}
+								<img src="{{ app.user.profilePhoto }}" alt="..." class="avatar-img rounded-circle"/>
+							{% else %}
+								<img src="{{ asset('assets/img/profile.jpg') }}" alt="..." class="avatar-img rounded-circle"/>
+							{% endif %}
 						</div>
 						<span class="profile-username">
 							<span class="op-7">Hi,</span>
-							<span class="fw-bold">Hizrian</span>
+							<span class="fw-bold">{{ app.user.firstname }}</span>
 						</span>
 					</a>
 					<ul class="dropdown-menu dropdown-user animated fadeIn">
@@ -285,24 +270,28 @@
 							<li>
 								<div class="user-box">
 									<div class="avatar-lg">
-										<img src="assets/img/profile.jpg" alt="image profile" class="avatar-img rounded"/>
+										{% if app.user.profilePhoto %}
+											<img src="{{ app.user.profilePhoto }}" alt="image profile" class="avatar-img rounded"/>
+										{% else %}
+											<img src="{{ asset('assets/img/profile.jpg') }}" alt="image profile" class="avatar-img rounded"/>
+										{% endif %}
 									</div>
 									<div class="u-text">
-										<h4>Hizrian</h4>
-										<p class="text-muted">hello@example.com</p>
-										<a href="profile.html" class="btn btn-xs btn-secondary btn-sm">View Profile</a>
+										<h4>{{ app.user.firstname }}</h4>
+										<p class="text-muted">{{ app.user.email }}</p>
+										<a href="{{ path('app_profile') }}" class="btn btn-xs btn-secondary btn-sm">View Profile</a>
 									</div>
 								</div>
 							</li>
 							<li>
 								<div class="dropdown-divider"></div>
-								<a class="dropdown-item" href="#">My Profile</a>
+								<a class="dropdown-item" href="{{ path('app_profile') }}">My Profile</a>
 								<a class="dropdown-item" href="#">My Balance</a>
 								<a class="dropdown-item" href="#">Inbox</a>
 								<div class="dropdown-divider"></div>
 								<a class="dropdown-item" href="#">Account Setting</a>
 								<div class="dropdown-divider"></div>
-								<a class="dropdown-item" href="#">Logout</a>
+								<a class="dropdown-item" href="{{ path('app_logout') }}">Logout</a>
 							</li>
 						</div>
 					</ul>
