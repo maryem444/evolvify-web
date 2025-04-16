@@ -52,8 +52,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: "conge_restant", type: 'integer', nullable: true)]
     private ?int $conge_restant = null;
 
-    #[ORM\Column(name: "uploaded_cv", type: 'blob', nullable: true)]
-    private $uploaded_cv;
+    #[ORM\Column(name: "uploaded_cv", type: 'string', length: 255, nullable: true)]
+    private ?string $uploaded_cv = null;
 
     #[ORM\Column(name: "num_tel", type: 'integer', nullable: true)]
     private ?int $num_tel = null;
