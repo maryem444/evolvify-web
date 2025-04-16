@@ -45,23 +45,42 @@
 					</a>
 				</li>
 				
-
-<li class="nav-item">
-          <a data-bs-toggle="collapse" href="#conges">
-            <i class="fa fa-calendar"></i>
-            <p>Conge Management</p>
-            <span class="caret"></span>
-          </a>
-          <div class="collapse" id="conges">
-            <ul class="nav nav-collapse">
-              <li>
-                <a href="{{ path('app_conge_index') }}">
-                  <span class="sub-item">Conge RH</span>
-                </a>
-              </li>
-			  </ul>
-			  </div>
-			  </li>
+				<li class="nav-item">
+					<a data-bs-toggle="collapse" href="#conges">
+						<i class="fa fa-calendar"></i>
+						<p>Conge Management</p>
+						<span class="caret"></span>
+					</a>
+					<div class="collapse" id="conges">
+						<ul class="nav nav-collapse">
+						{% if app.user.role == 'RESPONSABLE_RH' %}
+							<li>
+								<a href="{{ path('app_conge_index') }}">
+									<span class="sub-item">Leave Requests</span>
+								</a>
+							</li>
+							<li>
+								<a href="{{ path('app_employee_attendance_admin') }}">
+									<span class="sub-item">Absence List</span>
+								</a>
+							</li>
+							{% endif %}
+							{% if app.user.role == 'EMPLOYEE' %}
+							<li>
+								<a href="{{ path('app_employe_conge_index') }}">
+									<span class="sub-item"> My Leave Requests</span>
+								</a>
+							</li>
+							<li>
+								<a href="{{ path('app_employee_my_attendance') }}">
+									<span class="sub-item">My Absences</span>
+								</a>
+							</li>
+							{% endif %}
+						</ul>
+					</div>
+				</li>
+			{% endif %}
               
 			  
 				{# <li class="nav-item">

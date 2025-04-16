@@ -190,7 +190,7 @@ class AbsenceController extends AbstractController
         $startDate = new \DateTime("$year-$monthNumber-01");
         $endDate = new \DateTime($startDate->format('Y-m-t'));
         
-        // Get all absences for the month
+        // Get all absences for the current month
         $absences = $this->absenceRepository->createQueryBuilder('a')
             ->where('a.date BETWEEN :startDate AND :endDate')
             ->setParameter('startDate', $startDate)
@@ -198,7 +198,7 @@ class AbsenceController extends AbstractController
             ->getQuery()
             ->getResult();
         
-        // Calculate statistics
+        // Calculate statistics for current month
         $statistics = [
             'total' => count($absences),
             'present' => 0,
@@ -223,10 +223,95 @@ class AbsenceController extends AbstractController
             }
         }
         
+        // Calculate previous month statistics
+        $prevMonthStart = clone $startDate;
+        $prevMonthStart->modify('-1 month');
+        $prevMonthEnd = clone $prevMonthStart;
+        $prevMonthEnd->modify('last day of this month');
+        
+        $prevMonthAbsences = $this->absenceRepository->createQueryBuilder('a')
+            ->where('a.date BETWEEN :startDate AND :endDate')
+            ->setParameter('startDate', $prevMonthStart)
+            ->setParameter('endDate', $prevMonthEnd)
+            ->getQuery()
+            ->getResult();
+        
+        $prevMonthStats = [
+            'total' => count($prevMonthAbsences),
+            'present' => 0,
+            'absent' => 0,
+            'leave' => 0,
+            'other' => 0,
+        ];
+        
+        foreach ($prevMonthAbsences as $absence) {
+            switch ($absence->getStatus()) {
+                case AbsenceStatus::PRESENT:
+                    $prevMonthStats['present']++;
+                    break;
+                case AbsenceStatus::ABSENT:
+                    $prevMonthStats['absent']++;
+                    break;
+                case AbsenceStatus::EN_CONGE:
+                    $prevMonthStats['leave']++;
+                    break;
+                default:
+                    $prevMonthStats['other']++;
+            }
+        }
+        
+        // Calculate daily trends (group by day of week)
+        $dailyTrends = [
+            'Monday' => ['present' => 0, 'absent' => 0, 'leave' => 0],
+            'Tuesday' => ['present' => 0, 'absent' => 0, 'leave' => 0],
+            'Wednesday' => ['present' => 0, 'absent' => 0, 'leave' => 0],
+            'Thursday' => ['present' => 0, 'absent' => 0, 'leave' => 0],
+            'Friday' => ['present' => 0, 'absent' => 0, 'leave' => 0],
+        ];
+        
+        foreach ($absences as $absence) {
+            $dayOfWeek = $absence->getDate()->format('l');
+            if (isset($dailyTrends[$dayOfWeek])) {
+                switch ($absence->getStatus()) {
+                    case AbsenceStatus::PRESENT:
+                        $dailyTrends[$dayOfWeek]['present']++;
+                        break;
+                    case AbsenceStatus::ABSENT:
+                        $dailyTrends[$dayOfWeek]['absent']++;
+                        break;
+                    case AbsenceStatus::EN_CONGE:
+                        $dailyTrends[$dayOfWeek]['leave']++;
+                        break;
+                }
+            }
+        }
+        
+        // Calculate working days in the month (excluding weekends)
+        $workingDays = 0;
+        $currentDate = clone $startDate;
+        while ($currentDate <= $endDate) {
+            $dayOfWeek = $currentDate->format('N');
+            if ($dayOfWeek < 6) { // Not Saturday or Sunday
+                $workingDays++;
+            }
+            $currentDate->modify('+1 day');
+        }
+        
+        // Calculate total number of employees
+        $employeesCount = $this->userRepository->count([]);
+        
+        // Calculate employees with perfect attendance
+        $perfectAttendance = $employeesCount - count($this->absenceRepository->findAbsentEmployeesInPeriod($startDate, $endDate));
+        
         return $this->render('absence/statistics.html.twig', [
             'month' => $month,
             'year' => $year,
             'statistics' => $statistics,
+            'prevMonthStats' => $prevMonthStats,
+            'dailyTrends' => $dailyTrends,
+            'workingDays' => $workingDays,
+            'perfectAttendance' => $perfectAttendance,
+            'employeesCount' => $employeesCount, // Added to match template
         ]);
     }
 }

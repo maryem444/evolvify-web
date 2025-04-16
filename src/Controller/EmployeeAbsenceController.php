@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Absence;
 use App\Entity\AbsenceStatus;
+use App\Entity\User;
 use App\Repository\AbsenceRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -12,6 +13,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 #[Route('/employees/my-attendance')]
 class EmployeeAbsenceController extends AbstractController
@@ -19,7 +21,6 @@ class EmployeeAbsenceController extends AbstractController
     private EntityManagerInterface $entityManager;
     private AbsenceRepository $absenceRepository;
     private UserRepository $userRepository;
-    private int $employeeId = 114; // Static employee ID
 
     public function __construct(
         EntityManagerInterface $entityManager,
@@ -31,9 +32,26 @@ class EmployeeAbsenceController extends AbstractController
         $this->userRepository = $userRepository;
     }
 
+    /**
+     * Get the current user or throw an exception if not authenticated
+     */
+    private function getCurrentUser(): User
+    {
+        $user = $this->getUser();
+        
+        if (!$user instanceof User) {
+            throw new AccessDeniedException('Vous devez être connecté pour accéder à cette page.');
+        }
+        
+        return $user;
+    }
+
     #[Route('/', name: 'app_employee_my_attendance')]
     public function index(Request $request): Response
     {
+        $user = $this->getCurrentUser();
+        $employeeId = $user->getId();
+        
         // Get month and year from request, default to current month/year
         $month = $request->query->get('month', date('F'));
         $year = (int)$request->query->get('year', date('Y'));
@@ -63,7 +81,7 @@ class EmployeeAbsenceController extends AbstractController
             ->andWhere('a.idEmploye = :employeeId')
             ->setParameter('startDate', $startDate)
             ->setParameter('endDate', $endDate)
-            ->setParameter('employeeId', $this->employeeId)
+            ->setParameter('employeeId', $employeeId)
             ->getQuery()
             ->getResult();
         
@@ -114,74 +132,98 @@ class EmployeeAbsenceController extends AbstractController
             'statusOptions' => $statusOptions,
             'today' => $today,
             'isCurrentMonth' => $isCurrentMonth,
-            'employeeId' => $this->employeeId,
+            'employeeId' => $employeeId,
             'modifiableDays' => $modifiableDays
         ]);
     }
 
-    #[Route('/mark', name: 'app_employee_mark_attendance', methods: ['POST'])]
+    #[Route('/mark', name: 'app_employee_mark_attendance', methods: ['POST', 'GET'])]
     public function markAttendance(Request $request): JsonResponse
     {
         try {
-            // For debugging purposes
-            $content = $request->getContent();
-            $contentType = $request->getContentType();
+            $user = $this->getCurrentUser();
+            $employeeId = $user->getId();
             
-            // Ensure we have content
-            if (empty($content)) {
-                return new JsonResponse(['success' => false, 'message' => 'No content provided'], 400);
+            // For GET requests, check query parameters
+            if ($request->isMethod('GET')) {
+                $date = $request->query->get('date');
+                $status = $request->query->get('status');
+                
+                // If navigating directly with no parameters, redirect to attendance page
+                if (!$date || !$status) {
+                    // Return a proper message for direct URL access
+                    return new JsonResponse([
+                        'success' => false,
+                        'message' => 'Cette URL est réservée aux appels API. Veuillez utiliser l\'interface utilisateur pour marquer votre présence.'
+                    ], 400);
+                }
+            } else {
+                // For POST requests
+                $content = $request->getContent();
+                $data = json_decode($content, true);
+                
+                if ($data === null) {
+                    // Try to get from request parameters
+                    $date = $request->request->get('date');
+                    $status = $request->request->get('status');
+                } else {
+                    $date = $data['date'] ?? null;
+                    $status = $data['status'] ?? null;
+                }
             }
             
-            // Parse JSON data
-            $data = json_decode($content, true);
-            
-            // Check if JSON was decoded properly
-            if ($data === null && json_last_error() !== JSON_ERROR_NONE) {
-                throw new \Exception('Invalid JSON provided: ' . json_last_error_msg());
+            // Validate parameters
+            if (!isset($date) || !isset($status)) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Les paramètres date et status sont requis'
+                ], 400);
             }
             
-            if (!isset($data['date'], $data['status'])) {
-                return new JsonResponse(['success' => false, 'message' => 'Missing required parameters'], 400);
-            }
+            // Rest of your code remains the same...
+            $date = new \DateTime($date);
+            $status = $status;
             
-            $date = new \DateTime($data['date']);
-            $status = $data['status'];
-            
-            // Set time to beginning of day to ensure consistent date comparison
+            // Set time to beginning of day
             $date->setTime(0, 0, 0);
             
-            // Verify the date is not in the future
+            // Check if future date
             $today = new \DateTime();
             $today->setTime(23, 59, 59);
             
             if ($date > $today) {
-                return new JsonResponse(['success' => false, 'message' => 'Cannot mark attendance for future dates'], 400);
+                return new JsonResponse([
+                    'success' => false, 
+                    'message' => 'Impossible de marquer la présence pour une date future'
+                ], 400);
             }
             
-            // Verify it's not a weekend
+            // Check if weekend
             $dayOfWeek = (int)$date->format('N');
             if ($dayOfWeek >= 6) {
-                return new JsonResponse(['success' => false, 'message' => 'Cannot mark attendance for weekends'], 400);
+                return new JsonResponse([
+                    'success' => false, 
+                    'message' => 'Impossible de marquer la présence pour les weekends'
+                ], 400);
             }
             
-            // Check if there's already an absence record for this employee on this date
+            // Get or create absence record
             $absence = $this->absenceRepository->findOneBy([
-                'idEmploye' => $this->employeeId,
+                'idEmploye' => $employeeId,
                 'date' => $date,
             ]);
             
             if (!$absence) {
-                // Create a new absence record if none exists
                 $absence = new Absence();
-                $absence->setIdEmploye($this->employeeId);
+                $absence->setIdEmploye($employeeId);
                 $absence->setDate($date);
             }
             
-            // Set the status
+            // Set status
             $absenceStatus = AbsenceStatus::from($status);
             $absence->setStatus($absenceStatus);
             
-            // Save changes
+            // Save
             $this->entityManager->persist($absence);
             $this->entityManager->flush();
             
@@ -189,6 +231,7 @@ class EmployeeAbsenceController extends AbstractController
                 'success' => true,
                 'message' => 'Présence marquée avec succès pour le ' . $date->format('d/m/Y')
             ]);
+            
         } catch (\Exception $e) {
             return new JsonResponse([
                 'success' => false, 
@@ -196,10 +239,12 @@ class EmployeeAbsenceController extends AbstractController
             ], 500);
         }
     }
-
     #[Route('/history', name: 'app_employee_attendance_history')]
     public function history(Request $request): Response
     {
+        $user = $this->getCurrentUser();
+        $employeeId = $user->getId();
+        
         $year = (int)$request->query->get('year', date('Y'));
         
         $absencesByMonth = [];
@@ -215,7 +260,7 @@ class EmployeeAbsenceController extends AbstractController
                 ->andWhere('a.idEmploye = :employeeId')
                 ->setParameter('startDate', $startDate)
                 ->setParameter('endDate', $endDate)
-                ->setParameter('employeeId', $this->employeeId)
+                ->setParameter('employeeId', $employeeId)
                 ->getQuery()
                 ->getResult();
             
@@ -249,7 +294,7 @@ class EmployeeAbsenceController extends AbstractController
         return $this->render('absence/EmpHistory.html.twig', [
             'year' => $year,
             'absencesByMonth' => $absencesByMonth,
-            'employeeId' => $this->employeeId
+            'employeeId' => $employeeId
         ]);
     }
 }

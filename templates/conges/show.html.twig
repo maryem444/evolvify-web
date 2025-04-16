@@ -20,8 +20,14 @@
                                 <h5 class="card-title">Informations générales</h5>
                                 <ul class="list-group list-group-flush">
                                     <li class="list-group-item d-flex justify-content-between">
-                                        <span>ID Employé:</span>
-                                        <span class="fw-bold">{{ conge.idEmploye }}</span>
+                                        <span>Employé:</span>
+                                        <span class="fw-bold">
+                                            {% if conge.employe %}
+                                                {{ conge.employe.firstname }} {{ conge.employe.lastname }}
+                                            {% else %}
+                                                ID: {{ conge.idEmploye }}
+                                            {% endif %}
+                                        </span>
                                     </li>
                                     <li class="list-group-item d-flex justify-content-between">
                                         <span>Type de congé:</span>

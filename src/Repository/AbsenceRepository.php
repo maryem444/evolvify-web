@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Absence;
+use App\Entity\AbsenceStatus;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -58,4 +59,16 @@ class AbsenceRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+    public function findAbsentEmployeesInPeriod(\DateTimeInterface $startDate, \DateTimeInterface $endDate)
+{
+    return $this->createQueryBuilder('a')
+        ->select('DISTINCT a.idEmploye')
+        ->where('a.date BETWEEN :startDate AND :endDate')
+        ->andWhere('a.status = :absentStatus')
+        ->setParameter('startDate', $startDate)
+        ->setParameter('endDate', $endDate)
+        ->setParameter('absentStatus', AbsenceStatus::ABSENT)
+        ->getQuery()
+        ->getResult();
+}
 }
