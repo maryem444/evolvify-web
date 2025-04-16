@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="fr">
+	<head>
+		<meta charset="UTF-8">
+		<style>
+			body {
+				font-family: Helvetica, sans-serif;
+				font-size: 12px;
+			}
+			.title {
+				text-align: center;
+				font-size: 18px;
+				font-weight: bold;
+				color: #034694;
+			}
+			.date {
+				text-align: right;
+				font-size: 10px;
+				font-style: italic;
+			}
+			table {
+				width: 100%;
+				border-collapse: collapse;
+				margin-top: 20px;
+			}
+			th,
+			td {
+				border: 1px solid #ddd;
+				padding: 8px;
+				text-align: center;
+			}
+			th {
+				background-color: #f2f2f2;
+			}
+			.footer {
+				text-align: center;
+				font-size: 10px;
+				margin-top: 20px;
+			}
+		</style>
+	</head>
+	<body>
+		<p class="date">Exporté le :
+			{{ dateExport|date("d/m/Y H:i") }}</p>
+		<h2 class="title">Liste des Projets</h2>
+
+		<table>
+			<thead>
+				<tr>
+					<th>Nom</th>
+					<th>Abbreviation</th>
+					<th>Description</th>
+					<th>Statut</th>
+					<th>Assigné à</th>
+					<th>Date de début</th>
+					<th>Date de fin</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for projet in projets %}
+					<tr>
+						<td>{{ projet.name }}</td>
+						<td>{{ projet.abbreviation }}</td>
+						<td>{{ projet.description|raw }}</td>
+						<td>{{ projet.status ? projet.status.value : 'Inconnu' }}</td>
+						<td>
+							{% for user in projet.assignedUsers %}
+								{{ user.firstname }}
+								{{ user.lastname }}
+								{% if not loop.last %},
+								{% endif %}
+							{% endfor %}
+						</td>
+						<td>{{ projet.starterAt ? projet.starterAt|date('d/m/Y') : '-' }}</td>
+						<td>{{ projet.endDate ? projet.endDate|date('d/m/Y') : '-' }}</td>
+					</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+
+		<p class="footer">Document généré automatiquement</p>
+	</body>
+</html>
