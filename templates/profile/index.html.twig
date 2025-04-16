@@ -1,0 +1,359 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+	<div class="container-fluid px-4">
+	<!-- Add a clear top navigation bar -->
+	<div class="row mb-4" style="margin-top: 40px;">
+		<div class="col-12">
+			<nav class="bg-light py-2 px-3 rounded">
+				<ol class="breadcrumb mb-0">
+					<li class="breadcrumb-item"><a href="{{ path('app_dashboard') }}" class="text-decoration-none">Dashboard</a></li>
+					<li class="breadcrumb-item active">Profile</li>
+				</ol>
+			</nav>
+		</div>
+	</div>
+
+		
+		<!-- Page title -->
+		<h1 class="mt-2 mb-4">Profile</h1>
+
+		{# Display flash messages #}
+		{% for message in app.flashes('success') %}
+			<div class="alert alert-success alert-dismissible fade show" role="alert">
+				{{ message }}
+				<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+			</div>
+		{% endfor %}
+
+		{% for message in app.flashes('error') %}
+			<div class="alert alert-danger alert-dismissible fade show" role="alert">
+				{{ message }}
+				<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+			</div>
+		{% endfor %}
+
+		<div class="card mb-4 shadow">
+			<div class="card-body">
+				<div class="row">
+					<!-- Profile Photo Section -->
+					<div class="col-md-4 border-end">
+						<div class="text-center mb-4">
+							{% if user.profilePhoto %}
+								<img src="{{ user.profilePhotoUrl }}" alt="Profile Photo" class="img-fluid rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
+							{% else %}
+								<img src="{{ asset('assets/img/profile.jpg') }}" alt="Default Profile Photo" class="img-fluid rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
+							{% endif %}
+						</div>
+
+						<h3 class="text-center fw-bold">{{ user.firstname }} {{ user.lastname }}</h3>
+						<div class="badge bg-primary text-white mb-2 d-block w-75 mx-auto py-2">
+							{% if user.role == 'RESPONSABLE_RH' %}
+								<i class="fas fa-users-cog me-1"></i>
+								Talent Management
+							{% elseif user.role == 'CHEF_PROJET' %}
+								<i class="fas fa-project-diagram me-1"></i>
+								Project Management
+							{% elseif user.role == 'EMPLOYEE' %}
+								<i class="fas fa-user-tie me-1"></i>
+								Team Member
+							{% else %}
+								<i class="fas fa-user me-1"></i>
+								Candidate
+							{% endif %}
+						</div>
+
+						<p class="text-center">
+							<i class="fas fa-calendar-alt me-1 text-muted"></i>
+							Joined:
+							{{ user.joiningDate ? user.joiningDate|date('Y-m-d') : 'Not set' }}
+						</p>
+
+						<div class="text-center mt-4">
+							<button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#contactModal">
+								<i class="fas fa-envelope me-1"></i>
+								Send Message
+							</button>
+						</div>
+					</div>
+
+					<!-- Profile Details Section -->
+					<div class="col-md-8">
+						<div class="d-flex justify-content-between align-items-center mb-4">
+							<h4 class="mb-0">Personal Information</h4>
+							<button class="btn btn-sm btn-outline-primary rounded-circle" data-bs-toggle="modal" data-bs-target="#personalInfoModal">
+								<i class="fas fa-pencil-alt"></i>
+							</button>
+						</div>
+
+						<div class="row g-3">
+							<div class="col-md-6">
+								<div class="card h-100 border-0 bg-light">
+									<div class="card-body">
+										<p class="text-muted mb-1">
+											<i class="fas fa-phone me-2"></i>Phone</p>
+										<h6>{{ user.numTel ? user.numTel : 'Not provided' }}</h6>
+									</div>
+								</div>
+							</div>
+
+							<div class="col-md-6">
+								<div class="card h-100 border-0 bg-light">
+									<div class="card-body">
+										<p class="text-muted mb-1">
+											<i class="fas fa-envelope me-2"></i>Email</p>
+										<h6 class="text-primary">{{ user.email }}</h6>
+									</div>
+								</div>
+							</div>
+
+							<div class="col-md-6">
+								<div class="card h-100 border-0 bg-light">
+									<div class="card-body">
+										<p class="text-muted mb-1">
+											<i class="fas fa-birthday-cake me-2"></i>Birthday</p>
+										<h6>{{ user.birthdayDate ? user.birthdayDate|date('d F Y') : 'Not provided' }}</h6>
+									</div>
+								</div>
+							</div>
+
+							<div class="col-md-6">
+								<div class="card h-100 border-0 bg-light">
+									<div class="card-body">
+										<p class="text-muted mb-1">
+											<i class="fas fa-venus-mars me-2"></i>Gender</p>
+										<h6>{{ user.gender == 'HOMME' ? 'Male' : 'Female' }}</h6>
+									</div>
+								</div>
+							</div>
+
+							{% if user.role == 'RESPONSABLE_RH' or user.role == 'CHEF_PROJET' or user.role == 'EMPLOYEE' %}
+								<div class="col-md-6">
+									<div class="card h-100 border-0 bg-light">
+										<div class="card-body">
+											<p class="text-muted mb-1">
+												<i class="fas fa-umbrella-beach me-2"></i>Remaining Leave Days</p>
+											<h6>{{ user.congeRestant ? user.congeRestant : '0' }}</h6>
+										</div>
+									</div>
+								</div>
+
+								<div class="col-md-6">
+									<div class="card h-100 border-0 bg-light">
+										<div class="card-body">
+											<p class="text-muted mb-1">
+												<i class="fas fa-home me-2"></i>Telecommuting Days</p>
+											<h6>{{ user.ttRestants ? user.ttRestants : '0' }}</h6>
+										</div>
+									</div>
+								</div>
+							{% endif %}
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+	</div>
+
+	<!-- Contact Modal -->
+	<div class="modal fade" id="contactModal" tabindex="-1" aria-labelledby="contactModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-lg">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="contactModalLabel">Send Message to {{ user.firstname }}</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<form action="{{ path('app_send_message') }}" method="post">
+					<div class="modal-body">
+						<input type="hidden" name="recipient_id" value="{{ user.id }}">
+						<div class="mb-3">
+							<label for="subject" class="form-label">Subject</label>
+							<input type="text" class="form-control" id="subject" name="subject" required>
+						</div>
+						<div class="mb-3">
+							<label for="message" class="form-label">Message</label>
+							<textarea class="form-control" id="message" name="message" rows="5" required></textarea>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+						<button type="submit" class="btn btn-primary">Send</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<!-- Combined Personal Information Edit Modal -->
+	<div class="modal fade" id="personalInfoModal" tabindex="-1" aria-labelledby="personalInfoModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-lg">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="personalInfoModalLabel">Edit Personal Information</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+
+				<!-- Profile Photo Form -->
+				<div class="border-bottom pb-3">
+					<div class="modal-body">
+						<!-- Profile Photo Edit -->
+						<div class="row">
+							<div class="col-md-12">
+								<div class="d-flex flex-column align-items-center">
+									<h6 class="mb-3">Profile Photo</h6>
+									<div class="mb-3">
+										<div id="currentPhotoContainer">
+											{% if user.profilePhoto %}
+												<img src="{{ user.profilePhotoUrl }}" alt="Current Profile Photo" id="photoPreview" class="img-fluid rounded-circle mb-2" style="width: 100px; height: 100px; object-fit: cover;">
+											{% else %}
+												<img src="{{ asset('assets/img/profile.jpg') }}" alt="Default Profile Photo" id="photoPreview" class="img-fluid rounded-circle mb-2" style="width: 100px; height: 100px; object-fit: cover;">
+											{% endif %}
+										</div>
+									</div>
+
+									{{ form_start(photoForm, {
+                        'action': path('app_profile_update_photo'),
+                        'attr': {
+                            'id': 'photoForm',
+                            'enctype': 'multipart/form-data'
+                        }
+                    }) }}
+
+									<div class="mb-3">
+										{{ form_widget(photoForm.photo, {'attr': {'class': 'form-control', 'onchange': 'previewPhoto(this)'}}) }}
+										<small class="text-muted">Upload a new profile photo (JPG, PNG)</small>
+									</div>
+
+									<div class="text-center mb-2">
+										<button type="submit" class="btn btn-primary">Update Photo</button>
+									</div>
+
+									{{ form_rest(photoForm) }}
+									{{ form_end(photoForm) }}
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Personal Information Form -->
+				<form method="post" action="{{ path('app_profile') }}" id="infoForm">
+					<div class="modal-body">
+						<!-- Non-editable fields (displayed but disabled) -->
+						<div class="row mb-3">
+							<div class="col-md-6">
+								<label for="email" class="form-label">Email</label>
+								<input type="email" class="form-control bg-light" id="email" name="email" value="{{ user.email }}" disabled>
+								<small class="text-muted">Email cannot be modified</small>
+							</div>
+							<div class="col-md-6">
+								<label for="joiningDate" class="form-label">Joining Date</label>
+								<input type="text" class="form-control bg-light" id="joiningDate" value="{{ user.joiningDate ? user.joiningDate|date('Y-m-d') : '' }}" disabled>
+								<small class="text-muted">Joining date cannot be modified</small>
+							</div>
+						</div>
+
+						<div class="row mb-3">
+							<div class="col-md-6">
+								<label for="role" class="form-label">Role</label>
+								<input type="text" class="form-control bg-light" id="role" value="{% if user.role == 'RESPONSABLE_RH' %}Talent Management{% elseif user.role == 'CHEF_PROJET' %}Project Management{% elseif user.role == 'EMPLOYEE' %}Team Member{% else %}Candidate{% endif %}" disabled>
+								<small class="text-muted">Role cannot be modified</small>
+							</div>
+						</div>
+
+						<!-- Editable fields -->
+						<hr>
+						<div class="row mb-3">
+							<div class="col-md-6">
+								<label for="firstname" class="form-label">First Name</label>
+								<input type="text" class="form-control" id="firstname" name="firstname" value="{{ user.firstname }}">
+							</div>
+							<div class="col-md-6">
+								<label for="lastname" class="form-label">Last Name</label>
+								<input type="text" class="form-control" id="lastname" name="lastname" value="{{ user.lastname }}">
+							</div>
+						</div>
+
+						<div class="row mb-3">
+							<div class="col-md-6">
+								<label for="numTel" class="form-label">Phone Number</label>
+								<input type="tel" class="form-control" id="numTel" name="numTel" value="{{ user.numTel }}">
+							</div>
+							<div class="col-md-6">
+								<label for="birthdayDate" class="form-label">Birth Date</label>
+								<input type="date" class="form-control {% if user.birthdateEdited %}bg-light{% endif %}" id="birthdayDate" name="birthdayDate" value="{{ user.birthdayDate ? user.birthdayDate|date('Y-m-d') : '' }}" {% if user.birthdateEdited %}disabled{% endif %}>
+								{% if user.birthdateEdited %}
+									<small class="text-muted">Birth date can only be set once</small>
+								{% else %}
+									<small class="text-warning">Important: You can only set your birth date once!</small>
+								{% endif %}
+							</div>
+						</div>
+
+						<div class="row mb-3">
+							<div class="col-md-6">
+								<label for="gender" class="form-label">Gender</label>
+								<select class="form-select" id="gender" name="gender">
+									<option value="HOMME" {% if user.gender == 'HOMME' %} selected {% endif %}>Male</option>
+									<option value="FEMME" {% if user.gender == 'FEMME' %} selected {% endif %}>Female</option>
+								</select>
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+						<button type="submit" class="btn btn-primary">Save Changes</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	{% block javascripts %}
+		<script>
+			function previewPhoto(input) {
+				if (input.files && input.files[0]) {
+					var reader = new FileReader();
+					
+					reader.onload = function (e) {
+						document.getElementById('photoPreview').src = e.target.result;
+					};
+					
+					reader.readAsDataURL(input.files[0]);
+				}
+			}
+		</script>
+	{% endblock %}
+	{% block stylesheets %}
+    {{ parent() }}
+    <!-- Fix for modal backdrop color -->
+    <style>
+        /* Override Bootstrap modal backdrop */
+        .modal-backdrop {
+            background-color: rgba(0, 0, 0, 0.5) !important; /* Semi-transparent background */
+        }
+
+        .modal-backdrop.fade {
+            opacity: 0;
+            transition: opacity 0.15s linear;
+        }
+
+        .modal-backdrop.show {
+            opacity: 0.5; /* Match the opacity in the background-color above */
+        }
+        
+        /* Optional: Add smooth transition to modals */
+        .modal.fade .modal-dialog {
+            transition: transform 0.2s ease-out;
+            transform: translate(0, -50px);
+        }
+        
+        .modal.show .modal-dialog {
+            transform: none;
+        }
+    </style>
+{% endblock %}
+{% endblock %}
