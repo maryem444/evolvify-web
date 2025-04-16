@@ -31,7 +31,8 @@
         "symfony/security-core": "6.4.*",
         "symfony/twig-bundle": "6.4",
         "symfony/validator": "6.4.*",
-        "symfony/yaml": "7.2.*"
+        "symfony/yaml": "7.2.*",
+        "twilio/sdk": "^6.44"
     },
     "config": {
         "allow-plugins": {

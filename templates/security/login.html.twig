@@ -31,13 +31,13 @@
         .password-toggle {
             position: absolute;
             right: 10px;
-            top: 60%; /* Changed from 50% to 55% to move it down */
+            top: 60%;
             transform: translateY(-50%);
             cursor: pointer;
             z-index: 10;
             color: #666;
             opacity: 0.7;
-            font-size: 22px; /* Increased from 16px to 22px */
+            font-size: 22px;
             transition: opacity 0.2s;
         }
         .password-toggle:hover {
@@ -46,90 +46,109 @@
     </style>
 </head>
 <body>
-
-<div class="limiter">
-    <div class="container-login100" style="background-image: url('{{ asset('login/images/bg-01.jpg') }}');">
-        <div class="wrap-login100 p-l-55 p-r-55 p-t-65 p-b-54">
-            <form method="post" class="login100-form validate-form" action="{{ path('app_login') }}">
-                <div class="logo-container">
-                    <img src="{{ asset('assets/img/logo.png') }}" alt="Logo" class="logo-img">
-                </div>
-                <span class="login100-form-title p-b-49">
-                    Login
-                </span>
-
-                {% if error %}
-                    <div class="alert alert-danger" role="alert">
-                        {{ error.messageKey|trans(error.messageData, 'security') }}
+    <div class="limiter">
+        <div class="container-login100" style="background-image: url('{{ asset('login/images/bg-01.jpg') }}');">
+            <div class="wrap-login100 p-l-55 p-r-55 p-t-65 p-b-54">
+                <form method="post" class="login100-form validate-form" action="{{ path('app_login') }}">
+                    <div class="logo-container">
+                        <img src="{{ asset('assets/img/logo.png') }}" alt="Logo" class="logo-img">
                     </div>
-                {% endif %}
+                    <span class="login100-form-title p-b-49">
+                        Login
+                    </span>
 
-                {# Add CSRF token #}
-                <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+                    {% if error %}
+                        <div class="alert alert-danger" role="alert">
+                            {{ error.messageKey|trans(error.messageData, 'security') }}
+                        </div>
+                    {% endif %}
 
-                <div class="wrap-input100 validate-input m-b-23" data-validate="Username is required">
-                    <span class="label-input100">Email</span>
-                    <input class="input100" type="text" name="_username" value="{{ last_username }}" placeholder="Type your email" required autofocus>
-                    <span class="focus-input100" data-symbol="&#xf206;"></span>
-                </div>
+                    {# Add CSRF token #}
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
 
-                <div class="wrap-input100 validate-input password-container" data-validate="Password is required">
-                    <span class="label-input100">Password</span>
-                    <input class="input100" type="password" name="_password" id="password-field" placeholder="Type your password" required>
-                    <span class="focus-input100" data-symbol="&#xf190;"></span>
-                    <i class="fa fa-eye-slash password-toggle" id="password-toggle"></i>
-                </div>
-
-                <div class="text-right p-t-8 p-b-31">
-                    <a href="#">Forgot password?</a>
-                </div>
-
-                <div class="container-login100-form-btn">
-                    <div class="wrap-login100-form-btn">
-                        <div class="login100-form-bgbtn"></div>
-                        <button class="login100-form-btn" type="submit">
-                            Login
-                        </button>
+                    <div class="wrap-input100 validate-input m-b-23" data-validate="Username is required">
+                        <span class="label-input100">Email</span>
+                        <input class="input100" type="text" name="_username" value="{{ last_username }}" placeholder="Type your email" required autofocus>
+                        <span class="focus-input100" data-symbol="&#xf206;"></span>
                     </div>
-                </div>
 
-                
-            </form>
+                    <div class="wrap-input100 validate-input password-container" data-validate="Password is required">
+                        <span class="label-input100">Password</span>
+                        <input class="input100" type="password" name="_password" id="password-field" placeholder="Type your password" required>
+                        <span class="focus-input100" data-symbol="&#xf190;"></span>
+                        <i class="fa fa-eye-slash password-toggle" id="password-toggle"></i>
+                    </div>
+
+                    <div class="text-right p-t-8 p-b-31">
+                        <a href="{{ path('app_forgot_password') }}">Forgot password?</a>
+                    </div>
+
+                    <div class="container-login100-form-btn">
+                        <div class="wrap-login100-form-btn">
+                            <div class="login100-form-bgbtn"></div>
+                            <button class="login100-form-btn" type="submit">
+                                Login
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</div>
 
-<div id="dropDownSelect1"></div>
+    <div id="dropDownSelect1"></div>
 
-<script src="{{ asset('login/vendor/jquery/jquery-3.2.1.min.js') }}"></script>
-<script src="{{ asset('login/vendor/animsition/js/animsition.min.js') }}"></script>
-<script src="{{ asset('login/vendor/bootstrap/js/popper.js') }}"></script>
-<script src="{{ asset('login/vendor/bootstrap/js/bootstrap.min.js') }}"></script>
-<script src="{{ asset('login/vendor/select2/select2.min.js') }}"></script>
-<script src="{{ asset('login/vendor/daterangepicker/moment.min.js') }}"></script>
-<script src="{{ asset('login/vendor/daterangepicker/daterangepicker.js') }}"></script>
-<script src="{{ asset('login/vendor/countdowntime/countdowntime.js') }}"></script>
-<script src="{{ asset('login/js/main.js') }}"></script>
+    <!-- Load jQuery first, before any other scripts -->
+    <script src="{{ asset('login/vendor/jquery/jquery-3.2.1.min.js') }}"></script>
+    <script src="{{ asset('login/vendor/animsition/js/animsition.min.js') }}"></script>
+    <script src="{{ asset('login/vendor/bootstrap/js/popper.js') }}"></script>
+    <script src="{{ asset('login/vendor/bootstrap/js/bootstrap.min.js') }}"></script>
+    <script src="{{ asset('login/vendor/select2/select2.min.js') }}"></script>
+    <script src="{{ asset('login/vendor/daterangepicker/moment.min.js') }}"></script>
+    <script src="{{ asset('login/vendor/daterangepicker/daterangepicker.js') }}"></script>
+    <script src="{{ asset('login/vendor/countdowntime/countdowntime.js') }}"></script>
+    <script src="{{ asset('login/js/main.js') }}"></script>
 
-<script>
-    // Password visibility toggle with Font Awesome icons
-    document.addEventListener('DOMContentLoaded', function() {
-        const passwordField = document.getElementById('password-field');
-        const passwordToggle = document.getElementById('password-toggle');
-        
-        passwordToggle.addEventListener('click', function() {
-            if (passwordField.type === 'password') {
-                passwordField.type = 'text';
-                passwordToggle.classList.remove('fa-eye-slash');
-                passwordToggle.classList.add('fa-eye');
-            } else {
-                passwordField.type = 'password';
-                passwordToggle.classList.remove('fa-eye');
-                passwordToggle.classList.add('fa-eye-slash');
+    <!-- Add these to fix the missing plugins -->
+    <!-- If you're using scrollbar plugin -->
+    <script src="{{ asset('login/vendor/perfect-scrollbar/perfect-scrollbar.min.js') }}"></script>
+    <!-- If you're using sparkline plugin -->
+    {# // <script src="{{ asset('login/vendor/jquery-sparkline/jquery.sparkline.min.js') }}"></script> #}
+
+    <!-- Password toggle script -->
+    <script>
+        // Wait for DOM to be fully loaded
+        document.addEventListener('DOMContentLoaded', function () {
+            const passwordField = document.getElementById('password-field');
+            const passwordToggle = document.getElementById('password-toggle');
+
+            // Only add event listener if elements exist
+            if (passwordField && passwordToggle) {
+                passwordToggle.addEventListener('click', function () {
+                    if (passwordField.type === 'password') {
+                        passwordField.type = 'text';
+                        passwordToggle.classList.remove('fa-eye-slash');
+                        passwordToggle.classList.add('fa-eye');
+                    } else {
+                        passwordField.type = 'password';
+                        passwordToggle.classList.remove('fa-eye');
+                        passwordToggle.classList.add('fa-eye-slash');
+                    }
+                });
             }
         });
-    });
-</script>
 
+        // Only run this on password reset pages
+        {% if app.request.pathInfo starts with '/reset-password' or app.request.pathInfo starts with '/forgot-password' or app.request.pathInfo starts with '/verify-code' %}
+            // Prevent back navigation for password reset flow
+            (function() {
+                window.history.pushState(null, null, window.location.href);
+                window.onpopstate = function() {
+                    window.history.pushState(null, null, window.location.href);
+                    alert('Pour des raisons de sécurité, veuillez utiliser les boutons de navigation fournis.');
+                };
+            })();
+        {% endif %}
+    </script>
 </body>
 </html>

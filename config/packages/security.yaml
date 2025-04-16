@@ -46,3 +46,7 @@ security:
           [ROLE_RESPONSABLE_RH, ROLE_CHEF_PROJET, ROLE_EMPLOYEE, ROLE_CONDIDAT],
       }
     - { path: ^/dashboard, roles: ROLE_RESPONSABLE_RH } # Only HR Managers can access dashboard
+    - { path: ^/reset-password, roles: PUBLIC_ACCESS }
+    - { path: ^/verify-code, roles: PUBLIC_ACCESS }
+    - { path: ^/forgot-password, roles: PUBLIC_ACCESS }
+

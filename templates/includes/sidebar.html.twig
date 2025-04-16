@@ -21,14 +21,13 @@
 	<div class="sidebar-wrapper scrollbar scrollbar-inner">
 		<div class="sidebar-content">
 			<ul class="nav nav-secondary">
-				{% if app.user.role == 'CHEF_PROJET' or app.user.role == 'RESPONSABLE_RH' %}
-					<li class="nav-item active">
-						<a href="{{ path('app_dashboard') }}">
-							<i class="fas fa-home"></i>
-							<p>Dashboard</p>
-						</a>
-					</li>
-				{% endif %}
+			{% if app.user is defined and app.user and app.user.role is defined and (app.user.role == 'CHEF_PROJET' or app.user.role == 'RESPONSABLE_RH') %}				<li class="nav-item active">
+					<a href="{{ path('app_dashboard') }}">
+						<i class="fas fa-home"></i>
+						<p>Dashboard</p>
+					</a>
+				</li>
+			{% endif %}
 
 				<li class="nav-section">
 					<span class="sidebar-mini-icon">
@@ -37,8 +36,7 @@
 					<h4 class="text-section">Components</h4>
 				</li>
 
-				{% if app.user.role == 'RESPONSABLE_RH' %}
-					<li class="nav-item">
+				{% if app.user is defined and app.user and app.user.role is defined and app.user.role == 'RESPONSABLE_RH' %}					<li class="nav-item">
 						<a href="{{ path('user_index') }}">
 							<i class="fa-solid fa-users"></i>
 							<p>Users</p>
