@@ -20,6 +20,7 @@
 
     
                 
+	</div>           
 	<div class="sidebar-wrapper scrollbar scrollbar-inner">
 		<div class="sidebar-content">
 			<ul class="nav nav-secondary">
@@ -65,7 +66,29 @@
 					        </ul>
 					</div>
 					</li>
+				</li>
+				<li class="nav-item">
+					<a data-bs-toggle="collapse" href="#transports">
+						<i class="fa fa-car"></i>
+						<p>Gestion de transport</p>
+						<span class="caret"></span>
+					</a>
+					<div class="collapse" id="transports">
+						<ul class="nav nav-collapse">
+							<li>
+								<!-- Dans votre sidebar -->
+                                 <a href="{{ path('moyentransport_list') }}">moyensTransports List</a>
+                                 <a href="{{ path('abonnement_list') }}">Abonnements List</a>
+                                 <a href="{{ path('abonnement_list_front') }}">abonnement de l'employé</a>
+                                 <a href="{{ path('trajet_list') }}">Trajets List</a>
+                                 <a href="{{ path('trajet_list_front') }}">Trajet de l'employé</a>
+							</li>
+					        </ul>
+					</div>
+				</li>
+
 			{% endif %}
+			
 
 
 			</ul>

@@ -9,7 +9,7 @@
         "php": ">=8.2",
         "ext-ctype": "*",
         "ext-iconv": "*",
-        "doctrine/dbal": "^4.2",
+        "doctrine/dbal": "^4.2.3",
         "doctrine/doctrine-bundle": "^2.14",
         "doctrine/doctrine-migrations-bundle": "^3.4",
         "doctrine/orm": "^3.3",
@@ -21,6 +21,7 @@
         "symfony/framework-bundle": "6.4",
         "symfony/google-mailer": "6.4.*",
         "symfony/mailer": "6.4.*",
+        "symfony/monolog-bundle": "^3.0",
         "symfony/runtime": "7.2.*",
         "symfony/security-bundle": "6.4.*",
         "symfony/security-core": "6.4.*",
@@ -81,6 +82,8 @@
     },
     "require-dev": {
         "symfony/debug-bundle": "6.4.*",
-        "symfony/maker-bundle": "^1.62"
+        "symfony/maker-bundle": "^1.62",
+        "symfony/stopwatch": "6.4.*",
+        "symfony/web-profiler-bundle": "6.4.*"
     }
 }
