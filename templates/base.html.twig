@@ -124,16 +124,19 @@
     <div class="wrapper">
         {% include 'includes/sidebar.html.twig' %}
 
-				<div class="main-panel">
-					{% include 'includes/header.html.twig' %}
-
-					{% block content %}{% endblock %}
+        <div class="main-panel">
+            {% include 'includes/header.html.twig' %}
+            
+            
+            {% block content %}{% endblock %}
 
 					{% include 'includes/footer.html.twig' %}
 				</div>
 
-				{% include 'includes/custom_template.html.twig' %}
-			</div>
+        {% include 'includes/custom_template.html.twig' %}
+    </div>
+    
+
 
 			<!--   Core JS Files   -->
 			<script src="{{ asset('assets/js/core/jquery-3.7.1.min.js') }}"></script>
@@ -179,6 +182,16 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
+
+   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+
+   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
 			{% block javascripts %}{% endblock %}
 
