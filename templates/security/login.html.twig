@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
-    <title>Login V4</title>
+    <title>Connexion</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="icon" type="image/png" href="{{ asset('login/images/icons/favicon.ico') }}"/>
+    <link rel="icon" href="{{ asset('assets/img/logo1.png') }}" type="image/x-icon">
     <link rel="stylesheet" type="text/css" href="{{ asset('login/vendor/bootstrap/css/bootstrap.min.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ asset('login/fonts/font-awesome-4.7.0/css/font-awesome.min.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ asset('login/fonts/iconic/css/material-design-iconic-font.min.css') }}">
@@ -54,7 +54,7 @@
                         <img src="{{ asset('assets/img/logo.png') }}" alt="Logo" class="logo-img">
                     </div>
                     <span class="login100-form-title p-b-49">
-                        Login
+                        Connexion
                     </span>
 
                     {% if error %}
@@ -66,28 +66,28 @@
                     {# Add CSRF token #}
                     <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
 
-                    <div class="wrap-input100 validate-input m-b-23" data-validate="Username is required">
+                    <div class="wrap-input100 validate-input m-b-23" data-validate="L'email est requis">
                         <span class="label-input100">Email</span>
-                        <input class="input100" type="text" name="_username" value="{{ last_username }}" placeholder="Type your email" required autofocus>
+                        <input class="input100" type="text" name="_username" value="{{ last_username }}" placeholder="Entrez votre email" required autofocus>
                         <span class="focus-input100" data-symbol="&#xf206;"></span>
                     </div>
 
-                    <div class="wrap-input100 validate-input password-container" data-validate="Password is required">
-                        <span class="label-input100">Password</span>
-                        <input class="input100" type="password" name="_password" id="password-field" placeholder="Type your password" required>
+                    <div class="wrap-input100 validate-input password-container" data-validate="Le mot de passe est requis">
+                        <span class="label-input100">Mot de passe</span>
+                        <input class="input100" type="password" name="_password" id="password-field" placeholder="Entrez votre mot de passe" required>
                         <span class="focus-input100" data-symbol="&#xf190;"></span>
                         <i class="fa fa-eye-slash password-toggle" id="password-toggle"></i>
                     </div>
 
                     <div class="text-right p-t-8 p-b-31">
-                        <a href="{{ path('app_forgot_password') }}">Forgot password?</a>
+                        <a href="{{ path('app_forgot_password') }}">Mot de passe oublié ?</a>
                     </div>
 
                     <div class="container-login100-form-btn">
                         <div class="wrap-login100-form-btn">
                             <div class="login100-form-bgbtn"></div>
                             <button class="login100-form-btn" type="submit">
-                                Login
+                                Connexion
                             </button>
                         </div>
                     </div>

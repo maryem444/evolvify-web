@@ -1,0 +1,280 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Ma présence{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .attendance-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        .attendance-table th, .attendance-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        
+        .attendance-table th {
+            background-color: #f2f2f2;
+        }
+        
+        .status-present {
+            background-color: #c8e6c9;
+        }
+        
+        .status-absent {
+            background-color: #ffcdd2;
+        }
+        
+        .status-leave {
+            background-color: #fff9c4;
+        }
+        
+        .today {
+            border: 2px solid #2196F3 !important;
+        }
+        
+        .month-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .btn-group {
+            margin-top: 10px;
+        }
+        
+        .leave-request-form {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+        
+        #statusMessage {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        
+        .status-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="container-fluid" style="margin-top: 6rem;">
+        <h1>Ma feuille de présence</h1>
+        
+        <div id="statusMessage"></div>
+        
+        <div class="month-navigation">
+            <h2>{{ month }} {{ year }}</h2>
+            <div>
+                <form action="{{ path('app_employee_my_attendance') }}" method="GET" class="d-inline">
+                    <div class="input-group">
+                        <select name="month" class="form-select">
+                            {% for m in ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'] %}
+                                <option value="{{ m }}" {% if m == month %}selected{% endif %}>{{ m }}</option>
+                            {% endfor %}
+                        </select>
+                        <select name="year" class="form-select">
+                            {% for y in range(year-2, year+1) %}
+                                <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn btn-primary">Afficher</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-body">
+                <h3>Calendrier de présence</h3>
+                
+                <div class="table-responsive">
+                    <table class="attendance-table">
+                        <thead>
+                            <tr>
+                                <th>Jour</th>
+                                <th>Date</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for day in days %}
+                                {% set monthNum = date(month ~ ' 1, ' ~ year)|date('m') %}
+                                {% set dayDate = date(year ~ '-' ~ monthNum ~ '-' ~ day) %}
+                                {% set isWeekend = dayDate|date('N') >= 6 %}
+                                {% set canEdit = day in modifiableDays %}
+                                
+                                <tr {% if day == today and isCurrentMonth %}class="today"{% endif %} data-day="{{ day }}">
+                                    <td>{{ dayDate|date('l') }}</td>
+                                    <td>{{ day }} {{ month }}</td>
+                                    <td class="status-cell">
+                                        {% if attendanceData[day] is defined and attendanceData[day] is not null %}
+                                            {% set status = attendanceData[day].status %}
+                                            <span class="badge 
+                                                {% if status == constant('App\\Entity\\AbsenceStatus::PRESENT') %}
+                                                    bg-success
+                                                {% elseif status == constant('App\\Entity\\AbsenceStatus::ABSENT') %}
+                                                    bg-danger
+                                                {% elseif status == constant('App\\Entity\\AbsenceStatus::EN_CONGE') %}
+                                                    bg-warning
+                                                {% else %}
+                                                    bg-secondary
+                                                {% endif %}
+                                            ">
+                                                {{ status.getLabel() }}
+                                            </span>
+                                        {% else %}
+                                            {% if isWeekend %}
+                                                <span class="badge bg-secondary">Weekend</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Non marqué</span>
+                                            {% endif %}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if canEdit %}
+                                            <div class="btn-group" role="group">
+                                                <button type="button" class="btn btn-sm btn-success mark-attendance" 
+                                                    data-date="{{ dayDate|date('Y-m-d') }}" 
+                                                    data-status="{{ constant('App\\Entity\\AbsenceStatus::PRESENT').value }}">
+                                                    Présent
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-danger mark-attendance" 
+                                                    data-date="{{ dayDate|date('Y-m-d') }}" 
+                                                    data-status="{{ constant('App\\Entity\\AbsenceStatus::ABSENT').value }}">
+                                                    Absent
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-warning mark-attendance" 
+                                                    data-date="{{ dayDate|date('Y-m-d') }}" 
+                                                    data-status="{{ constant('App\\Entity\\AbsenceStatus::EN_CONGE').value }}">
+                                                    Congé
+                                                </button>
+                                            </div>
+                                        {% else %}
+                                            <span class="text-muted">{% if isWeekend %}Weekend{% else %}Non modifiable{% endif %}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-4">
+            <a href="{{ path('app_employee_attendance_history') }}" class="btn btn-info">Voir l'historique</a>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+   document.addEventListener('DOMContentLoaded', function() {
+    const statusMessage = document.getElementById('statusMessage');
+    
+    if (!statusMessage) {
+        console.error('Status message element not found!');
+        return;
+    }
+    
+    function showMessage(message, isSuccess) {
+        statusMessage.textContent = message;
+        statusMessage.className = isSuccess ? 'alert status-success' : 'alert status-error';
+        statusMessage.style.display = 'block';
+        
+        // Make message disappear after 5 seconds
+        setTimeout(() => {
+            statusMessage.style.display = 'none';
+        }, 5000);
+    }
+    
+    // Mark attendance
+    document.querySelectorAll('.mark-attendance').forEach(button => {
+        button.addEventListener('click', function(event) {
+            // Prevent any default behavior
+            event.preventDefault();
+            event.stopPropagation();
+            
+            const date = this.getAttribute('data-date');
+            const status = this.getAttribute('data-status');
+            const row = this.closest('tr');
+            const statusCell = row.querySelector('.status-cell');
+            
+            console.log('Marking attendance:', { date, status });
+            
+            // Use the correct URL for the API endpoint
+            fetch('/employees/my-attendance/mark', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    date: date,
+                    status: status
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.message || 'Server responded with status: ' + response.status);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Update the status cell without reloading
+                    let badgeClass = 'bg-secondary';
+                    let statusText = 'Non défini';
+                    
+                    if (status === "PRESENT") {
+                        badgeClass = 'bg-success';
+                        statusText = 'Présent';
+                    } else if (status === "ABSENT") {
+                        badgeClass = 'bg-danger';
+                        statusText = 'Absent';
+                    } else if (status === "EN_CONGE") {
+                        badgeClass = 'bg-warning';
+                        statusText = 'En congé';
+                    }
+                    
+                    statusCell.innerHTML = `<span class="badge ${badgeClass}">${statusText}</span>`;
+                    
+                    // Show success message
+                    showMessage(data.message || 'Présence mise à jour avec succès', true);
+                } else {
+                    showMessage('Erreur: ' + (data.message || 'Une erreur inconnue est survenue'), false);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showMessage('Une erreur est survenue: ' + error.message, false);
+            });
+        });
+    });
+});
+    </script>
+{% endblock %}
