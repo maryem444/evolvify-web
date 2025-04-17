@@ -44,7 +44,8 @@
 							<p>Gestion des utilisateurs</p>
 						</a>
 					</li>
-				
+				{% endif %}
+				{% if app.user is defined and app.user and app.user.role is defined and (app.user.role == 'EMPLOYEE' or app.user.role == 'RESPONSABLE_RH') %}
 				<li class="nav-item">
 					<a data-bs-toggle="collapse" href="#conges">
 						<i class="fa fa-calendar"></i>
