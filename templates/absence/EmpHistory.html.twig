@@ -1,0 +1,226 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Historique de présence{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        .history-table th, .history-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        
+        .history-table th {
+            background-color: #f2f2f2;
+        }
+        
+        .stats-card {
+            margin-bottom: 20px;
+            transition: transform 0.3s;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .chart-container {
+            height: 400px;
+            margin-top: 30px;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+   <div class="container-fluid" style="margin-top: 6rem;">
+        <h1>Mon historique de présence</h1>
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Année {{ year }}</h2>
+            <form action="{{ path('app_employee_attendance_history') }}" method="GET" class="d-inline">
+                <div class="input-group">
+                    <select name="year" class="form-select">
+                        {% for y in range(year-5, year+1) %}
+                            <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-primary">Afficher</button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-success text-white stats-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Jours présent</h5>
+                        <h3 class="card-text">
+                            {% set totalPresent = 0 %}
+                            {% for month, stats in absencesByMonth %}
+                                {% set totalPresent = totalPresent + stats.present %}
+                            {% endfor %}
+                            {{ totalPresent }}
+                        </h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-danger text-white stats-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Jours absent</h5>
+                        <h3 class="card-text">
+                            {% set totalAbsent = 0 %}
+                            {% for month, stats in absencesByMonth %}
+                                {% set totalAbsent = totalAbsent + stats.absent %}
+                            {% endfor %}
+                            {{ totalAbsent }}
+                        </h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-dark stats-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Jours en congé</h5>
+                        <h3 class="card-text">
+                            {% set totalLeave = 0 %}
+                            {% for month, stats in absencesByMonth %}
+                                {% set totalLeave = totalLeave + stats.leave %}
+                            {% endfor %}
+                            {{ totalLeave }}
+                        </h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-info text-white stats-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Jours enregistrés</h5>
+                        <h3 class="card-text">
+                            {% set totalDays = 0 %}
+                            {% for month, stats in absencesByMonth %}
+                                {% set totalDays = totalDays + stats.total %}
+                            {% endfor %}
+                            {{ totalDays }}
+                        </h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-body">
+                <h3>Détails par mois</h3>
+                
+                <div class="table-responsive">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>Mois</th>
+                                <th>Jours présent</th>
+                                <th>Jours absent</th>
+                                <th>Jours en congé</th>
+                                <th>Total jours enregistrés</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for month, stats in absencesByMonth %}
+                                <tr>
+                                    <td>{{ month }}</td>
+                                    <td>{{ stats.present }}</td>
+                                    <td>{{ stats.absent }}</td>
+                                    <td>{{ stats.leave }}</td>
+                                    <td>{{ stats.total }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-body">
+                <h3>Graphique annuel</h3>
+                <div class="chart-container">
+                    <canvas id="attendanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-4">
+            <a href="{{ path('app_employee_my_attendance') }}" class="btn btn-primary">Retour à ma feuille de présence</a>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('attendanceChart').getContext('2d');
+            
+            // Prepare data for chart
+            const months = [];
+            const presentData = [];
+            const absentData = [];
+            const leaveData = [];
+            
+            {% for month, stats in absencesByMonth %}
+                months.push('{{ month }}');
+                presentData.push({{ stats.present }});
+                absentData.push({{ stats.absent }});
+                leaveData.push({{ stats.leave }});
+            {% endfor %}
+            
+            const attendanceChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: months,
+                    datasets: [
+                        {
+                            label: 'Jours présent',
+                            data: presentData,
+                            backgroundColor: 'rgba(76, 175, 80, 0.6)',
+                            borderColor: 'rgba(76, 175, 80, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Jours absent',
+                            data: absentData,
+                            backgroundColor: 'rgba(244, 67, 54, 0.6)',
+                            borderColor: 'rgba(244, 67, 54, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Jours en congé',
+                            data: leaveData,
+                            backgroundColor: 'rgba(255, 235, 59, 0.6)',
+                            borderColor: 'rgba(255, 235, 59, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+{% endblock %}

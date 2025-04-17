@@ -1,0 +1,54 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Liste des Congés{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Liste des Congés</h1>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Début du Congé</th>
+                <th>Fin du Congé</th>
+                <th>Nombre de Jours</th>
+                <th>Statut</th>
+                <th>Type</th>
+                <th>Raison</th>
+                <th>Employé</th>
+                <th>Description</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for conge in conges %}
+            <tr>
+                <td>{{ conge.id }}</td>
+                <td>{{ conge.leaveStart ? conge.leaveStart|date('d/m/Y') : '' }}</td>
+                <td>{{ conge.leaveEnd ? conge.leaveEnd|date('d/m/Y') : '' }}</td>
+                <td>{{ conge.numberOfDays }}</td>
+                <td>
+                    {% if conge.status %}
+                        {{ conge.status.label }}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if conge.type %}
+                        {{ conge.type.label }}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if conge.reason %}
+                        {{ conge.reason.label }}
+                    {% endif %}
+                </td>
+                <td>{{ conge.idEmploye }}</td>
+                <td>{{ conge.description }}</td>
+                
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
