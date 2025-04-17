@@ -1,0 +1,109 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Détails de ma Demande de Congé{% endblock %}
+
+{% block content %}
+    <div class="container-fluid" style="margin-top: 7rem;">
+
+        <div class="row">
+            <div class="col-md-8 offset-md-2">
+                <div class="card">
+                    <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">Détails de ma Demande de Congé</h4>
+                        <span class="badge rounded-pill bg-{{ conge.status ? (conge.status.value == 'ACCEPTE' ? 'success' : (conge.status.value == 'REFUSE' ? 'danger' : (conge.status.value == 'EN_COURS' ? 'warning' : 'secondary'))) : 'secondary' }} p-2 fs-6">
+                            {{ conge.status ? conge.status.label : 'Non défini' }}
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h5 class="card-title">Informations générales</h5>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>ID Employé:</span>
+                                        <span class="fw-bold">{{ conge.idEmploye }}</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Type de congé:</span>
+                                        <span class="fw-bold">{{ conge.type ? conge.type.label : 'Non défini' }}</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Raison:</span>
+                                        <span class="fw-bold">{{ conge.reason ? conge.reason.label : 'Non défini' }}</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h5 class="card-title">Détails du congé</h5>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Date de début:</span>
+                                        <span class="fw-bold">{{ conge.leaveStart|date('d/m/Y') }}</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Date de fin:</span>
+                                        <span class="fw-bold">{{ conge.leaveEnd|date('d/m/Y') }}</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Nombre de jours:</span>
+                                        <span class="fw-bold">{{ conge.numberOfDays }}</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        {% if conge.description %}
+                            <div class="mb-4">
+                                <h5 class="card-title">Description</h5>
+                                <div class="card">
+                                    <div class="card-body bg-light">
+                                        {{ conge.description }}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ path('app_employe_conge_index') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Retour à la liste
+                            </a>
+
+                            {% if conge.status.value != 'ACCEPTE' %}
+                                <div class="d-flex gap-2">
+                                    <a href="{{ path('app_employe_conge_edit', {'id': conge.id}) }}" class="btn btn-primary">
+                                        <i class="fas fa-edit"></i> Modifier
+                                    </a>
+                                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                        <i class="fas fa-trash"></i> Supprimer
+                                    </button>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel">Confirmation de suppression</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    Êtes-vous sûr de vouloir supprimer cette demande de congé ?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <form action="{{ path('app_employe_conge_delete', {'id': conge.id}) }}" method="post">
+                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ conge.id) }}">
+                        <button type="submit" class="btn btn-danger">Supprimer</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

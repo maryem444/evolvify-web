@@ -1,0 +1,84 @@
+<!-- Popup d'ajout de trajet -->
+<div class="modal fade" id="ajoutTrajetModal" tabindex="-1" aria-labelledby="ajoutTrajetLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ajoutTrajetLabel">Ajouter un Trajet</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="ajoutTrajetForm" method="POST">
+                    <div class="mb-3">
+                        <label for="point_dep" class="form-label">Point de départ</label>
+                        <input type="text" id="point_dep" name="point_dep" class="form-control" required autofocus>
+                    </div>
+                    <div class="mb-3">
+                        <label for="point_arr" class="form-label">Point d'arrivée</label>
+                        <input type="text" id="point_arr" name="point_arr" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="distance" class="form-label">Distance (en km)</label>
+                        <input type="number" id="distance" name="distance" class="form-control" step="0.01" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="durée_estimé" class="form-label">Durée estimée</label>
+                        <input type="time" id="durée_estimé" name="durée_estimé" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_moyen" class="form-label">Moyen de Transport</label>
+                       <select id="id_moyen" name="id_moyen" class="form-control" required>
+    {% for moyen in moyentransport %}
+        <option value="{{ moyen.id_moyen }}">{{ moyen.type_moyen }} ({{ moyen.immatriculation }})</option>
+    {% endfor %}
+</select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_employe" class="form-label">Employé</label>
+                        <input type="number" id="id_employe" name="id_employe" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Statut</label>
+                        <select id="status" name="status" class="form-control">
+                            < <option value="PLANIFIE">PLANIFIE</option>
+                            <option value="EN_COURS">En Cours</option>
+                            <option value="TERMINE">Terminé</option>
+                            <option value="ANNULE">Annulé</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Ajouter</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('ajoutTrajetForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+
+    fetch('{{ path('trajet_new') }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert(data.error || 'Une erreur est survenue lors de l\'ajout du trajet.');
+        } else {
+            alert('Trajet ajouté avec succès');
+            // Reset the form after successful submission
+            document.getElementById('ajoutTrajetForm').reset();
+            // Close the modal
+            var modal = new bootstrap.Modal(document.getElementById('ajoutTrajetModal'));
+            modal.hide();
+            location.reload();
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        alert('Une erreur est survenue lors de la requête.');
+    });
+});
+</script>

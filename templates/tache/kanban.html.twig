@@ -1,0 +1,1166 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Kanban -
+	{{ projet.name }}
+{% endblock %}
+
+{% block stylesheets %}
+	{{ parent() }}
+	<style>
+		.custom-confirm-dialog {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background-color: rgba(0, 0, 0, 0.5);
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			z-index: 9999;
+		}
+
+		.confirm-content {
+			width: 380px;
+			background-color: #fff3cd;
+			border: 2px solid #ffc107;
+			border-radius: 10px;
+			padding: 20px;
+			box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+			text-align: center;
+			animation: fadeIn 0.2s ease-out;
+		}
+
+		.confirm-header {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			margin-bottom: 15px;
+		}
+
+		.warning-icon {
+			color: #856404;
+			font-size: 40px;
+			margin-bottom: 10px;
+		}
+
+		.confirm-header h3 {
+			color: #856404;
+			font-size: 15px;
+			font-weight: bold;
+			margin: 5px 0;
+		}
+
+		.confirm-message {
+			color: #856404;
+			font-size: 13px;
+			margin-bottom: 20px;
+		}
+
+		.confirm-buttons {
+			display: flex;
+			justify-content: center;
+			gap: 15px;
+		}
+
+		.btn-cancel,
+		.btn-confirm {
+			padding: 8px 16px;
+			border-radius: 8px;
+			font-size: 13px;
+			border: none;
+			cursor: pointer;
+			transition: background-color 0.2s;
+		}
+
+		.btn-cancel {
+			background-color: #dddddd;
+			color: #333;
+		}
+
+		.btn-confirm {
+			background-color: #dc3545;
+			color: white;
+		}
+
+		.btn-cancel:hover {
+			background-color: #c8c8c8;
+		}
+
+		.btn-confirm:hover {
+			background-color: #c82333;
+		}
+
+		body.dialog-open {
+			overflow: hidden;
+		}
+
+		@keyframes fadeIn {
+			from {
+				opacity: 0;
+				transform: translateY(-20px);
+			}
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
+		}
+		.kanban-board {
+			display: flex;
+			gap: 10px;
+			overflow-x: auto;
+			padding: 10px;
+			min-height: 600px;
+		}
+
+		.kanban-column {
+			flex: 1;
+			min-width: 250px;
+			border-radius: 5px;
+		}
+
+		.kanban-column-header {
+			padding: 10px;
+			text-align: center;
+			color: white;
+			font-weight: bold;
+			border-radius: 5px 5px 0 0;
+		}
+
+		.to-do-header {
+			background-color: #2196F3;
+		}
+		.in-progress-header {
+			background-color: #FF9800;
+		}
+		.done-header {
+			background-color: #4CAF50;
+		}
+		.canceled-header {
+			background-color: #9C27B0;
+		}
+
+		.kanban-column-content {
+			padding: 10px;
+			min-height: 500px;
+		}
+
+		.to-do-content {
+			background-color: #E3F2FD;
+		}
+		.in-progress-content {
+			background-color: #FFF3E0;
+		}
+		.done-content {
+			background-color: #E8F5E9;
+		}
+		.canceled-content {
+			background-color: #F3E5F5;
+		}
+
+		.task-card {
+			background-color: white;
+			border-radius: 5px;
+			padding: 10px;
+			margin-bottom: 10px;
+			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+			position: relative;
+			color: black;
+		}
+
+		.task-card.priority-low {
+			border-left: 4px solid #2196F3;
+		}
+		.task-card.priority-medium {
+			border-left: 4px solid #FF9800;
+		}
+		.task-card.priority-high {
+			border-left: 4px solid #F44336;
+		}
+
+		.task-delete-btn {
+			position: absolute;
+			bottom: 5px; /* Repositionner en haut */
+			right: 5px;
+			color: #F44336;
+			background: none;
+			border: none;
+			cursor: pointer;
+			font-size: 1.2rem;
+		}
+
+		.progress-bar {
+			height: 15px;
+			background-color: #E0E0E0;
+			border-radius: 10px;
+			margin: 10px 0;
+		}
+
+		.progress-bar-fill {
+			height: 100%;
+			border-radius: 10px;
+			height: 20px;
+		}
+
+		.progress-bar-fill.in-progress {
+			background-color: #FF9800;
+		}
+		.progress-bar-fill.done {
+			background-color: #4CAF50;
+		}
+
+		.task-form-container {
+			max-width: 600px;
+			margin: 0 auto 20px;
+			padding: 20px;
+			background-color: #f5f5f5;
+			border-radius: 5px;
+		}
+
+		.priority-low {
+			color: #2196F3;
+		}
+		.priority-medium {
+			color: #FF9800;
+		}
+		.priority-high {
+			color: #F44336;
+		}
+		.task-card h5,
+		.task-card p,
+		.task-card span {
+			color: #000000 !important;
+		}
+		.actions-container {
+			margin-top: 20px;
+			margin-bottom: 20px;
+			text-align: left;
+		}
+
+		.btn-return {
+			background-color: #034694;
+			color: white;
+			padding: 8px 16px;
+			border-radius: 5px;
+			text-decoration: none;
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			font-weight: 500;
+			transition: background-color 0.3s;
+		}
+
+		.btn-return:hover {
+			background-color: #023a7a;
+			text-decoration: none;
+			color: white;
+		}
+
+		.btn-return i {
+			margin-right: 5px;
+		}
+
+
+		/* Style ajusté pour le bouton ajouter tâche */
+		.add-task-btn {
+			padding: 10px 15px;
+			background-color: #28a745;
+			color: white;
+			border-radius: 6px;
+			text-decoration: none;
+			font-weight: bold;
+
+		}
+		.add-task-btn:hover {
+			background-color: #218838;
+			color: white;
+		}
+
+		/* Modal styles */
+		.overlay {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background-color: rgba(0, 0, 0, 0.5);
+			display: none;
+			justify-content: center;
+			align-items: center;
+			z-index: 1050;
+			padding: 20px;
+			overflow: auto;
+		}
+
+		.modal-custom {
+			background-color: #fff;
+			border-radius: 10px;
+			padding: 20px;
+			width: 500px;
+			max-height: 90vh;
+			overflow-y: auto;
+			box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+			position: relative;
+		}
+
+		.modal-header {
+			font-size: 18px;
+			font-weight: bold;
+			margin-bottom: 20px;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+		}
+
+		.modal-body input,
+		.modal-body select {
+			width: 100%;
+			padding: 10px;
+			margin-bottom: 15px;
+			border-radius: 5px;
+			border: 1px solid #ccc;
+		}
+
+		.modal-body .form-icon {
+			margin-right: 10px;
+		}
+
+		.modal-footer {
+			text-align: right;
+			display: flex;
+			justify-content: flex-end;
+			gap: 10px;
+			margin-top: 15px;
+		}
+
+		.close-btn {
+			color: #888;
+			font-size: 24px;
+			cursor: pointer;
+			line-height: 1;
+		}
+
+		.modal-body input:focus,
+		.modal-body select:focus {
+			border-color: #4CAF50;
+			box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+			outline: none;
+		}
+
+		@media(max-width: 480px) {
+			.modal-custom {
+				width: 95%;
+				margin: 0 auto;
+			}
+		}
+
+		.form-error {
+			color: #e74c3c;
+			font-size: 13px;
+			margin-top: 5px;
+			display: block;
+		}
+
+		.is-invalid {
+			border-color: #e74c3c !important;
+		}
+		.progress-bar-fill span {
+			color: black; /* Définir la couleur du texte à noir */
+			font-weight: bold; /* Facultatif: ajouter du poids pour rendre le texte plus visible */
+		}
+		#searchInput {
+			padding: 10px;
+			border-radius: 6px;
+			border: 1px solid #ccc;
+			font-size: 14px;
+			width: 100%;
+		}
+		.header-container {
+			display: flex;
+			flex-direction: column;
+			margin-bottom: 20px;
+		}
+
+		.top-controls {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-top: 20px;
+		}
+
+		.search-container {
+			width: 60%;
+		}
+		.actions-buttons {
+			display: flex;
+			gap: 10px;
+		}
+
+		.download-report-btn {
+			padding: 10px 15px;
+			background-color: #6610f2;
+			color: white;
+			border-radius: 6px;
+			text-decoration: none;
+			font-weight: bold;
+		}
+
+		.download-report-btn:hover {
+			background-color: #520dc2;
+			color: white;
+		}
+		.flash-message {
+			position: fixed;
+			top: 20px;
+			right: 20px;
+			padding: 15px 20px;
+			border-radius: 8px;
+			color: white;
+			box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+			z-index: 9999;
+			display: flex;
+			align-items: center;
+			animation: slideIn 0.3s ease-out forwards, fadeOut 0.5s ease-in 4s forwards;
+		}
+
+		.flash-success {
+			background-color: #28a745;
+			border-left: 5px solid #1e7e34;
+		}
+
+		.flash-error {
+			background-color: #dc3545;
+			border-left: 5px solid #bd2130;
+		}
+
+		.flash-warning {
+			background-color: #ffc107;
+			border-left: 5px solid #d39e00;
+			color: #333;
+		}
+
+		.flash-info {
+			background-color: #17a2b8;
+			border-left: 5px solid #117a8b;
+		}
+
+		.flash-message i {
+			margin-right: 10px;
+			font-size: 18px;
+		}
+
+		@keyframes slideIn {
+			from {
+				transform: translateX(100%);
+				opacity: 0;
+			}
+			to {
+				transform: translateX(0);
+				opacity: 1;
+			}
+		}
+
+		@keyframes fadeOut {
+			from {
+				opacity: 1;
+			}
+			to {
+				opacity: 0;
+				visibility: hidden;
+			}
+		}
+	</style>
+{% endblock %}
+
+{% block content %}
+	<div class="container mt-4">
+		{% for label, messages in app.flashes %}
+			{% for message in messages %}
+				<div class="flash-message flash-{{ label }}" id="flash-message-{{ loop.index }}">
+					{% if label == 'success' %}
+						<i class="fas fa-check-circle"></i>
+					{% elseif label == 'error' %}
+						<i class="fas fa-exclamation-circle"></i>
+					{% elseif label == 'warning' %}
+						<i class="fas fa-exclamation-triangle"></i>
+					{% elseif label == 'info' %}
+						<i class="fas fa-info-circle"></i>
+					{% endif %}
+					{{ message }}
+				</div>
+			{% endfor %}
+		{% endfor %}
+
+		<div class="header-container">
+			<h1>Projet :{{ projet.name }}</h1>
+			<div class="top-controls">
+				<div class="search-container">
+					<input type="text" id="searchInput" class="form-control" placeholder="🔍 Rechercher une tâche par nom ou statut...">
+				</div>
+				<a href="#" class="add-task-btn" onclick="openModal()">+ Ajouter Tâche</a>
+				<a href="#" class="download-report-btn" onclick="generateReport()">📊 Télécharger Rapport</a>
+			</div>
+		</div>
+
+		<div class="kanban-board">
+			{% for status, columnClass in {'TO_DO': 'to-do', 'IN_PROGRESS': 'in-progress', 'DONE': 'done', 'CANCELED': 'canceled'} %}
+				<div class="kanban-column">
+					<div class="kanban-column-header {{ columnClass }}-header">{{ status|capitalize }}</div>
+					<div class="kanban-column-content {{ columnClass }}-content">
+						{% if tasksByStatus is defined and tasksByStatus[status] is not empty %}
+							{% for task in tasksByStatus[status] %}
+								<div class="task-card priority-{{ task.priority.value|lower }}" data-id="{{ task.getIdTache }}">
+									{% if status == 'IN_PROGRESS' %}
+										<div class="progress-bar">
+											<div class="progress-bar-fill in-progress" style="width: 50%;"></div>
+										</div>
+									{% endif %}
+									{% if status == 'DONE' %}
+										<div class="progress-bar">
+											<div class="progress-bar-fill done" style="width: 100%;"></div>
+										</div>
+									{% endif %}
+
+									<h5>Description :
+										{{ task.description }}</h5>
+									<p>Date :
+										{{ task.createdAt|date('Y-m-d') }}</p>
+									<p>Employé :
+										{{ task.user.firstname }}
+										{{ task.user.lastname }}</p>
+									<p class="priority-{{ task.priority.getLabel()}}">Priorité :
+										{{ task.priority.getLabel() }}</p>
+
+									<a href="#" onclick="openModal(
+																																																																																{{ task.idTache }},'{{ task.description }}','{{ task.location }}','{{ task.priority.getLabel() }}','{{ task.status.getLabel() }}')" title="Modifier">
+										<i class="fas fa-edit"></i>
+									</a>
+									<form action="{{ path('kanban_task_delete', { 'id': projet.id, 'tacheId': task.getIdTache }) }}" method="post" class="delete-form" style="display:inline;">
+										<button type="submit" style="border: none; background: none; padding: 0;">
+											<i class="fas fa-trash" title="Supprimer" style="color: #F44336; cursor: pointer;"></i>
+										</button>
+									</form>
+								</div>
+							{% endfor %}
+						{% endif %}
+					</div>
+				</div>
+			{% endfor %}
+		</div>
+
+		<div class="actions-container mt-3">
+			<a href="{{ path('projets_cards') }}" class="btn-return">
+				<i class="fas fa-arrow-left"></i>
+				Retour à la liste
+			</a>
+		</div>
+
+		<!-- Modal pour ajouter une tâche -->
+		<div class="overlay" id="overlay">
+			<div class="modal-custom">
+				<div class="modal-header">
+					<h5>Ajouter une Tâche</h5>
+					<span class="close-btn" onclick="closeModal()">&times;</span>
+				</div>
+				<div class="modal-body">
+					{{ form_start(form, {'action': path('kanban_task_add', {'id': projet.id}), 'method': 'POST', 'attr': {'novalidate': 'novalidate'}}) }}
+
+
+					<div class="form-group">
+						{{ form_label(form.description) }}
+						{{ form_widget(form.description, {'attr': {'class': 'form-control' ~ (form.description.vars.valid ? '' : ' is-invalid')}}) }}
+						{% if not form.description.vars.valid %}
+							<div class="alert alert-warning">
+								<i class="fas fa-exclamation-triangle"></i>
+								{{ form_errors(form.description) }}
+							</div>
+						{% endif %}
+					</div>
+
+
+					<div class="form-group">
+						{{ form_label(form.status) }}
+						{{ form_widget(form.status, {'attr': {'class': 'form-control' ~ (form.status.vars.valid ? '' : ' is-invalid')}}) }}
+						{% if not form.status.vars.valid %}
+							<div class="invalid-feedback">
+								{{ form_errors(form.status) }}
+							</div>
+						{% endif %}
+					</div>
+
+					<div class="form-group">
+						{{ form_label(form.priority) }}
+						{{ form_widget(form.priority, {'attr': {'class': 'form-control' ~ (form.priority.vars.valid ? '' : ' is-invalid')}}) }}
+						{% if not form.priority.vars.valid %}
+							<div class="invalid-feedback">
+								{{ form_errors(form.priority) }}
+							</div>
+						{% endif %}
+					</div>
+
+					<div class="form-group">
+						{{ form_label(form.location) }}
+						{{ form_widget(form.location, {'attr': {'class': 'form-control' ~ (form.location.vars.valid ? '' : ' is-invalid')}}) }}
+						{% if not form.location.vars.valid %}
+							<div class="alert alert-warning">
+								<i class="fas fa-exclamation-triangle"></i>
+								{{ form_errors(form.location) }}
+							</div>
+						{% endif %}
+					</div>
+
+
+					<div class="form-group">
+						{{ form_label(form.createdAt) }}
+						{{ form_widget(form.createdAt, {'attr': {'class': 'form-control' ~ (form.createdAt.vars.valid ? '' : ' is-invalid')}}) }}
+						{% if not form.createdAt.vars.valid %}
+							<div class="invalid-feedback">
+								{{ form_errors(form.createdAt) }}
+							</div>
+						{% endif %}
+					</div>
+
+					{#{{ form_widget(form.idEmploye) }}#}
+
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" onclick="closeModal()">Annuler</button>
+						{{ form_widget(form.submit, {'attr': {'class': 'btn btn-primary'}}) }}
+					</div>
+					{{ form_end(form) }}
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+	<script>
+		document.addEventListener('DOMContentLoaded', function () {
+document.querySelectorAll('.kanban-column-content').forEach(column => {
+new Sortable(column, {
+group: 'tasks',
+animation: 150,
+onEnd: function (evt) {
+let taskId = evt.item.getAttribute('data-id'); // ID de la tâche
+let newStatus = evt.to.parentNode.querySelector('.kanban-column-header').innerText.toUpperCase();
+// Nouveau statut
+
+// Envoi de la requête AJAX pour mettre à jour le statut de la tâche
+fetch('{{ path("kanban_task_update_status", {"id": projet.id}) }}', {
+method: 'POST',
+headers: {
+'Content-Type': 'application/json',
+'X-Requested-With': 'XMLHttpRequest'
+},
+body: JSON.stringify(
+{taskId: taskId, newStatus: newStatus}
+)
+}).then(response => response.json()).then(data => {
+if (!data.success) {
+alert("Erreur lors de la mise à jour du statut");
+location.reload(); // Recharger la page en cas d'erreur
+}
+}).catch(error => console.error('Erreur:', error));
+updateProgressBar(evt.item);
+}
+});
+});
+});
+
+function updateProgressBar(taskElement) { // Trouver la barre de progression existante
+let progressBarContainer = taskElement.querySelector('.progress-bar');
+
+// Récupérer le nouveau statut de la tâche
+const newStatus = taskElement.closest('.kanban-column').querySelector('.kanban-column-header').innerText.toUpperCase();
+
+// Supprimer la barre si la tâche est "CANCELED" ou "TO_DO"
+if (newStatus === 'CANCELED' || newStatus === 'TO_DO') {
+if (progressBarContainer) {
+progressBarContainer.remove();
+}
+return;
+}
+
+// Créer la barre de progression si elle n'existe pas
+if (! progressBarContainer) {
+progressBarContainer = document.createElement('div');
+progressBarContainer.classList.add('progress-bar');
+const progressBarFill = document.createElement('div');
+progressBarFill.classList.add('progress-bar-fill');
+progressBarFill.innerHTML = '<span></span>';
+progressBarContainer.appendChild(progressBarFill);
+taskElement.insertBefore(progressBarContainer, taskElement.firstChild);
+}
+
+// Sélectionner la barre de progression interne
+const progressBarFill = progressBarContainer.querySelector('.progress-bar-fill');
+
+// Mettre à jour la barre selon le statut
+if (newStatus === 'IN_PROGRESS') {
+progressBarFill.style.width = '50%';
+progressBarFill.className = 'progress-bar-fill in-progress';
+} else if (newStatus === 'DONE') {
+progressBarFill.style.width = '100%';
+progressBarFill.className = 'progress-bar-fill done';
+}
+}
+	</script>
+
+	<script>
+		function openModal(tacheId = null, description = '', location = '', priority = '', status = '') {
+let form = document.querySelector("#overlay form");
+
+if (tacheId) { // Mode édition
+form.action = "{{ path('kanban_task_edit', {'id': projet.id, 'tacheId': 'PLACEHOLDER'}) }}".replace('PLACEHOLDER', tacheId);
+document.querySelector("#overlay h5").innerText = "Modifier une Tâche";
+document.querySelector("#tache_description").value = description;
+document.querySelector("#tache_location").value = location;
+
+// Définir la priorité sélectionnée
+const prioritySelect = document.querySelector("#tache_priority");
+if (prioritySelect) { // Trouver l'option qui correspond à la priorité
+for (let i = 0; i < prioritySelect.options.length; i++) {
+if (prioritySelect.options[i].text === priority) {
+prioritySelect.selectedIndex = i;
+break;
+}
+}
+}
+
+// Définir le statut sélectionné
+const statusSelect = document.querySelector("#tache_status");
+if (statusSelect) { // Trouver l'option qui correspond au statut
+for (let i = 0; i < statusSelect.options.length; i++) {
+if (statusSelect.options[i].text === status) {
+statusSelect.selectedIndex = i;
+break;
+}
+}
+}
+} else { // Mode ajout
+form.action = "{{ path('kanban_task_add', {'id': projet.id}) }}";
+document.querySelector("#overlay h5").innerText = "Ajouter une Tâche";
+form.reset();
+}
+
+document.getElementById("overlay").style.display = "flex";
+}
+
+function closeModal() {
+document.getElementById("overlay").style.display = "none";
+}
+
+// Code optimisé pour vérifier les erreurs et ouvrir le modal après soumission
+document.addEventListener('DOMContentLoaded', function () { // Vérifier si le formulaire a été soumis et contient des erreurs
+const formHasErrors = {{ form.vars.submitted and not form.vars.valid ? 'true' : 'false' }};
+
+// N'ouvrir le modal que si le formulaire a été soumis et contient des erreurs
+if (formHasErrors) {
+openModal();
+}
+});
+	</script>
+	<script>
+		document.addEventListener('DOMContentLoaded', function () { // Sélectionner tous les formulaires de suppression
+var deleteForms = document.querySelectorAll('.delete-form');
+
+deleteForms.forEach(function (form) {
+form.addEventListener('submit', function (event) {
+event.preventDefault();
+
+// Créer une div pour notre boîte de dialogue personnalisée
+var confirmDialog = document.createElement('div');
+confirmDialog.className = 'custom-confirm-dialog';
+
+confirmDialog.innerHTML = `
+                        <div class="confirm-content">
+                            <div class="confirm-header">
+                                <i class="fas fa-exclamation-triangle warning-icon"></i>
+                                <h3>Attention !</h3>
+                            </div>
+                            <p class="confirm-message">Êtes-vous sûr de vouloir supprimer cette tâche ?</p>
+                            <div class="confirm-buttons">
+                                <button type="button" class="btn-cancel">Annuler</button>
+                                <button type="button" class="btn-confirm">Supprimer</button>
+                            </div>
+                        </div>
+                    `;
+
+// Ajouter la boîte de dialogue au body
+document.body.appendChild(confirmDialog);
+document.body.classList.add('dialog-open');
+
+// Gestionnaire pour le bouton Annuler
+confirmDialog.querySelector('.btn-cancel').addEventListener('click', function () {
+closeDialog();
+});
+
+// Gestionnaire pour le bouton Supprimer
+confirmDialog.querySelector('.btn-confirm').addEventListener('click', function () {
+closeDialog();
+form.submit();
+});
+
+// Fermer si on clique en dehors
+confirmDialog.addEventListener('click', function (e) {
+if (e.target === confirmDialog) {
+closeDialog();
+}
+});
+
+function closeDialog() {
+document.body.removeChild(confirmDialog);
+document.body.classList.remove('dialog-open');
+}
+});
+});
+});
+	</script>
+	<script>
+		document.addEventListener('DOMContentLoaded', function () {
+const searchInput = document.getElementById('searchInput');
+
+searchInput.addEventListener('input', function () {
+const searchTerm = this.value.toLowerCase();
+const taskCards = document.querySelectorAll('.task-card');
+
+taskCards.forEach(function (card) {
+const description = card.querySelector('h5').textContent.toLowerCase();
+const status = card.closest('.kanban-column').querySelector('.kanban-column-header').textContent.toLowerCase();
+const priority = card.querySelector('[class^="priority-"]').textContent.toLowerCase();
+const employeeId = card.querySelector('p:nth-of-type(2)').textContent.toLowerCase();
+
+// Check if the card matches the search term
+const isMatch = description.includes(searchTerm) || status.includes(searchTerm) || priority.includes(searchTerm) || employeeId.includes(searchTerm);
+
+// Show or hide the card based on the search result
+if (isMatch) {
+card.style.display = '';
+} else {
+card.style.display = 'none';
+}
+});
+
+// Check if columns are empty and add placeholder message if needed
+document.querySelectorAll('.kanban-column-content').forEach(column => {
+const visibleCards = column.querySelectorAll('.task-card[style="display: none;"]').length;
+const totalCards = column.querySelectorAll('.task-card').length;
+
+// If all cards are hidden but column had cards initially
+if (visibleCards === totalCards && totalCards > 0) {
+column.classList.add('empty-column');
+} else {
+column.classList.remove('empty-column');
+}
+});
+});
+});
+	</script>
+	<script>
+		function generateReport() { // Inclure la bibliothèque jsPDF si elle n'est pas déjà chargée
+if (typeof jsPDF === 'undefined') {
+const script = document.createElement('script');
+script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+script.onload = function () {
+const fontScript = document.createElement('script');
+fontScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js';
+fontScript.onload = actuallyGenerateReport;
+document.head.appendChild(fontScript);
+};
+document.head.appendChild(script);
+} else {
+actuallyGenerateReport();
+}
+
+function actuallyGenerateReport() { // Récupérer les données du projet
+const projectName = "{{ projet.name }}";
+const today = new Date().toLocaleDateString();
+
+// Structure de données pour les tâches
+let tasksByStatus = {
+'TO_DO': 0,
+'IN_PROGRESS': 0,
+'DONE': 0,
+'CANCELED': 0
+};
+let tasksByPriority = {
+high: 0,
+medium: 0,
+low: 0
+};
+let tasksList = [];
+
+// Collecter les tâches directement depuis les colonnes Kanban
+const columns = document.querySelectorAll('.kanban-column');
+
+columns.forEach(column => { // Extraire le statut de la colonne
+const headerElement = column.querySelector('.kanban-column-header');
+if (! headerElement) 
+return;
+
+
+
+const status = headerElement.textContent.trim();
+const normalizedStatus = normalizeStatus(status);
+
+// Sélectionner toutes les tâches de cette colonne
+const taskCards = column.querySelectorAll('.task-card');
+
+taskCards.forEach(task => { // Extraire les informations de la tâche
+const descriptionEl = task.querySelector('h5');
+const dateEl = task.querySelector('p:nth-of-type(1)');
+const employeeEl = task.querySelector('p:nth-of-type(2)');
+const priorityEl = task.querySelector('[class^="priority-"]');
+
+if (! descriptionEl) 
+return;
+
+
+
+// Ignorer les tâches sans description
+
+const description = descriptionEl.textContent.replace('Description :', '').trim();
+const date = dateEl ? dateEl.textContent.replace('Date :', '').trim() : 'N/A';
+const employee = employeeEl ? employeeEl.textContent.replace('Employé ID :', '').trim() : 'N/A';
+
+// Déterminer la priorité
+let priority = 'Basse';
+let priorityLevel = 'low';
+
+if (priorityEl) {
+priority = priorityEl.textContent.replace('Priorité :', '').trim();
+
+if (task.classList.contains('priority-high') || priority.toLowerCase().includes('haute') || priority.toLowerCase().includes('high')) {
+priorityLevel = 'high';
+} else if (task.classList.contains('priority-medium') || priority.toLowerCase().includes('moyenne') || priority.toLowerCase().includes('medium')) {
+priorityLevel = 'medium';
+}
+}
+
+// Mettre à jour les compteurs
+tasksByStatus[normalizedStatus] = (tasksByStatus[normalizedStatus] || 0) + 1;
+tasksByPriority[priorityLevel]++;
+
+// Ajouter la tâche à la liste
+tasksList.push({
+description: description,
+status: normalizedStatus,
+priority: priority,
+date: date,
+employee: employee
+});
+});
+});
+
+// Calculer le nombre total de tâches (à partir des tâches réellement trouvées)
+const totalTasks = tasksList.length;
+
+// Calculer les pourcentages
+const completionRate = totalTasks > 0 ? ((tasksByStatus['DONE'] || 0) / totalTasks * 100).toFixed(1) : 0;
+const progressRate = totalTasks > 0 ? ((tasksByStatus['IN_PROGRESS'] || 0) / totalTasks * 100).toFixed(1) : 0;
+const todoRate = totalTasks > 0 ? ((tasksByStatus['TO_DO'] || 0) / totalTasks * 100).toFixed(1) : 0;
+const cancelledRate = totalTasks > 0 ? ((tasksByStatus['CANCELED'] || 0) / totalTasks * 100).toFixed(1) : 0;
+
+// Créer le PDF
+const {jsPDF} = window.jspdf;
+const doc = new jsPDF();
+
+// Ajouter le titre
+doc.setFontSize(20);
+doc.setTextColor(33, 150, 243);
+doc.text (`Rapport d'avancement du projet: ${projectName}`, 20, 20);
+
+// Ajouter la date
+doc.setFontSize(12);
+doc.setTextColor(100);
+doc.text (`Généré le: ${today}`, 20, 30);
+
+// Ajouter un résumé
+doc.setFontSize(16);
+doc.setTextColor(0);
+doc.text('Résumé', 20, 45);
+
+doc.setFontSize(12);
+doc.text (`Tâches totales: ${totalTasks}`, 25, 55);
+doc.text (`Taux d'achèvement: ${completionRate}%`, 25, 62);
+doc.text (`Tâches en cours: ${progressRate}%`, 25, 69);
+doc.text (`Tâches à faire: ${todoRate}%`, 25, 76);
+doc.text (`Tâches annulées: ${cancelledRate}%`, 25, 83);
+
+// Ajouter un tableau de répartition par statut
+doc.setFontSize(16);
+doc.text('Répartition par statut', 20, 100);
+
+doc.autoTable({
+startY: 105,
+head: [
+['Statut', 'Nombre', 'Pourcentage']
+],
+body: [
+[
+'À faire', tasksByStatus['TO_DO'] || 0,
+`${todoRate}%`
+],
+[
+'En cours', tasksByStatus['IN_PROGRESS'] || 0,
+`${progressRate}%`
+],
+[
+'Terminé', tasksByStatus['DONE'] || 0,
+`${completionRate}%`
+],
+[
+'Annulé', tasksByStatus['CANCELED'] || 0,
+`${cancelledRate}%`
+]
+],
+theme: 'striped',
+headStyles: {
+fillColor: [33, 150, 243]
+}
+});
+
+// Ajouter un tableau de répartition par priorité
+doc.setFontSize(16);
+doc.text('Répartition par priorité', 20, doc.autoTable.previous.finalY + 20);
+
+const highPriorityRate = totalTasks > 0 ? (tasksByPriority.high / totalTasks * 100).toFixed(1) : 0;
+const mediumPriorityRate = totalTasks > 0 ? (tasksByPriority.medium / totalTasks * 100).toFixed(1) : 0;
+const lowPriorityRate = totalTasks > 0 ? (tasksByPriority.low / totalTasks * 100).toFixed(1) : 0;
+
+doc.autoTable({
+startY: doc.autoTable.previous.finalY + 25,
+head: [
+['Priorité', 'Nombre', 'Pourcentage']
+],
+body: [
+[
+'Haute', tasksByPriority.high, `${highPriorityRate}%`
+],
+[
+'Moyenne', tasksByPriority.medium, `${mediumPriorityRate}%`
+],
+[
+'Basse', tasksByPriority.low, `${lowPriorityRate}%`
+]
+],
+theme: 'striped',
+headStyles: {
+fillColor: [255, 152, 0]
+}
+});
+
+// Ajouter une analyse
+doc.setFontSize(16);
+doc.text('Analyse', 20, doc.autoTable.previous.finalY + 20);
+
+doc.setFontSize(12);
+const analysis = completionRate >= 75 ? "Le projet progresse très bien avec la majorité des tâches terminées." : completionRate >= 50 ? "Le projet avance à un bon rythme avec environ la moitié des tâches terminées." : completionRate >= 25 ? "Le projet est en cours avec quelques tâches terminées." : "Le projet est en phase initiale avec peu de tâches terminées.";
+
+const priorityWarning = tasksByPriority.high > tasksByPriority.medium + tasksByPriority.low ? "Attention: Le projet comporte un nombre élevé de tâches à haute priorité." : "";
+
+doc.text(analysis, 20, doc.autoTable.previous.finalY + 30);
+if (priorityWarning) {
+doc.text(priorityWarning, 20, doc.autoTable.previous.finalY + 40);
+}
+
+// Ajouter une nouvelle page pour la liste des tâches
+doc.addPage();
+doc.setFontSize(16);
+doc.setTextColor(0);
+doc.text('Liste des tâches', 20, 20);
+
+// Préparer les données pour le tableau des tâches
+const tasksTableBody = tasksList.map(task => [
+task.description,
+task.status,
+task.priority,
+task.date,
+task.employee
+]);
+
+doc.autoTable({
+startY: 30,
+head: [
+[
+'Description',
+'Statut',
+'Priorité',
+'Date',
+'Employé ID'
+]
+],
+body: tasksTableBody,
+theme: 'striped',
+headStyles: {
+fillColor: [76, 175, 80]
+},
+styles: {
+overflow: 'linebreak'
+},
+columnStyles: {
+0: {
+cellWidth: 60
+},
+1: {
+cellWidth: 30
+},
+2: {
+cellWidth: 30
+},
+3: {
+cellWidth: 30
+},
+4: {
+cellWidth: 30
+}
+}
+});
+
+// Sauvegarder le PDF
+doc.save(`rapport-projet-${
+projectName.replace(/\s+/g, '-').toLowerCase()
+}-${
+new Date().toISOString().slice(0, 10)
+}.pdf`);
+}
+
+// Fonction pour normaliser un statut
+function normalizeStatus(status) {
+const upperStatus = status.toUpperCase();
+
+if (upperStatus.includes('TO_DO') || upperStatus.includes('TODO') || upperStatus.includes('À FAIRE')) {
+return 'TO_DO';
+} else if (upperStatus.includes('IN_PROGRESS') || upperStatus.includes('EN COURS')) {
+return 'IN_PROGRESS';
+} else if (upperStatus.includes('DONE') || upperStatus.includes('TERMINÉ')) {
+return 'DONE';
+} else if (upperStatus.includes('CANCELED') || upperStatus.includes('ANNULÉ')) {
+return 'CANCELED';
+}
+
+return upperStatus;
+}
+}
+	</script>
+	<script>
+		// Gestion des flash messages
+document.addEventListener('DOMContentLoaded', function () {
+const flashMessages = document.querySelectorAll('.flash-message');
+
+flashMessages.forEach(function (message) { // Suppression automatique après 5 secondes
+setTimeout(function () {
+if (message && message.parentNode) {
+message.parentNode.removeChild(message);
+}
+}, 5000);
+
+// Permettre la fermeture manuelle en cliquant
+message.addEventListener('click', function () {
+if (message.parentNode) {
+message.parentNode.removeChild(message);
+}
+});
+});
+});
+	</script>
+{% endblock %}

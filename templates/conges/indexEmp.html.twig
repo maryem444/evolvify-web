@@ -1,0 +1,236 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes Congés{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="margin-top: 10rem;">
+
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ label }} alert-dismissible fade show py-2">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    <!-- Dashboard Section -->
+    <div class="row mb-3">
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 bg-light">
+                <div class="card-body text-center py-2">
+                    <i class="fas fa-calendar-check text-primary mb-1" style="font-size: 1.5rem;"></i>
+                    <h2 class="fw-bold fs-3 mb-0">{{ congesPris }}</h2>
+                    <p class="text-muted small mb-0">Congés pris</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 bg-light">
+                <div class="card-body text-center py-2">
+                    <i class="fas fa-hourglass-half text-warning mb-1" style="font-size: 1.5rem;"></i>
+                    <h2 class="fw-bold fs-3 mb-0">{{ demandesEnAttente }}</h2>
+                    <p class="text-muted small mb-0">Demandes en attente</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 bg-light">
+                <div class="card-body text-center py-2">
+                    <i class="fas fa-calendar-day text-success mb-1" style="font-size: 1.5rem;"></i>
+                    <h2 class="fw-bold fs-3 mb-0">{{ joursRestants }}</h2>
+                    <p class="text-muted small mb-0">Jours restants</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historique Section -->
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h1 class="fs-4 mb-0">Historique des congés</h1>
+        <a href="{{ path('app_employe_conge_new') }}" class="btn btn-primary btn-sm rounded-pill">
+            <i class="fas fa-plus small"></i> Demander un congé
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-2">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="small">
+                    Afficher 
+                    <select class="form-select form-select-sm d-inline-block" style="width: auto; padding-top: 0.1rem; padding-bottom: 0.1rem;">
+                        <option>10</option>
+                        <option>25</option>
+                        <option>50</option>
+                        <option>100</option>
+                    </select>
+                    éléments
+                </div>
+                
+                <div class="input-group input-group-sm" style="width: 200px">
+                    <span class="input-group-text py-0">Rechercher</span>
+                    <input type="text" class="form-control py-0" id="searchInput">
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-sm small mb-0">
+                    <thead>
+                        <tr>
+                            <th>TYPE <i class="fas fa-sort small"></i></th>
+                            <th>DATE DÉBUT <i class="fas fa-sort small"></i></th>
+                            <th>DATE FIN <i class="fas fa-sort small"></i></th>
+                            <th>JOURS <i class="fas fa-sort small"></i></th>
+                            <th>STATUT <i class="fas fa-sort small"></i></th>
+                            <th>ACTIONS <i class="fas fa-sort small"></i></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for conge in conges %}
+                            <tr>
+                                <td>
+                                    <span class="badge {% if conge.type.value == 'MALADIE' %}bg-danger{% elseif conge.type.value == 'CONGE_PAYE' %}bg-warning text-dark{% else %}bg-info{% endif %} rounded-pill px-2 py-1">
+                                        {{ conge.type.label }}
+                                    </span>
+                                </td>
+                                <td>{{ conge.leaveStart|date('d/m/Y') }}</td>
+                                <td>{{ conge.leaveEnd|date('d/m/Y') }}</td>
+                                <td>{{ conge.numberOfDays }}</td>
+                                <td>
+                                    <span class="badge {% if conge.status.value == 'APPROUVE' %}bg-success{% elseif conge.status.value == 'REFUSE' %}bg-danger{% else %}bg-warning text-dark{% endif %} rounded-pill px-2 py-1">
+                                        {{ conge.status.label }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{{ path('app_employe_conge_show', {'id': conge.id}) }}" class="btn btn-xs btn-primary rounded-circle p-1" style="width: 24px; height: 24px;">
+                                            <i class="fas fa-eye small"></i>
+                                        </a>
+                                        {% if conge.status.value != 'APPROUVE' %}
+                                            <a href="{{ path('app_employe_conge_edit', {'id': conge.id}) }}" class="btn btn-xs btn-warning rounded-circle p-1 ms-1" style="width: 24px; height: 24px;">
+                                                <i class="fas fa-edit small"></i>
+                                            </a>
+                                            <form method="post" action="{{ path('app_employe_conge_delete', {'id': conge.id}) }}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette demande?');" class="d-inline">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ conge.id) }}">
+                                                <button class="btn btn-xs btn-danger rounded-circle p-1 ms-1" style="width: 24px; height: 24px;">
+                                                    <i class="fas fa-trash small"></i>
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center">Aucune demande de congé trouvée.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="d-flex justify-content-between align-items-center mt-2">
+                <div class="small">
+                    Affichage de l'élément 1 à {{ conges|length < 10 ? conges|length : 10 }} sur {{ conges|length }} éléments
+                </div>
+                
+                <nav aria-label="Page navigation">
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item disabled">
+                            <a class="page-link py-0 px-2" href="#" aria-label="Previous">
+                                <span aria-hidden="true">Précédent</span>
+                            </a>
+                        </li>
+                        <li class="page-item active">
+                            <a class="page-link py-0 px-2" href="#">1</a>
+                        </li>
+                        <li class="page-item disabled">
+                            <a class="page-link py-0 px-2" href="#" aria-label="Next">
+                                <span aria-hidden="true">Suivant</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    .card {
+        border-radius: 6px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        margin-bottom: 1.5rem; /* Plus d’espace */
+    }
+
+    .card-body {
+        padding: 1.5rem; /* Plus d’espace interne */
+    }
+
+    .badge {
+        font-weight: normal;
+        font-size: 0.75rem;
+    }
+
+    .rounded-pill {
+        border-radius: 50rem;
+    }
+
+    .table th, .table td {
+        padding: 0.6rem 0.75rem; /* Plus confortable */
+    }
+
+    .table-sm th, .table-sm td {
+        padding: 0.5rem 0.75rem;
+    }
+
+    .btn-xs {
+        font-size: 0.75rem;
+        line-height: 1.2;
+    }
+
+    .btn-sm {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.8rem;
+    }
+
+    .form-select-sm {
+        padding-top: 0.3rem;
+        padding-bottom: 0.3rem;
+        font-size: 0.8rem;
+    }
+
+    .input-group-sm .input-group-text,
+    .input-group-sm .form-control {
+        padding-top: 0.3rem;
+        padding-bottom: 0.3rem;
+    }
+</style>
+{% endblock %}
+
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        const tableRows = document.querySelectorAll('tbody tr');
+        
+        searchInput.addEventListener('keyup', function() {
+            const searchTerm = searchInput.value.toLowerCase();
+            
+            tableRows.forEach(row => {
+                const rowText = row.textContent.toLowerCase();
+                if (rowText.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
