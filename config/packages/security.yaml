@@ -1,0 +1,52 @@
+# config/packages/security.yaml
+security:
+  # Enable authenticator manager (for Symfony 5.3+)
+  enable_authenticator_manager: true
+
+  # Configure the user provider
+  providers:
+    app_user_provider:
+      entity:
+        class: App\Entity\User
+        property: email # assuming email is your username field
+
+  password_hashers:
+    Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: "auto"
+
+  firewalls:
+    dev:
+      pattern: ^/(_(profiler|wdt)|css|images|js)/
+      security: false
+    main:
+      lazy: true
+      provider: app_user_provider
+
+      # Updated to use your existing CustomAuthenticator
+      custom_authenticator: App\Security\CustomAuthenticator
+
+      # Logout configuration
+      logout:
+        path: app_logout
+        target: app_login
+        invalidate_session: true
+
+      # Optional: remember me functionality
+      remember_me:
+        secret: "%kernel.secret%"
+        lifetime: 604800 # 1 week in seconds
+        path: /
+        secure: true
+
+  # Access control based on path and roles
+  access_control:
+    - { path: ^/login, roles: PUBLIC_ACCESS }
+    - {
+        path: ^/profile,
+        roles:
+          [ROLE_RESPONSABLE_RH, ROLE_CHEF_PROJET, ROLE_EMPLOYEE, ROLE_CONDIDAT],
+      }
+    - { path: ^/dashboard, roles: ROLE_RESPONSABLE_RH } # Only HR Managers can access dashboard
+    - { path: ^/reset-password, roles: PUBLIC_ACCESS }
+    - { path: ^/verify-code, roles: PUBLIC_ACCESS }
+    - { path: ^/forgot-password, roles: PUBLIC_ACCESS }
+
