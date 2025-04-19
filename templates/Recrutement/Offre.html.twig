@@ -1,0 +1,128 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dashboard - Evolvify{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-inner">
+        <div class="d-flex align-items-left align-items-md-center flex-column flex-md-row pt-2 pb-4">
+            
+
+            <nav class="navbar navbar-header-left navbar-expand-lg navbar-form nav-search p-0 d-none d-lg-flex">
+                <form class="form-inline ml-auto" method="GET" action="{{ path('recherche_offres') }}">
+                  <div class="input-group">
+                    <div class="input-group-prepend">
+                    
+                      <button type="submit" class="btn btn-search pe-1" >
+                        <i class="fa fa-search search-icon"></i>
+                       </button>
+                
+                    </div>
+                    <input type="text" placeholder="Search ..."  name="keyword"  value="{{ keyword|default('') }}" class="form-control"/>
+                
+                  </div>
+                </form>
+            </nav>
+
+            <div class="ms-md-auto py-2 py-md-0">
+                <a href="{{ path('add_Offre') }}" class="btn btn-primary btn-round">Ajouter Offre</a>
+                <a href="#" class="btn btn-primary btn-round">Trier</a>
+            </div>
+        </div>
+
+        <div class="col-md-20">
+            <div class="card card-round">
+                <div class="card-header">
+                    <div class="card-head-row card-tools-still-right">
+                        <div class="card-title">Liste des Offres</div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table align-items-center mb-0">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th scope="col">Titre</th>
+                                    <th scope="col" >Description</th>
+                                    <th scope="col" class="text-end" style="min-width: 250px;">Date de Publication</th>
+                                    <th scope="col" class="text-end" style="min-width: 250px;">Date d'expiration</th>
+                                    <th scope="col" class="text-end">Status</th>
+                                    <th scope="col" class="text-end">Actions</th>
+                                  
+                                  
+                                </tr>
+                            </thead>
+                            <!-- Modal de confirmation -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteLabel" aria-hidden="true">
+  <div class="modal-dialog">
+      <div class="modal-content">
+          <div class="modal-header">
+              <h5 class="modal-title" id="confirmDeleteLabel">Confirmation</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+              Êtes-vous sûr de vouloir supprimer cette offre ?
+          </div>
+          <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+              <a href="#" id="confirmDeleteBtn" class="btn btn-danger">Supprimer</a>
+          </div>
+      </div>
+  </div>
+</div>
+
+                            <tbody>
+                             
+
+                                {% for offre in offres %}
+                                    <tr>
+                                        <td>{{ offre.titre }}</td>
+                                        <td >{{ offre.description }}</td>
+                                        <td class="text-end">{{ offre.datePublication|date('d/m/Y') }}</td>
+                                        <td class="text-end">{{ offre.dateExpiration|date('d/m/Y') }}</td>
+                                        <td class="text-end">{{ offre.status.value }}</td>
+                                        <td class="text-end">
+                                          <div class="d-flex justify-content-end gap-2">
+                                            <a href="{{ path('offre_update', {'idOffre': offre.idOffre}) }}" ><img src="{{ asset('assets/img/editIcon.png') }}" alt="Modifier" width="30" height="30"></a>
+                                                <button data-bs-toggle="modal" data-bs-target="#confirmDeleteModal" data-url="{{ path('delete_Offre', {'idOffre': offre.idOffre}) }}"
+                                                        style="border: none; background: none; padding: 0;">
+                                                         <img src="{{ asset('assets/img/deleteIcon.png') }}" alt="Supprimer" width="30" height="30">
+                                                </button>
+
+                                          </div>
+                                      </td>
+                                      
+                                      
+                                      
+                                    </tr>
+                                {% else %}
+                                    <tr>
+                                        <td colspan="6" class="text-center">Aucune offre disponible</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var confirmDeleteModal = document.getElementById('confirmDeleteModal');
+        confirmDeleteModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget; // Bouton qui a déclenché le modal
+            var url = button.getAttribute('data-url'); // Récupérer l'URL de suppression
+            var confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+            confirmDeleteBtn.setAttribute('href', url); // Modifier le lien du bouton "Supprimer"
+        });
+    });
+</script>
+<style>
+    .modal-backdrop.show {
+        background-color: rgba(0, 0, 0, 0.2) !important;
+    }
+</style>
+{% endblock %}
+

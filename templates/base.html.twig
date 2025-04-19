@@ -115,10 +115,11 @@
         // This is just for UI purposes, all security relies on server-side session
         sessionStorage.setItem('user_logged_in', 'true');
         sessionStorage.setItem('username', "{{ app.user.username|default(app.user.email)|e('js') }}");
-        {% if app.user.roles is defined %}
-        sessionStorage.setItem('user_role', "{{ app.user.roles[0]|e('js') }}");
-        {% endif %}
+        //{% if app.user.roles is defined %}
+       //sessionStorage.setItem('user_role', "{{ app.user.roles[0]|e('js') }}");
+      // {% endif %}
     </script>
+      
     {% endif %}
 
     <div class="wrapper">
