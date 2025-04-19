@@ -18,7 +18,7 @@ class EntretienRepository extends ServiceEntityRepository
     
 
     public function getOffreAndCandidatDetails()
-{
+    {
     $LO = [];
     $query = "
         SELECT 
@@ -51,7 +51,8 @@ class EntretienRepository extends ServiceEntityRepository
     }
 
     return $LO;
-}
+    }
+
 
     
     

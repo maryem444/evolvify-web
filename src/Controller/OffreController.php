@@ -99,7 +99,7 @@ class OffreController extends AbstractController
 
     #[Route('/recherche', name: 'recherche_offres', methods: ['GET'])]
     public function search(Request $request, OffreRepository $offreRepository): Response
-{
+    {
     $keyword = strtolower(trim($request->query->get('keyword', '')));
 
     if (empty($keyword)) {
@@ -112,7 +112,27 @@ class OffreController extends AbstractController
         'offres' => $offres,
         'keyword' => $keyword,
     ]);
-}
+    }
+    #[Route('/trie/offres', name: 'trie_offres')]
+    public function index(Request $request, EntityManagerInterface $em): Response
+    {
+    $sort = $request->query->get('sort', 'titre');
+    $direction = $request->query->get('direction', 'asc');
+
+    // Sécuriser les champs autorisés pour le tri
+    $allowedSorts = ['titre', 'description', 'datePublication', 'dateExpiration', 'status'];
+    if (!in_array($sort, $allowedSorts)) {
+        $sort = 'titre';
+    }
+
+    $offres = $em->getRepository(Offre::class)->findBy([], [$sort => $direction]);
+
+    return $this->render('Recrutement/Offre.html.twig', [
+        'offres' => $offres,
+        'sort' => $sort,
+        'direction' => $direction
+    ]);
+    }
 
 
 }

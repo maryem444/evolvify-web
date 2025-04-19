@@ -5,6 +5,7 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\DBAL\Types\Types;
 use App\Entity\StatusEntretien;
+#[ORM\Table(name: "liste_offres")]
 #[ORM\Entity]
 class Entretien
 {
