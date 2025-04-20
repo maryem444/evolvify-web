@@ -96,6 +96,9 @@ class CardsController extends AbstractController
         }
       }
 
+      // Sauvegarder les modifications en base de données - LIGNE MANQUANTE AJOUTÉE
+      $entityManager->flush();
+
       $this->addFlash('success', 'Projet modifié avec succès !');
 
       // Rediriger explicitement vers la vue en cartes

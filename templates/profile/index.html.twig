@@ -44,7 +44,7 @@
 							{% if user.profilePhoto %}
 								<img src="{{ user.profilePhotoUrl }}" alt="Photo de profil" class="img-fluid rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
 							{% else %}
-								<img src="{{ asset('assets/img/profile.jpg') }}" alt="Photo de profil par défaut" class="img-fluid rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
+								<img src="{{ asset('assets/img/profile.png') }}" alt="Photo de profil par défaut" class="img-fluid rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
 							{% endif %}
 						</div>
 
@@ -209,7 +209,7 @@
 											{% if user.profilePhoto %}
 												<img src="{{ user.profilePhotoUrl }}" alt="Photo de profil actuelle" id="photoPreview" class="img-fluid rounded-circle mb-2" style="width: 100px; height: 100px; object-fit: cover;">
 											{% else %}
-												<img src="{{ asset('assets/img/profile.jpg') }}" alt="Photo de profil par défaut" id="photoPreview" class="img-fluid rounded-circle mb-2" style="width: 100px; height: 100px; object-fit: cover;">
+												<img src="{{ asset('assets/img/profile.png') }}" alt="Photo de profil par défaut" id="photoPreview" class="img-fluid rounded-circle mb-2" style="width: 100px; height: 100px; object-fit: cover;">
 											{% endif %}
 										</div>
 									</div>
