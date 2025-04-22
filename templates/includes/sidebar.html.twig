@@ -21,22 +21,96 @@
 	<div class="sidebar-wrapper scrollbar scrollbar-inner">
 		<div class="sidebar-content">
 			<ul class="nav nav-secondary">
-			{% if app.user.role == 'CHEF_PROJET' or app.user.role == 'RESPONSABLE_RH' %}
-				<li class="nav-item active">
-					<a href="{{ path('app_dashboard') }}">
-						<i class="fas fa-home"></i>
-						<p>Dashboard</p>
-					</a>
-				</li>
-			{% endif %}
+				{% if app.user is defined and app.user and app.user.role is defined and (app.user.role == 'CHEF_PROJET' or app.user.role == 'RESPONSABLE_RH') %}
+					<li class="nav-item active">
+						<a href="{{ path('app_dashboard') }}">
+							<i class="fas fa-home"></i>
+							<p>Dashboard</p>
+						</a>
+					</li>
+				{% endif %}
 
 				<li class="nav-section">
 					<span class="sidebar-mini-icon">
 						<i class="fa fa-ellipsis-h"></i>
 					</span>
-					<h4 class="text-section">Components</h4>
+					<h4 class="text-section">Composants</h4>
 				</li>
 
+				{% if app.user is defined and app.user and app.user.role is defined and app.user.role == 'RESPONSABLE_RH' %}
+					<li class="nav-item">
+						<a href="{{ path('user_index') }}">
+							<i class="fa-solid fa-users"></i>
+							<p>Gestion des utilisateurs</p>
+						</a>
+					</li>
+				{% endif %}
+				
+				{% if app.user is defined and app.user and app.user.role is defined %}
+					<li class="nav-item">
+						<a data-bs-toggle="collapse" href="#conges">
+							<i class="fa fa-calendar"></i>
+							<p>Conge Management</p>
+							<span class="caret"></span>
+						</a>
+						<div class="collapse" id="conges">
+							<ul class="nav nav-collapse">
+								{% if app.user.role == 'RESPONSABLE_RH' %}
+									<li>
+										<a href="{{ path('app_conge_index') }}">
+											<span class="sub-item">Leave Requests</span>
+										</a>
+									</li>
+									<li>
+										<a href="{{ path('app_employee_attendance_admin') }}">
+											<span class="sub-item">Absence List</span>
+										</a>
+									</li>
+								{% endif %}
+								{% if app.user.role == 'EMPLOYEE' %}
+									<li>
+										<a href="{{ path('app_employe_conge_index') }}">
+											<span class="sub-item"> My Leave Requests</span>
+										</a>
+									</li>
+									<li>
+										<a href="{{ path('app_employee_my_attendance') }}">
+											<span class="sub-item">My Absences</span>
+										</a>
+									</li>
+								{% endif %}
+							</ul>
+						</div>
+					</li>
+				{% endif %}
+
+				{% if app.user is defined and app.user and app.user.role is defined and (app.user.role == 'RESPONSABLE_RH' or app.user.role == 'CHEF_PROJET' or app.user.role == 'EMPLOYEE') %}
+					<li class="nav-item">
+						<a data-bs-toggle="collapse" href="#projects">
+							<i class="fas fa-project-diagram"></i>
+							<p>Project Management</p>
+							<span class="caret"></span>
+						</a>
+						<div class="collapse" id="projects">
+							<ul class="nav nav-collapse">
+								{% if app.user.role == 'RESPONSABLE_RH' %}
+									<li>
+										<a href="{{ path('projets_list') }}">
+											<span class="sub-item">Projects List</span>
+										</a>
+									</li>
+								{% endif %}
+								{% if app.user.role == 'CHEF_PROJET' or app.user.role == 'EMPLOYEE' %}
+									<li>
+										<a href="{{ path('projets_cards') }}">
+											<span class="sub-item">Projects Cards</span>
+										</a>
+									</li>
+								{% endif %}
+							</ul>
+						</div>
+					</li>
+				{% endif %}
 			{% if app.user.role == 'RESPONSABLE_RH' %}
 				<li class="nav-item">
 				<a href="{{ path('user_index') }}">
