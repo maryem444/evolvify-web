@@ -83,39 +83,8 @@
 						</div>
 					</li>
 				{% endif %}
-
-				{% if app.user is defined and app.user and app.user.role is defined and (app.user.role == 'RESPONSABLE_RH' or app.user.role == 'CHEF_PROJET' or app.user.role == 'EMPLOYEE') %}
-					<li class="nav-item">
-						<a data-bs-toggle="collapse" href="#projects">
-							<i class="fas fa-project-diagram"></i>
-							<p>Project Management</p>
-							<span class="caret"></span>
-						</a>
-						<div class="collapse" id="projects">
-							<ul class="nav nav-collapse">
-								{% if app.user.role == 'RESPONSABLE_RH' %}
-									<li>
-										<a href="{{ path('projets_list') }}">
-											<span class="sub-item">Projects List</span>
-										</a>
-									</li>
-									<li class="nav-item">
-   
-								{% endif %}
-								{% if app.user.role == 'CHEF_PROJET' or app.user.role == 'EMPLOYEE' %}
-									<li>
-										<a href="{{ path('projets_cards') }}">
-											<span class="sub-item">Projects Cards</span>
-										</a>
-									</li>
-								{% endif %}
-							</ul>
-						</div>
-					</li>
-				{% endif %}
-			{% if app.user.role == 'RESPONSABLE_RH' %}
-				
-				<li class="nav-item">
+				{% if app.user is defined and app.user and app.user.role is defined %}
+                 <li class="nav-item">
     <a data-bs-toggle="collapse" href="#transports">
         <i class="fa fa-car"></i>
         <p>Gestion de transport</p>
@@ -146,6 +115,40 @@
         </ul>
     </div>
 </li>
+				
+
+				{% if app.user is defined and app.user and app.user.role is defined and (app.user.role == 'RESPONSABLE_RH' or app.user.role == 'CHEF_PROJET' or app.user.role == 'EMPLOYEE') %}
+					<li class="nav-item">
+						<a data-bs-toggle="collapse" href="#projects">
+							<i class="fas fa-project-diagram"></i>
+							<p>Project Management</p>
+							<span class="caret"></span>
+						</a>
+						<div class="collapse" id="projects">
+							<ul class="nav nav-collapse">
+								{% if app.user.role == 'RESPONSABLE_RH' %}
+									<li>
+										<a href="{{ path('projets_list') }}">
+											<span class="sub-item">Projects List</span>
+										</a>
+									</li>
+									<li class="nav-item">
+   
+								{% endif %}
+								{% if app.user.role == 'CHEF_PROJET' or app.user.role == 'EMPLOYEE' %}
+									<li>
+										<a href="{{ path('projets_cards') }}">
+											<span class="sub-item">Projects Cards</span>
+										</a>
+									</li>
+								{% endif %}
+							</ul>
+						</div>
+					</li>
+				{% endif %}
+			
+				
+				
 
 				
 				
