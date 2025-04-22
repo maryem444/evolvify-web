@@ -27,26 +27,21 @@
         <div class="card-header">
           <div class="card-head-row card-tools-still-right">
             <div class="card-title">List Candidates</div>
-            <div class="card-tools">
-              <div class="dropdown">
-                <!-- vide pour l’instant -->
-              </div>
-            </div>
           </div>
         </div>
         <div class="card-body p-0">
           <div class="table-responsive">
             <!-- Candidates table -->
-            <table class="table align-items-center mb-0">
+            <table class="table align-items-center mb-0" id="candidatesTable">
               <thead class="thead-light">
                 <tr>
                   <th scope="col">Prenom</th>
                   <th scope="col" class="text-end">Nom</th>
-                  <th scope="col" class="text-end" style="min-width: 120px;">E-mail</th>
-                  <th scope="col" class="text-end" style="min-width: 250px;">Date de Naissance</th>
-                  <th scope="col" class="text-end" style="min-width: 250px;">Date de Postulation</th>
-                  <th scope="col" class="text-end" style="min-width: 250px;">Numero de Telephone</th>
-                  <th scope="col" class="text-end">genre</th>
+                  <th scope="col" class="text-end">E-mail</th>
+                  <th scope="col" class="text-end">Date de Naissance</th>
+                  <th scope="col" class="text-end">Date de Postulation</th>
+                  <th scope="col" class="text-end">Numero de Telephone</th>
+                  <th scope="col" class="text-end">Genre</th>
                   <th scope="col" class="text-end">CV</th>
                 </tr>
               </thead>
@@ -55,10 +50,10 @@
                   <tr class="row-candidate">
                     <td>{{ candidate.firstname }}</td>
                     <td class="text-end">{{ candidate.lastname }}</td>
-                    <td class="text-end" style="min-width: 120px;">{{ candidate.email }}</td>
-                    <td class="text-end" style="min-width: 250px;">{{ candidate.birthdayDate|date('d/m/Y') }}</td>
-                    <td class="text-end" style="min-width: 250px;">{{ candidate.joiningDate|date('d/m/Y') }}</td>
-                    <td class="text-end" style="min-width: 250px;">{{ candidate.getNumTel() }}</td>
+                    <td class="text-end">{{ candidate.email }}</td>
+                    <td class="text-end">{{ candidate.birthdayDate|date('d/m/Y') }}</td>
+                    <td class="text-end">{{ candidate.joiningDate|date('d/m/Y') }}</td>
+                    <td class="text-end">{{ candidate.getNumTel() }}</td>
                     <td class="text-end">{{ candidate.gender }}</td>
                     <td class="text-end">
                       <a href="{{ candidate.getUploadedCv() }}" target="_blank">Voir le CV</a>
@@ -75,20 +70,109 @@
         </div>
       </div>
     </div>
+
+    <!-- Graphique Genre -->
+    <div class="row mb-4">
+      <div class="col-md-6 offset-md-3">
+        <canvas id="genderChart"></canvas>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- Script de recherche -->
-<script>
-  document.getElementById('searchInput').addEventListener('input', function () {
-    const keyword = this.value.toLowerCase();
-    const rows = document.querySelectorAll('.row-candidate');
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    rows.forEach(row => {
-      const rowText = row.innerText.toLowerCase();
-      row.style.display = rowText.includes(keyword) ? '' : 'none';
+<!-- Script de recherche + mise à jour du graphique -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const searchInput = document.getElementById('searchInput');
+    const rows = document.querySelectorAll('.row-candidate');
+    const chartCanvas = document.getElementById('genderChart');
+    let genderChart;
+
+    // Fonction pour mettre à jour le graphique à partir des lignes visibles
+    function updateGenderChart() {
+  let nbHommes = 0;
+  let nbFemmes = 0;
+  
+
+  document.querySelectorAll('.row-candidate').forEach(row => {
+    if (row.style.display !== 'none') {
+      const genderCell = row.querySelector('td:nth-child(7)');
+if (genderCell) {
+  const gender = genderCell.textContent.trim().toLowerCase(); // minuscule
+  console.log("Genre lu :", gender); // debug
+  if (gender === 'homme') nbHommes++;
+  else if (gender === 'femme') nbFemmes++;
+}
+
+    }
+  });
+
+  const data = {
+    labels: ['Hommes', 'Femmes'],
+    datasets: [{
+      data: [nbHommes, nbFemmes], // Inclure le compteur des autres genres
+      backgroundColor: ['#36A2EB', '#FF6384'], // Couleurs pour Hommes, Femmes, et Autres
+      borderColor: ['#1E7FB7', '#D06A80'],
+      borderWidth: 2,
+    }]
+  };
+
+  if (genderChart) {
+    genderChart.data = data;
+    genderChart.update();
+  } else {
+    const ctx = chartCanvas.getContext('2d');
+    genderChart = new Chart(ctx, {
+      type: 'pie',
+      data: data,
+      options: {
+        responsive: true,
+        animation: {
+          animateRotate: true,
+          animateScale: true,
+        },
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              font: {
+                size: 14,
+              }
+            }
+          },
+          title: {
+            display: true,
+            text: 'Répartition des Candidats par Genre',
+            font: {
+              size: 16,
+            },
+            color: '#333'
+          }
+        }
+      }
+    });
+  }
+}
+
+
+    // Initialiser le graphique
+    updateGenderChart();
+
+    // Filtrage par recherche + mise à jour graphique
+    searchInput.addEventListener('input', function () {
+      const keyword = this.value.toLowerCase();
+
+      rows.forEach(row => {
+        const rowText = row.innerText.toLowerCase();
+        const match = rowText.includes(keyword);
+        row.style.display = match ? '' : 'none';
+      });
+
+      updateGenderChart();
     });
   });
 </script>
-
 {% endblock %}
