@@ -17,7 +17,7 @@
 			</button>
 		</div>
 	</div>
-
+        
 	<div class="sidebar-wrapper scrollbar scrollbar-inner">
 		<div class="sidebar-content">
 			<ul class="nav nav-secondary">
@@ -83,6 +83,39 @@
 						</div>
 					</li>
 				{% endif %}
+				{% if app.user is defined and app.user and app.user.role is defined %}
+                 <li class="nav-item">
+    <a data-bs-toggle="collapse" href="#transports">
+        <i class="fa fa-car"></i>
+        <p>Gestion de transport</p>
+        <span class="caret"></span>
+    </a>
+    <div class="collapse" id="transports">
+        <ul class="nav nav-collapse">
+            {% if app.user.role == 'RESPONSABLE_RH' %}
+                <li>
+                    <a href="{{ path('moyentransport_list') }}">Moyens de Transport</a>
+                </li>
+                <li>
+                    <a href="{{ path('abonnement_list') }}">Liste des Abonnements</a>
+                </li>
+                <li>
+                    <a href="{{ path('trajet_list') }}">Liste des Trajets</a>
+                </li>
+            {% endif %}
+
+            {% if app.user.role == 'EMPLOYEE' %}
+                <li>
+                    <a href="{{ path('abonnement_list_front') }}">Mes Abonnements</a>
+                </li>
+                <li>
+                    <a href="{{ path('trajet_list_front') }}">Mes Trajets</a>
+                </li>
+            {% endif %}
+        </ul>
+    </div>
+</li>
+				
 
 				{% if app.user is defined and app.user and app.user.role is defined and (app.user.role == 'RESPONSABLE_RH' or app.user.role == 'CHEF_PROJET' or app.user.role == 'EMPLOYEE') %}
 					<li class="nav-item">
@@ -99,6 +132,8 @@
 											<span class="sub-item">Projects List</span>
 										</a>
 									</li>
+									<li class="nav-item">
+   
 								{% endif %}
 								{% if app.user.role == 'CHEF_PROJET' or app.user.role == 'EMPLOYEE' %}
 									<li>
@@ -127,6 +162,17 @@
 						</div>
 					</li>	
 				{% endif %}
+			
+				
+				
+
+				
+				
+
+			{% endif %}
+			
+
+
 			</ul>
 		</div>
 	</div>
