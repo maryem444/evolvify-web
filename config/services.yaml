@@ -5,6 +5,8 @@
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
     profile_photo_base_url: 'http://localhost/evolvify/'
+    facial_images_directory: '%kernel.project_dir%/public/uploads/facial'
+
     
 services:
     # default configuration for services in *this* file
@@ -25,6 +27,6 @@ services:
     App\Security\CustomAuthenticator:
         arguments:
             $urlGenerator: '@router'
-
+            
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
