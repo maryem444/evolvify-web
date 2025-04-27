@@ -18,7 +18,7 @@
 			</button>
 		</div>
 	</div>
-
+        
 	<div class="sidebar-wrapper scrollbar scrollbar-inner">
 		<div class="sidebar-content">
 			<ul class="nav nav-secondary">
@@ -46,43 +46,77 @@
 						</a>
 					</li>
 				{% endif %}
-				{% if app.user is defined and app.user and app.user.role is defined and (app.user.role == 'EMPLOYEE' or app.user.role == 'RESPONSABLE_RH') %}
-				<li class="nav-item">
-					<a data-bs-toggle="collapse" href="#conges">
-						<i class="fa fa-calendar"></i>
-						<p>Gestion congé</p>
-						<span class="caret"></span>
-					</a>
-					<div class="collapse" id="conges">
-						<ul class="nav nav-collapse">
-						{% if app.user.role == 'RESPONSABLE_RH' %}
-							<li>
-								<a href="{{ path('app_conge_index') }}">
-									<span class="sub-item">Demandes Congés</span>
-								</a>
-							</li>
-							<li>
-								<a href="{{ path('app_employee_attendance_admin') }}">
-									<span class="sub-item">Liste Absences</span>
-								</a>
-							</li>
-							{% endif %}
-							{% if app.user.role == 'EMPLOYEE' %}
-							<li>
-								<a href="{{ path('app_employe_conge_index') }}">
-									<span class="sub-item"> Mes demandes congés</span>
-								</a>
-							</li>
-							<li>
-								<a href="{{ path('app_employee_my_attendance') }}">
-									<span class="sub-item">Mes absences</span>
-								</a>
-							</li>
-							{% endif %}
-						</ul>
-					</div>
-				</li>
+				
+				{% if app.user is defined and app.user and app.user.role is defined %}
+					<li class="nav-item">
+						<a data-bs-toggle="collapse" href="#conges">
+							<i class="fa fa-calendar"></i>
+							<p>Conge Management</p>
+							<span class="caret"></span>
+						</a>
+						<div class="collapse" id="conges">
+							<ul class="nav nav-collapse">
+								{% if app.user.role == 'RESPONSABLE_RH' %}
+									<li>
+										<a href="{{ path('app_conge_index') }}">
+											<span class="sub-item">Leave Requests</span>
+										</a>
+									</li>
+									<li>
+										<a href="{{ path('app_employee_attendance_admin') }}">
+											<span class="sub-item">Absence List</span>
+										</a>
+									</li>
+								{% endif %}
+								{% if app.user.role == 'EMPLOYEE' %}
+									<li>
+										<a href="{{ path('app_employe_conge_index') }}">
+											<span class="sub-item"> My Leave Requests</span>
+										</a>
+									</li>
+									<li>
+										<a href="{{ path('app_employee_my_attendance') }}">
+											<span class="sub-item">My Absences</span>
+										</a>
+									</li>
+								{% endif %}
+							</ul>
+						</div>
+					</li>
 				{% endif %}
+				{% if app.user is defined and app.user and app.user.role is defined %}
+                 <li class="nav-item">
+    <a data-bs-toggle="collapse" href="#transports">
+        <i class="fa fa-car"></i>
+        <p>Gestion de transport</p>
+        <span class="caret"></span>
+    </a>
+    <div class="collapse" id="transports">
+        <ul class="nav nav-collapse">
+            {% if app.user.role == 'RESPONSABLE_RH' %}
+                <li>
+                    <a href="{{ path('moyentransport_list') }}">Moyens de Transport</a>
+                </li>
+                <li>
+                    <a href="{{ path('abonnement_list') }}">Liste des Abonnements</a>
+                </li>
+                <li>
+                    <a href="{{ path('trajet_list') }}">Liste des Trajets</a>
+                </li>
+            {% endif %}
+
+            {% if app.user.role == 'EMPLOYEE' %}
+                <li>
+                    <a href="{{ path('abonnement_list_front') }}">Mes Abonnements</a>
+                </li>
+                <li>
+                    <a href="{{ path('trajet_list_front') }}">Mes Trajets</a>
+                </li>
+            {% endif %}
+        </ul>
+    </div>
+</li>
+				
 
 				{% if app.user is defined and app.user and app.user.role is defined and (app.user.role == 'RESPONSABLE_RH' or app.user.role == 'CHEF_PROJET' or app.user.role == 'EMPLOYEE') %}
 					<li class="nav-item">
@@ -99,6 +133,8 @@
 											<span class="sub-item">Liste des projets</span>
 										</a>
 									</li>
+									<li class="nav-item">
+   
 								{% endif %}
 								{% if app.user.role == 'CHEF_PROJET' or app.user.role == 'EMPLOYEE' %}
 									<li>
@@ -110,7 +146,34 @@
 							</ul>
 						</div>
 					</li>
+					<li class="nav-item">
+						<a data-bs-toggle="collapse" href="#forms">
+							<i class="fas fa-pen-square"></i>
+							<p>Gestion Recrutements</p>
+							<span class="caret"></span>
+						</a>
+						<div class="collapse" id="forms">
+							<ul class="nav nav-collapse">
+								{% if app.user.role == 'RESPONSABLE_RH' %}
+								<li><a href="{{ path('app_Candidates') }}"><span class="sub-item">Candidates</span></a></li>
+								<li><a href="{{ path('app_Offre') }}"><span class="sub-item">Offre</span></a></li>
+								<li><a href="{{ path('app_Entretiens') }}"><span class="sub-item">Entretiens</span></a></li>
+								{% endif %}
+							</ul>
+						</div>
+					</li>	
 				{% endif %}
+			
+				
+				
+
+				
+				
+
+			{% endif %}
+			
+
+
 			</ul>
 		</div>
 	</div>

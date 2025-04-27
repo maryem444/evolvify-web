@@ -1,0 +1,437 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Liste des Trajets{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- En-tête avec titre et bouton d'ajout -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-primary">Liste des Trajets</h2>
+            <p class="text-muted">Suivez et gérez tous les trajets des employés en temps réel</p>
+        </div>
+        
+    </div>
+
+    <!-- Cartes de statistiques -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100 text-white" style="background: linear-gradient(135deg, #43a047, #2e7d32);">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">Total des trajets</h5>
+                    <div class="d-flex align-items-end mb-3">
+                        <h3 class="display-5 fw-bold mb-0">{{ totalTrajets }}</h3>
+                        <small class="ms-2 mb-1">trajets enregistrés</small>
+                    </div>
+                    <div style="height: 100px;">
+                        <canvas id="totalTrajetsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100 text-white" style="background: linear-gradient(135deg, #1976d2, #0d47a1);">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">Distance totale</h5>
+                    <div class="d-flex align-items-end mb-3">
+                        <h3 class="display-5 fw-bold mb-0">{{ totalDistance }}</h3>
+                        <small class="ms-2 mb-1">kilomètres</small>
+                    </div>
+                    <div style="height: 100px;">
+                        <canvas id="distanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100 text-white" style="background: linear-gradient(135deg, #00bcd4, #0097a7);">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">Durée totale</h5>
+                    <div class="d-flex align-items-end mb-3">
+                        <h3 class="display-5 fw-bold mb-0">{{ totalDuration }}</h3>
+                        <small class="ms-2 mb-1">heures</small>
+                    </div>
+                    <div style="height: 100px;">
+                        <canvas id="dureeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold text-dark">Moyens de transport</h5>
+                    <div id="searchForm" class="d-flex mb-3 mt-3">
+                        <input type="text" id="searchInput" class="form-control me-2" placeholder="Rechercher un trajet..." aria-label="Search">
+                        <select id="sortSelect" class="form-select">
+                            <option value="date_desc">Date ↓</option>
+                            <option value="date_asc">Date ↑</option>
+                            <option value="distance_desc">Distance ↓</option>
+                            <option value="distance_asc">Distance ↑</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary px-4 py-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#ajoutTrajetModal">
+            <i class="bi bi-plus-circle me-2"></i>Nouveau Trajet
+        </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des trajets -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-dark text-white py-3">
+            <h5 class="mb-0 fw-bold">Liste des Trajets</h5>
+        </div>
+        <div class="card-body p-4">
+            {% if trajets is not empty %}
+                <div class="row g-4" id="trajetsList">
+                    {% for trajet in trajets %}
+                        {% set bgColor = '' %}
+                        {% if trajet.status.value == 'PLANIFIE' %}
+                            {% set bgColor = 'linear-gradient(135deg, #ff9800, #f57c00)' %}
+                        {% elseif trajet.status.value == 'EN_COURS' %}
+                            {% set bgColor = 'linear-gradient(135deg, #1976d2, #0d47a1)' %}
+                        {% elseif trajet.status.value == 'TERMINE' %}
+                            {% set bgColor = 'linear-gradient(135deg, #43a047, #2e7d32)' %}
+                        {% elseif trajet.status.value == 'ANNULE' %}
+                            {% set bgColor = 'linear-gradient(135deg, #f44336, #d32f2f)' %}
+                        {% endif %}
+                        
+                        <div class="col-md-4 trajets-card">
+                            <div class="card border-0 shadow-sm h-100 
+                                {% if trajet.status.value != 'ANNULE' %}
+                                    bg-gradient text-white
+                                {% else %}
+                                    bg-secondary bg-opacity-25 text-dark
+                                {% endif %}"
+                                {% if trajet.status.value != 'ANNULE' %}
+                                    style="background: {{ bgColor }};"
+                                {% endif %}
+                            >
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <h5 class="card-title fw-bold">Trajet #{{ trajet.id_T }}</h5>
+                                        <span class="badge bg-dark text-white rounded-pill">{{ trajet.status.value }}</span>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <p class="card-text mb-1 d-flex justify-content-between">
+                                            <span><i class="bi bi-geo-alt me-2"></i>Départ:</span>
+                                            <span class="fw-medium">{{ trajet.point_dep }}</span>
+                                        </p>
+                                        <p class="card-text mb-1 d-flex justify-content-between">
+                                            <span><i class="bi bi-geo me-2"></i>Arrivée:</span>
+                                            <span class="fw-medium">{{ trajet.point_arr }}</span>
+                                        </p>
+                                        <p class="card-text mb-1 d-flex justify-content-between">
+                                            <span><i class="bi bi-rulers me-2"></i>Distance:</span>
+                                            <span class="fw-medium">{{ trajet.distance }} km</span>
+                                        </p>
+                                        <p class="card-text mb-1 d-flex justify-content-between">
+                                            <span><i class="bi bi-clock me-2"></i>Durée:</span>
+                                            <span class="fw-medium">{{ trajet.durée_estimé ? trajet.durée_estimé|date('H:i') : 'Non définie' }}</span>
+                                        </p>
+                                        <p class="card-text mb-1 d-flex justify-content-between">
+                                            <span><i class="bi bi-truck me-2"></i>Moyen:</span>
+                                            <span class="fw-medium">{{ trajet.moyenTransport.type_moyen }}</span>
+                                        </p>
+                                        <p class="card-text mb-0 d-flex justify-content-between">
+                                            <span><i class="bi bi-person me-2"></i>Employé:</span>
+                                            <span class="fw-medium">ID {{ trajet.id_employe }}</span>
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="card-footer bg-transparent border-0 d-flex justify-content-between py-3">
+                                    <button class="btn btn-sm btn-dark edit-button"
+        data-bs-toggle="modal"
+        data-bs-target="#EditModal"
+        data-id="{{ trajet.id_T }}"
+        data-depart="{{ trajet.point_dep }}"
+        data-arrivee="{{ trajet.point_arr }}"
+        data-distance="{{ trajet.distance }}"
+        data-duree="{{ trajet.durée_estimé ? trajet.durée_estimé|date('H:i') : '' }}"
+        data-moyen="{{ trajet.moyenTransport.id_moyen }}"
+        data-employe="{{ trajet.id_employe }}"
+        data-status="{{ trajet.status.value }}">
+    <i class="bi bi-pencil me-1"></i>Modifier
+</button>
+                                    <button class="btn btn-sm btn-danger btn-delete"
+                                           data-id="{{ trajet.id_T }}">
+                                        <i class="bi bi-trash me-1"></i>Supprimer
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info d-flex align-items-center" role="alert">
+                    <i class="bi bi-info-circle-fill me-2"></i>
+                    <div>Aucun trajet disponible actuellement.</div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% include 'trajet/edit.html.twig' %}
+{% include 'trajet/add.html.twig' %}
+
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+<!-- ChartJS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Gestion de la recherche et du tri
+    const searchInput = document.getElementById('searchInput');
+    const sortSelect = document.getElementById('sortSelect');
+    const trajetsList = document.getElementById('trajetsList');
+    const trajetsCards = Array.from(document.getElementsByClassName('trajets-card'));
+
+    // Fonction pour filtrer et trier les trajets
+    function filterAndSort() {
+        const searchValue = searchInput.value.toLowerCase();
+        const sortValue = sortSelect.value;
+
+        // Filtrage des trajets basé sur la recherche
+        const filteredTrajets = trajetsCards.filter(card => {
+            const cardText = card.textContent.toLowerCase();
+            return cardText.includes(searchValue);
+        });
+
+        // Tri des trajets filtrés en fonction de l'option sélectionnée
+        filteredTrajets.sort((a, b) => {
+            const aId = parseInt(a.querySelector('.card-title').innerText.replace('Trajet #', '').trim());
+            const bId = parseInt(b.querySelector('.card-title').innerText.replace('Trajet #', '').trim());
+            
+            // Adapter cette partie selon la structure de vos cartes
+            const aDistanceText = a.querySelector('p:nth-child(3)').innerText;
+            const bDistanceText = b.querySelector('p:nth-child(3)').innerText;
+            const aDistance = parseFloat(aDistanceText.split(':')[1].replace('km', '').trim());
+            const bDistance = parseFloat(bDistanceText.split(':')[1].replace('km', '').trim());
+
+            switch (sortValue) {
+                case 'date_desc':
+                    return bId - aId;
+                case 'date_asc':
+                    return aId - bId;
+                case 'distance_desc':
+                    return bDistance - aDistance;
+                case 'distance_asc':
+                    return aDistance - bDistance;
+                default:
+                    return 0;
+            }
+        });
+
+        // Masquer toutes les cartes
+        trajetsCards.forEach(card => {
+            card.style.display = 'none';
+        });
+
+        // Afficher uniquement les cartes filtrées
+        filteredTrajets.forEach(card => {
+            card.style.display = '';
+            trajetsList.appendChild(card);
+        });
+    }
+
+    // Ajouter des événements pour la recherche et le tri
+    searchInput.addEventListener('input', filterAndSort);
+    sortSelect.addEventListener('change', filterAndSort);
+
+    // Exécuter le filtrage initial
+    filterAndSort();
+
+    // Gestion de la suppression avec SweetAlert2
+    document.querySelectorAll(".btn-delete").forEach(button => {
+        button.addEventListener("click", function () {
+            const trajetId = this.getAttribute("data-id");
+            
+            Swal.fire({
+                title: 'Êtes-vous sûr?',
+                text: "Cette action ne peut pas être annulée!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Oui, supprimer!',
+                cancelButtonText: 'Annuler'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/trajet/delete/${trajetId}`, {
+                        method: "DELETE",
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error("La suppression a échoué.");
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        Swal.fire(
+                            'Supprimé!',
+                            data.message,
+                            'success'
+                        ).then(() => {
+                            location.reload();
+                        });
+                    })
+                    .catch(error => {
+                        console.error("Erreur:", error);
+                        Swal.fire(
+                            'Erreur!',
+                            'La suppression a échoué.',
+                            'error'
+                        );
+                    });
+                }
+            });
+        });
+    });
+   
+
+    // Graphiques
+    // Chart pour total des trajets
+    new Chart(document.getElementById('totalTrajetsChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['TERMINE', 'EN_COURS', 'PLANIFIE', 'ANNULE'],
+            datasets: [{
+                data: [50, 20, 15, 15], // Remplacer par des données réelles
+                backgroundColor: ['rgba(255, 255, 255, 0.8)', 'rgba(255, 255, 255, 0.6)', 'rgba(255, 255, 255, 0.4)', 'rgba(255, 255, 255, 0.2)'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '75%',
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                    padding: 10,
+                    bodyFont: {
+                        size: 12
+                    }
+                }
+            }
+        }
+    });
+
+    // Chart pour la distance
+    new Chart(document.getElementById('distanceChart'), {
+        type: 'bar',
+        data: {
+            labels: ['Jan', 'Fév', 'Mar', 'Avr'],
+            datasets: [{
+                label: 'Distance (km)',
+                data: [{{ totalDistance/4 }}, {{ totalDistance/3 }}, {{ totalDistance/2 }}, {{ totalDistance }}],
+                backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                borderWidth: 0,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    display: false,
+                    beginAtZero: true
+                },
+                x: {
+                    display: false
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+
+    // Chart pour la durée
+    new Chart(document.getElementById('dureeChart'), {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Fév', 'Mar', 'Avr'],
+            datasets: [{
+                label: 'Durée moyenne',
+                data: [2, 3, 2.5, 4], // À remplacer par des données réelles
+                fill: true,
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                borderColor: 'rgba(255, 255, 255, 0.8)',
+                tension: 0.4,
+                pointRadius: 3,
+                pointBackgroundColor: 'white'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    display: false,
+                    beginAtZero: true
+                },
+                x: {
+                    display: false
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+});
+</script>
+
+<!-- SweetAlert2 pour de meilleures confirmations -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<!-- Style supplémentaire pour les cartes -->
+<style>
+    /* Styles pour les cartes de trajets selon leur statut */
+    .card.bg-gradient[style*="linear-gradient(135deg, #43a047"] {
+        color: white !important;
+        background: linear-gradient(135deg, #43a047, #2e7d32) !important;
+    }
+    
+    .card.bg-gradient[style*="linear-gradient(135deg, #ff9800"] {
+        color: white !important;
+        background: linear-gradient(135deg, #ff9800, #f57c00) !important;
+    }
+    
+    .card.bg-gradient[style*="linear-gradient(135deg, #f44336"] {
+        color: white !important;
+        background: linear-gradient(135deg, #f44336, #d32f2f) !important;
+    }
+    
+    .card.bg-gradient[style*="linear-gradient(135deg, #1976d2"] {
+        color: white !important;
+        background: linear-gradient(135deg, #1976d2, #0d47a1) !important;
+    }
+    
+    .card.bg-gradient[style*="linear-gradient(135deg, #00bcd4"] {
+        color: white !important;
+        background: linear-gradient(135deg, #00bcd4, #0097a7) !important;
+    }
+</style>
+{% endblock %}
