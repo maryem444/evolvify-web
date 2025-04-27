@@ -1,0 +1,646 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Tableau de bord RH{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: 20px;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .card-header {
+            font-weight: bold;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 15px 20px;
+            border-radius: 10px 10px 0 0;
+            background-color: #f8f9fa;
+        }
+        
+        .card-body {
+            padding: 20px;
+        }
+        
+        .stats-card {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .stats-card i {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+        
+        .stats-card .number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .stats-card .label {
+            font-size: 1rem;
+            color: #6c757d;
+        }
+        
+        .table-responsive {
+            margin-top: 20px;
+        }
+        
+        .table th {
+            font-weight: 600;
+            background-color: #f8f9fa;
+        }
+        
+        .progress {
+            height: 10px;
+            margin-top: 5px;
+        }
+        
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        
+        .dashboard-section {
+            margin-bottom: 30px;
+        }
+        
+        .dashboard-section h2 {
+            margin-bottom: 20px;
+            font-weight: 600;
+            color: #343a40;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .role-icon, .status-icon {
+            font-size: 1.5rem;
+            margin-right: 10px;
+        }
+        
+        /* Custom colors for roles */
+        .role-rh { color: #007bff; }
+        .role-chef { color: #28a745; }
+        .role-employee { color: #17a2b8; }
+        .role-condidat { color: #6c757d; }
+        
+        /* Custom colors for statuses */
+        .status-pending { color: #ffc107; }
+        .status-approved { color: #28a745; }
+        .status-rejected { color: #dc3545; }
+        .status-completed { color: #20c997; }
+        .status-in-progress { color: #17a2b8; }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid my-4">
+
+    <h1>TEST - This should always display</h1>
+
+<h1 class="mb-4">
+        <i class="fas fa-tachometer-alt me-2"></i>
+        Tableau de bord
+    </h1>
+    
+    <!-- Debug text to see if template is rendering -->
+    <div class="alert alert-info">
+        Welcome to your dashboard!
+        {% if app.user %}
+            User: {{ app.user.firstname ?? app.user.lastname ?? 'Unknown' }}
+        {% endif %}
+    </div>
+    
+    <!-- Top Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card stats-card">
+                <i class="fas fa-users role-rh"></i>
+                {% if usersByRole is defined %}
+                <div class="number">{{ usersByRole|reduce((sum, role) => sum + role.count, 0) }}</div>
+                <div class="label">Employés totaux</div>
+            {% else %}
+                <div class="number">-</div>
+                <div class="label">Employés totaux</div>
+            {% endif %}
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card">
+                <i class="fas fa-project-diagram status-completed"></i>
+                {% if projectsByStatus is defined %}
+                <div class="number">{{ projectsByStatus|reduce((sum, status) => sum + status.count, 0) }}</div>
+                {% endif %}
+                <div class="label">Projets</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card">
+                <i class="fas fa-tasks status-in-progress"></i>
+                {% if tasksByStatus is defined %}
+                <div class="number">{{ tasksByStatus|reduce((sum, status) => sum + status.count, 0) }}</div>
+                {% endif %}
+                <div class="label">Tâches</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card">
+                <i class="fas fa-calendar-alt status-pending"></i>
+                {% if leavesByStatus is defined %}
+                <div class="number">{{ leavesByStatus|reduce((sum, status) => sum + status.count, 0) }}</div>
+                {% endif %}
+                <div class="label">Congés</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Left Column -->
+        <div class="col-lg-8">
+            <!-- Répartition des employés par rôle -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    Répartition des employés par rôle
+                </div>
+                <div class="card-body">
+                    <canvas id="roleChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Évolution des congés sur 12 mois -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Évolution des congés (12 derniers mois)
+                </div>
+                <div class="card-body">
+                    <canvas id="leaveMonthlyChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Projets récents -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-project-diagram me-2"></i>
+                    Projets récents
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Nom</th>
+                                    <th>Date début</th>
+                                    <th>Date fin</th>
+                                    <th>Statut</th>
+                                    <th>Membres</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+{# Projects table section - fixed property access #}
+{% if recentProjects is defined and recentProjects %}
+    {% for project in recentProjects %}
+    <tr>
+        <td>{{ project.name }}</td>
+        <td>{{ project.starterAt|date('d/m/Y') }}</td>
+        <td>{{ project.endDate|date('d/m/Y') }}</td>
+        <td>
+            {% set statusClass = '' %}
+            {% if project.status == 'EN_COURS' %}
+                {% set statusClass = 'bg-info' %}
+            {% elseif project.status == 'TERMINE' %}
+                {% set statusClass = 'bg-success' %}
+            {% elseif project.status == 'EN_ATTENTE' %}
+                {% set statusClass = 'bg-warning' %}
+            {% elseif project.status == 'ANNULE' %}
+                {% set statusClass = 'bg-danger' %}
+            {% endif %}
+            <span class="badge {{ statusClass }}">{{ project.status }}</span>
+        </td>
+        <td>{{ project.assignedUsers|length }}</td>
+    </tr>
+    {% endfor %}
+{% else %}
+    <tr>
+        <td colspan="5" class="text-center">No recent projects found</td>
+    </tr>
+{% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tâches récentes -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-tasks me-2"></i>
+                    Tâches récentes
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Description</th>
+                                    <th>Projet</th>
+                                    <th>Assigné à</th>
+                                    <th>Priorité</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+{# Tasks table section - fixed property access #}
+{% if recentTasks is defined and recentTasks %}
+    {% for task in recentTasks %}
+    <tr>
+        <td>{{ task.description }}</td>
+        <td>{{ task.projet ? task.projet.name : 'N/A' }}</td>
+        <td>{{ task.employeFullName }}</td>
+        <td>
+            {% set priorityClass = '' %}
+            {% if task.priority == 'HAUTE' %}
+                {% set priorityClass = 'bg-danger' %}
+            {% elseif task.priority == 'MOYENNE' %}
+                {% set priorityClass = 'bg-warning' %}
+            {% elseif task.priority == 'BASSE' %}
+                {% set priorityClass = 'bg-success' %}
+            {% endif %}
+            <span class="badge {{ priorityClass }}">{{ task.priority }}</span>
+        </td>
+        <td>
+            {% set statusClass = '' %}
+            {% if task.status == 'A_FAIRE' %}
+                {% set statusClass = 'bg-secondary' %}
+            {% elseif task.status == 'EN_COURS' %}
+                {% set statusClass = 'bg-info' %}
+            {% elseif task.status == 'TERMINE' %}
+                {% set statusClass = 'bg-success' %}
+            {% elseif task.status == 'BLOQUE' %}
+                {% set statusClass = 'bg-danger' %}
+            {% endif %}
+            <span class="badge {{ statusClass }}">{{ task.status }}</span>
+        </td>
+    </tr>
+    {% endfor %}
+{% else %}
+    <tr>
+        <td colspan="5" class="text-center">No recent tasks found</td>
+    </tr>
+{% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Column -->
+        <div class="col-lg-4">
+            <!-- Répartition par genre -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-venus-mars me-2"></i>
+                    Répartition par genre
+                </div>
+                <div class="card-body">
+                    <canvas id="genderChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- État des congés -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-calendar-check me-2"></i>
+                    État des congés
+                </div>
+                <div class="card-body">
+                    <canvas id="leaveStatusChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- État des projets -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    État des projets
+                </div>
+                <div class="card-body">
+                    <canvas id="projectStatusChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Solde de congés -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-clock me-2"></i>
+                    Solde de congés (top 5)
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Employé</th>
+                                    <th>Jours restants</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                              {% if leaveBalances is defined and leaveBalances %}
+
+                                {% for balance in leaveBalances|slice(0, 5) %}
+                                <tr>
+                                    <td>{{ balance.firstname }} {{ balance.lastname }}</td>
+                                    <td>
+                                        <div class="d-flex justify-content-between">
+                                            <span>{{ balance.conge_restant }}</span>
+                                            <div class="progress" style="width: 60%;">
+                                                {% set percentage = (balance.conge_restant / 30) * 100 %}
+                                                <div class="progress-bar {{ percentage < 30 ? 'bg-danger' : (percentage < 70 ? 'bg-warning' : 'bg-success') }}" 
+                                                    role="progressbar" style="width: {{ percentage }}%" 
+                                                    aria-valuenow="{{ balance.conge_restant }}" aria-valuemin="0" aria-valuemax="30"></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                {% else %}
+    <tr>
+        <td colspan="5" class="text-center">No recent projects found</td>
+    </tr>
+{% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Solde de télétravail -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-home me-2"></i>
+                    Jours de télétravail restants (top 5)
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Employé</th>
+                                    <th>Jours restants</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                               {% if ttBalances is defined and ttBalances %}
+
+                                {% for balance in ttBalances|slice(0, 5) %}
+                                <tr>
+                                    <td>{{ balance.firstname }} {{ balance.lastname }}</td>
+                                    <td>
+                                        <div class="d-flex justify-content-between">
+                                            <span>{{ balance.tt_restants }}</span>
+                                            <div class="progress" style="width: 60%;">
+                                                {% set percentage = (balance.tt_restants / 10) * 100 %}
+                                                <div class="progress-bar {{ percentage < 30 ? 'bg-danger' : (percentage < 70 ? 'bg-warning' : 'bg-success') }}" 
+                                                    role="progressbar" style="width: {{ percentage }}%" 
+                                                    aria-valuenow="{{ balance.tt_restants }}" aria-valuemin="0" aria-valuemax="10"></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                {% else %}
+    <tr>
+        <td colspan="5" class="text-center">No recent projects found</td>
+    </tr>
+{% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Nouvelles recrues -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-user-plus me-2"></i>
+                    Nouvelles recrues
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Nom</th>
+                                    <th>Date d'embauche</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                              {% if recentHires is defined and recentHires %}
+
+                                {% for employee in recentHires %}
+                                <tr>
+                                    <td>
+                                        {% if employee.profilePhoto %}
+                                            <img src="{{ employee.profilePhotoUrl }}" alt="Photo de profil" class="img-thumbnail rounded-circle me-2" style="width: 30px; height: 30px;">
+                                        {% else %}
+                                            <i class="fas fa-user-circle me-2"></i>
+                                        {% endif %}
+                                        {{ employee.firstname }} {{ employee.lastname }}
+                                    </td>
+                                    <td>{{ employee.joiningDate|date('d/m/Y') }}</td>
+                                </tr>
+                                {% endfor %}
+                                {% else %}
+    <tr>
+        <td colspan="5" class="text-center">No recent projects found</td>
+    </tr>
+{% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Fonction pour générer des couleurs aléatoires
+    function getRandomColor() {
+        const letters = '0123456789ABCDEF';
+        let color = '#';
+        for (let i = 0; i < 6; i++) {
+            color += letters[Math.floor(Math.random() * 16)];
+        }
+        return color;
+    }
+    
+    // Définition des palettes de couleurs
+    const roleColors = {
+        'ROLE_RH': '#007bff',
+        'ROLE_CHEF': '#28a745',
+        'ROLE_EMPLOYEE': '#17a2b8',
+        'ROLE_CONDIDAT': '#6c757d'
+    };
+    
+    const projectStatusColors = {
+        'EN_COURS': '#17a2b8',
+        'TERMINE': '#28a745',
+        'EN_ATTENTE': '#ffc107',
+        'ANNULE': '#dc3545'
+    };
+    
+    const leaveStatusColors = {
+        'ACCEPTE': '#28a745',
+        'REFUSE': '#dc3545',
+        'EN_COURS': '#17a2b8',
+        'EN_ATTENTE': '#ffc107'
+    };
+    
+    // Chart des rôles
+    {% if usersByRole is defined and usersByRole %}
+    try {
+        const roleCtx = document.getElementById('roleChart').getContext('2d');
+        const roleLabels = {{ usersByRole|map(role => role.role)|json_encode|raw }};
+        const roleData = {
+            labels: roleLabels,
+            datasets: [{
+                data: {{ usersByRole|map(role => role.count)|json_encode|raw }},
+                backgroundColor: roleLabels.map(role => roleColors[role] || getRandomColor()),
+                borderWidth: 1
+            }]
+        };
+        new Chart(roleCtx, {
+            type: 'doughnut',
+            data: roleData,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error creating role chart:', error);
+    }
+    {% endif %}
+    
+    // Chart des statuts de projet
+    {% if projectsByStatus is defined and projectsByStatus %}
+    try {
+        const projectStatusCtx = document.getElementById('projectStatusChart').getContext('2d');
+        const projectStatusLabels = {{ projectsByStatus|map(status => status.status)|json_encode|raw }};
+        const projectStatusData = {
+            labels: projectStatusLabels,
+            datasets: [{
+                data: {{ projectsByStatus|map(status => status.count)|json_encode|raw }},
+                backgroundColor: projectStatusLabels.map(status => projectStatusColors[status] || getRandomColor()),
+                borderWidth: 1
+            }]
+        };
+        new Chart(projectStatusCtx, {
+            type: 'pie',
+            data: projectStatusData,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error creating project status chart:', error);
+    }
+    {% endif %}
+    
+    // Chart des statuts de congé
+    {% if leavesByStatus is defined and leavesByStatus %}
+    try {
+        const leaveStatusCtx = document.getElementById('leaveStatusChart').getContext('2d');
+        const leaveStatusLabels = {{ leavesByStatus|map(status => status.status)|json_encode|raw }};
+        const leaveStatusData = {
+            labels: leaveStatusLabels,
+            datasets: [{
+                data: {{ leavesByStatus|map(status => status.count)|json_encode|raw }},
+                backgroundColor: leaveStatusLabels.map(status => leaveStatusColors[status] || getRandomColor()),
+                borderWidth: 1
+            }]
+        };
+        new Chart(leaveStatusCtx, {
+            type: 'doughnut',
+            data: leaveStatusData,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error creating leave status chart:', error);
+    }
+    {% endif %}
+    
+    // Chart par genre (simplifié pour l'exemple)
+    {% if genderDistribution is defined and genderDistribution %}
+    try {
+        const genderCtx = document.getElementById('genderChart').getContext('2d');
+        const genderLabels = {{ genderDistribution|map(item => item.gender)|json_encode|raw }};
+        const genderData = {
+            labels: genderLabels,
+            datasets: [{
+                data: {{ genderDistribution|map(item => item.count)|json_encode|raw }},
+                backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'],
+                borderWidth: 1
+            }]
+        };
+        new Chart(genderCtx, {
+            type: 'pie',
+            data: genderData,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error creating gender chart:', error);
+    }
+    {% endif %}
+});
+</script>
+{% endblock %}
