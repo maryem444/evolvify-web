@@ -61,7 +61,7 @@
                     <div class="col-md-4">
                         <div class="card p-3">
                             <h6 class="text-center mb-2">QR Code Abonnement</h6>
-                            <div id="qrcode" class="text-center"></div>
+                            <div id="qrcode" class="text-center" style="min-height: 180px;"></div>
                             <p class="text-center small mt-2">Ce QR code contient les informations de l'abonnement</p>
                             <button id="downloadQRCode" class="btn btn-primary mt-2">
                                 <i class="fas fa-download"></i> Télécharger QR Code
@@ -81,7 +81,24 @@
 // Variable pour stocker l'instance QR code
 let qrCodeInstance = null;
 
-// Fonction pour définir la date actuelle - CONSERVÉE TELLE QUELLE
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("Document chargé, configuration des écouteurs...");
+    
+    // Observer l'ouverture de la modal
+    const modalElement = document.getElementById('ajoutAbonnementModal');
+    if (modalElement) {
+        modalElement.addEventListener('shown.bs.modal', function() {
+            console.log("Modal ouverte");
+            initializeQRSystem();
+        });
+    }
+    
+    // Initialiser le système immédiatement si la modal est déjà ouverte
+    if (modalElement && modalElement.classList.contains('show')) {
+        initializeQRSystem();
+    }
+});
+
 function setCurrentDate() {
     // Obtenir la date actuelle
     const currentDate = new Date();
@@ -126,37 +143,39 @@ function setCurrentDate() {
     });
 }
 
-// Fonction pour vérifier si tous les champs requis sont remplis
+
+
 function checkRequiredFields() {
-    const dateExp = document.getElementById('date_exp')?.value;
-    const prix = document.getElementById('prix')?.value;
-    const idEmploye = document.getElementById('id_employe')?.value;
-    
-    return dateExp && prix && idEmploye;
+    const requiredFields = ['date_exp', 'prix', 'id_employe'];
+    return requiredFields.every(id => {
+        const value = document.getElementById(id)?.value;
+        return value !== undefined && value !== '';
+    });
 }
+
 function generateQRCode() {
     try {
         console.log("Tentative de génération du QR code...");
         
         // Récupérer les valeurs du formulaire
-        const type = document.getElementById('type_Ab')?.value || '';
-        const dateDebut = document.getElementById('date_debut')?.value || '';
-        const dateExp = document.getElementById('date_exp')?.value || '';
-        const prix = document.getElementById('prix')?.value || '';
-        const idEmploye = document.getElementById('id_employe')?.value || '';
-        const status = document.getElementById('status')?.value || '';
+        const type = document.getElementById('type_Ab').value;
+        const dateDebut = document.getElementById('date_debut').value;
+        const dateExp = document.getElementById('date_exp').value;
+        const prix = document.getElementById('prix').value;
+        const idEmploye = document.getElementById('id_employe').value;
+        const status = document.getElementById('status').value;
         
-        console.log("Données collectées:", { type, dateDebut, dateExp, prix, idEmploye, status });
+        // Créer un format compact mais lisible
+        const qrText = `ABONNEMENT\n` +
+                       `Type:${type.substring(0, 3)}\n` + // 3 premiers caractères
+                       `Debut:${dateDebut.replace(/\//g, '')}\n` + // Supprime les /
+                       `Exp:${dateExp.replace(/\//g, '')}\n` + // Supprime les /
+                       `Prix:${prix}\n` +
+                       `Emp:${idEmploye}\n` +
+                       `Statut:${status.substring(0, 1)}`; // 1er caractère
         
-        // Créer un texte formaté lisible par humain plutôt qu'un JSON
-        let qrText = "Abonnement: " + type + "\n";
-        qrText += "Début: " + dateDebut + "\n";
-        qrText += "Expiration: " + dateExp + "\n";
-        qrText += "Prix: " + prix + " €\n";
-        qrText += "ID Employé: " + idEmploye + "\n";
-        qrText += "Statut: " + status;
+        console.log("Texte compressé pour QR code:", qrText);
         
-        // Obtenir le conteneur QR code
         const qrContainer = document.getElementById('qrcode');
         if (!qrContainer) {
             console.error("Conteneur QR code non trouvé");
@@ -166,7 +185,13 @@ function generateQRCode() {
         // Effacer le QR code existant
         qrContainer.innerHTML = '';
         
-        // Créer le nouveau QR code
+        if (typeof QRCode === 'undefined') {
+            console.error("La bibliothèque QRCode n'est pas disponible");
+            qrContainer.innerHTML = '<div class="alert alert-danger">Bibliothèque QR Code non chargée</div>';
+            return;
+        }
+        
+        // Créer le nouveau QR code avec correction d'erreur maximale
         qrCodeInstance = new QRCode(qrContainer, {
             text: qrText,
             width: 180,
@@ -176,406 +201,127 @@ function generateQRCode() {
             correctLevel: QRCode.CorrectLevel.H
         });
         
-        console.log("QR code généré avec succès", qrText);
+        console.log("QR code généré avec succès");
     } catch (error) {
         console.error("Erreur lors de la génération du QR code:", error);
+        const qrContainer = document.getElementById('qrcode');
+        if (qrContainer) {
+            qrContainer.innerHTML = `<div class="alert alert-danger">Erreur: ${error.message}</div>`;
+        }
     }
 }
-// Fonction pour télécharger le QR Code
+
 function setupQRCodeDownload() {
     const downloadBtn = document.getElementById('downloadQRCode');
-    if (!downloadBtn) {
-        console.error("Bouton de téléchargement non trouvé");
-        return;
-    }
+    if (!downloadBtn) return;
     
     downloadBtn.addEventListener('click', function() {
         try {
-            console.log("Tentative de téléchargement du QR code...");
-            
-            // Vérifier si le QR code existe
-            const qrCodeImg = document.querySelector('#qrcode img');
             const qrCodeCanvas = document.querySelector('#qrcode canvas');
-            
-            if (!qrCodeImg && !qrCodeCanvas) {
+            if (!qrCodeCanvas) {
                 alert('Veuillez d\'abord générer un QR code');
                 return;
             }
             
-            let dataURL;
+            const dataURL = qrCodeCanvas.toDataURL('image/png');
+            const type = document.getElementById('type_Ab').value || 'Abonnement';
+            const dateDebut = document.getElementById('date_debut').value?.replace(/\//g, '-') || 'date';
             
-            // Si nous avons le canvas directement, l'utiliser
-            if (qrCodeCanvas) {
-                console.log("Canvas QR code trouvé, extraction de l'image...");
-                dataURL = qrCodeCanvas.toDataURL('image/png');
-            } 
-            // Sinon, créer un canvas à partir de l'image
-            else if (qrCodeImg) {
-                console.log("Image QR code trouvée, création d'un canvas...");
-                const canvas = document.createElement('canvas');
-                const context = canvas.getContext('2d');
-                canvas.width = qrCodeImg.width;
-                canvas.height = qrCodeImg.height;
-                
-                // Attendre que l'image soit chargée
-                if (qrCodeImg.complete) {
-                    context.drawImage(qrCodeImg, 0, 0);
-                    dataURL = canvas.toDataURL('image/png');
-                } else {
-                    console.log("Image QR code pas encore chargée, attente...");
-                    qrCodeImg.onload = function() {
-                        context.drawImage(qrCodeImg, 0, 0);
-                        dataURL = canvas.toDataURL('image/png');
-                        
-                        // Continuer avec le téléchargement après le chargement de l'image
-                        triggerDownload(dataURL);
-                    };
-                    return; // Sortir pour attendre l'événement onload
-                }
-            } else {
-                alert('QR code non trouvé');
-                return;
-            }
-            
-            // Télécharger l'image
-            triggerDownload(dataURL);
-            
+            const downloadLink = document.createElement('a');
+            downloadLink.href = dataURL;
+            downloadLink.download = `QRCode_${type}_${dateDebut}.png`;
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
         } catch (error) {
-            console.error("Erreur lors du téléchargement du QR code:", error);
-            alert("Erreur lors du téléchargement du QR code: " + error.message);
+            console.error("Erreur lors du téléchargement:", error);
+            alert("Erreur lors du téléchargement: " + error.message);
         }
     });
-    
-    // Fonction utilitaire pour déclencher le téléchargement
-    function triggerDownload(dataURL) {
-        // Créer un lien de téléchargement
-        const downloadLink = document.createElement('a');
-        downloadLink.href = dataURL;
-        
-        // Obtenir des informations pour le nom du fichier
-        const type = document.getElementById('type_Ab')?.value || 'Abonnement';
-        const dateDebut = document.getElementById('date_debut')?.value?.replace(/\//g, '-') || 'date';
-        
-        // Donner un nom au fichier
-        downloadLink.download = `QRCode_Abonnement_${type}_${dateDebut}.png`;
-        
-        // Déclencher le téléchargement
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
-        console.log("QR code téléchargé avec succès");
-    }
 }
 
-// Fonction pour initialiser les valeurs par défaut
 function initializeDefaultValues() {
-    // Définir la date d'expiration par défaut (1 mois, 3 mois ou 1 an selon le type)
     const typeSelect = document.getElementById('type_Ab');
     const dateExpField = document.getElementById('date_exp');
+    const prixField = document.getElementById('prix');
     
-    if (typeSelect && dateExpField && !dateExpField.value) {
+    if (typeSelect && dateExpField) {
         const currentDate = new Date();
         let expDate = new Date(currentDate);
         
         switch(typeSelect.value) {
             case 'Mensuel':
                 expDate.setMonth(expDate.getMonth() + 1);
+                if (prixField && !prixField.value) prixField.value = '30';
                 break;
             case 'Trimestriel':
                 expDate.setMonth(expDate.getMonth() + 3);
+                if (prixField && !prixField.value) prixField.value = '80';
                 break;
             case 'Annuel':
                 expDate.setFullYear(expDate.getFullYear() + 1);
+                if (prixField && !prixField.value) prixField.value = '300';
                 break;
         }
         
-        const year = expDate.getFullYear();
-        const month = String(expDate.getMonth() + 1).padStart(2, '0');
-        const day = String(expDate.getDate()).padStart(2, '0');
-        dateExpField.value = `${year}-${month}-${day}`;
+        if (!dateExpField.value) {
+            const day = String(expDate.getDate()).padStart(2, '0');
+            const month = String(expDate.getMonth() + 1).padStart(2, '0');
+            const year = expDate.getFullYear();
+            dateExpField.value = `${day}/${month}/${year}`;
+        }
     }
     
-    // Valeur par défaut pour le prix
-    const prixField = document.getElementById('prix');
-    if (prixField && !prixField.value) {
-        prixField.value = "0";
+    if (!document.getElementById('id_employe').value) {
+        document.getElementById('id_employe').value = '1';
     }
-    
-    // Valeur par défaut pour l'ID employé
-    const idEmployeField = document.getElementById('id_employe');
-    if (idEmployeField && !idEmployeField.value) {
-        idEmployeField.value = "1";
-    }
+     // Ajouter un écouteur pour ajuster automatiquement les champs quand le type change
+    typeSelect.addEventListener('change', initializeDefaultValues);
 }
 
-// Fonction principale pour initialiser tout le système QR Code
 function initializeQRSystem() {
     console.log("Initialisation du système QR code...");
     
-    // Définir la date actuelle
     setCurrentDate();
-    
-    // Initialiser les valeurs par défaut
     initializeDefaultValues();
-    
-    // Générer le QR code initial (s'il y a des données)
-    if (checkRequiredFields()) {
-        setTimeout(generateQRCode, 100); // Petit délai pour s'assurer que les valeurs sont définies
-    } else {
-        console.log("Champs requis manquants, pas de génération initiale du QR code");
-    }
-    
-    // Configurer le bouton de téléchargement
+     generateQRCode();
     setupQRCodeDownload();
     
-    // Mettre à jour le QR code chaque fois qu'un champ du formulaire change
+    // Générer le QR code initial
+    if (checkRequiredFields()) {
+        generateQRCode();
+    }
+    
+    // Écouter les changements dans le formulaire
     const formInputs = document.querySelectorAll('#ajoutAbonnementForm input, #ajoutAbonnementForm select');
     formInputs.forEach(input => {
-        // Pour tous les champs, écouter l'événement change
         input.addEventListener('change', function() {
-            console.log(`Champ ${input.id || input.name} modifié, vérification des champs...`);
             if (checkRequiredFields()) {
                 generateQRCode();
             }
         });
         
-        // Pour les champs texte et nombre, utiliser un délai sur l'événement input
-        if (input.type === 'text' || input.type === 'number') {
+        if (input.type === 'text' || input.type === 'number' || input.type === 'date') {
             input.addEventListener('input', function() {
                 clearTimeout(input.timeout);
                 input.timeout = setTimeout(function() {
-                    console.log(`Saisie dans ${input.id || input.name}, vérification des champs...`);
                     if (checkRequiredFields()) {
                         generateQRCode();
                     }
-                }, 500); // 500ms de délai pour éviter trop de générations
+                }, 500);
             });
         }
     });
     
-    // Mettre à jour le QR code quand le type d'abonnement change (pour mettre à jour la date d'expiration)
+    // Mettre à jour quand le type change
     const typeSelect = document.getElementById('type_Ab');
     if (typeSelect) {
         typeSelect.addEventListener('change', function() {
-            console.log("Type d'abonnement modifié, mise à jour des valeurs par défaut...");
             initializeDefaultValues();
             if (checkRequiredFields()) {
                 generateQRCode();
             }
         });
     }
-    
-    console.log("Système QR code initialisé avec succès");
 }
-
-// Ajouter l'écouteur d'événement pour le chargement de la page
-document.addEventListener('DOMContentLoaded', function() {
-    console.log("Document chargé, configuration des écouteurs...");
-    
-    // Observer l'ouverture de la modal
-    const modalElement = document.getElementById('ajoutAbonnementModal');
-    if (modalElement) {
-        // Utiliser MutationObserver pour détecter quand la modal est visible
-        const observer = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-                if (mutation.type === 'attributes' && 
-                    mutation.attributeName === 'class' &&
-                    modalElement.classList.contains('show')) {
-                    console.log("Modal ouverte (détectée par MutationObserver)");
-                    setTimeout(initializeQRSystem, 100); // Petit délai pour s'assurer que le DOM est prêt
-                }
-            });
-        });
-        
-        observer.observe(modalElement, { attributes: true });
-        
-        // Aussi écouter l'événement Bootstrap
-        modalElement.addEventListener('shown.bs.modal', function() {
-            console.log("Modal ouverte (événement Bootstrap)");
-            setTimeout(initializeQRSystem, 100); // Petit délai pour s'assurer que le DOM est prêt
-        });
-        
-        console.log("Observateurs de modal configurés");
-    } else {
-        // Si nous ne trouvons pas la modal, initialiser directement
-        console.warn("Modal non trouvée, initialisation directe");
-        setTimeout(initializeQRSystem, 300); // Délai plus long pour s'assurer que tout est chargé
-    }
-    
-    // Surveiller également le clic sur le bouton qui ouvre la modal
-    const modalTriggers = document.querySelectorAll('[data-bs-toggle="modal"][data-bs-target="#ajoutAbonnementModal"]');
-    modalTriggers.forEach(trigger => {
-        trigger.addEventListener('click', function() {
-            console.log("Clic sur déclencheur de modal");
-            // Le code sera exécuté par les écouteurs de modal ci-dessus
-        });
-    });
-    
-    // Gérer la soumission du formulaire
-    const form = document.getElementById('ajoutAbonnementForm');
-    if (form) {
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            console.log("Formulaire soumis");
-            
-            // Code de traitement du formulaire existant...
-            const formData = new FormData(this);
-            console.log("Données du formulaire:", Array.from(formData.entries()));
-            
-            // Convertir la date du format DD/MM/YYYY au format YYYY-MM-DD pour le backend
-            const dateDebutInput = formData.get('date_debut');
-            if (dateDebutInput) {
-                const dateParts = dateDebutInput.split('/');
-                if (dateParts.length === 3) {
-                    const formattedDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
-                    formData.set('date_debut', formattedDate);
-                }
-            }
-            
-            // Remplacez cette URL par l'URL réelle de votre endpoint d'API
-            fetch('/abonnement/new', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => {
-                console.log("Status de la réponse:", response.status);
-                
-                // Le reste du code de traitement de la réponse...
-                if (response.redirected) {
-                    window.location.href = response.url;
-                    return;
-                }
-                
-                if (!response.ok) {
-                    return response.text().then(text => {
-                        try {
-                            return JSON.parse(text);
-                        } catch (e) {
-                            console.error("Réponse non-JSON reçue:", text);
-                            throw new Error('Erreur serveur: ' + response.status + ' ' + text.substring(0, 100));
-                        }
-                    });
-                }
-                
-                return response.text().then(text => {
-                    try {
-                        return JSON.parse(text);
-                    } catch (e) {
-                        if (text.includes('<html')) {
-                            window.location.href = '/abonnement';
-                            return { success: true };
-                        }
-                        return { message: text };
-                    }
-                });
-            })
-            .then(data => {
-                console.log("Données reçues:", data);
-                
-                if (data.success) {
-                    alert('Abonnement ajouté avec succès');
-                    window.location.href = '/abonnement';
-                } else if (data.error) {
-                    alert('Erreur: ' + data.error);
-                } else if (data.message) {
-                    alert('Message: ' + data.message);
-                    if (data.message.toLowerCase().includes('succès')) {
-                        window.location.href = '/abonnement';
-                    }
-                }
-            })
-            .catch(error => {
-                console.error('Erreur lors de la requête:', error);
-                alert('Une erreur s\'est produite: ' + error.message);
-            });
-        });
-    }
-});
-// Fonction pour télécharger le QR Code
-function setupQRCodeDownload() {
-    const downloadBtn = document.getElementById('downloadQRCode');
-    if (!downloadBtn) return;
-    
-    downloadBtn.addEventListener('click', function() {
-        // Vérifier si le QR code existe
-        const qrCodeImg = document.querySelector('#qrcode img');
-        if (!qrCodeImg) {
-            alert('Veuillez d\'abord générer un QR code');
-            return;
-        }
-        
-        // Créer un canvas pour obtenir l'image
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-        canvas.width = qrCodeImg.width;
-        canvas.height = qrCodeImg.height;
-        
-        // Dessiner l'image sur le canvas
-        context.drawImage(qrCodeImg, 0, 0);
-        
-        // Obtenir l'URL de données du canvas
-        const dataURL = canvas.toDataURL('image/png');
-        
-        // Créer un lien de téléchargement
-        const downloadLink = document.createElement('a');
-        downloadLink.href = dataURL;
-        
-        // Obtenir des informations pour le nom du fichier
-        const type = document.getElementById('type_Ab').value;
-        const dateDebut = document.getElementById('date_debut').value.replace(/\//g, '-');
-        
-        // Donner un nom au fichier
-        downloadLink.download = `QRCode_Abonnement_${type}_${dateDebut}.png`;
-        
-        // Déclencher le téléchargement
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
-    });
-}
-
-// Ajouter l'appel à cette fonction dans votre code d'initialisation
-document.addEventListener('DOMContentLoaded', function() {
-    // Exécuter 100ms après le chargement pour laisser le temps aux composants de s'initialiser
-    setTimeout(setCurrentDate, 100);
-    
-    // Observer l'ouverture de la modal
-    const modalElement = document.getElementById('ajoutAbonnementModal');
-    if (modalElement) {
-        modalElement.addEventListener('shown.bs.modal', function() {
-            // Exécuter avec un petit délai pour s'assurer que tous les éléments sont initialisés
-            setTimeout(() => {
-                setCurrentDate();
-                generateQRCode();
-                setupQRCodeDownload(); // Nouvelle fonction
-            }, 100);
-        });
-    }
-    
-    // Surveiller également le clic sur le bouton qui ouvre la modal
-    const modalTriggers = document.querySelectorAll('[data-bs-toggle="modal"][data-bs-target="#ajoutAbonnementModal"]');
-    modalTriggers.forEach(trigger => {
-        trigger.addEventListener('click', function() {
-            // Exécuter avec un délai légèrement plus long pour l'ouverture de la modal
-            setTimeout(() => {
-                setCurrentDate();
-                generateQRCode();
-                setupQRCodeDownload(); // Nouvelle fonction
-            }, 300);
-        });
-    });
-    
-    // Configuration du téléchargement QR Code
-    setupQRCodeDownload();
-    
-    // Mettre à jour le QR code chaque fois qu'un champ du formulaire change
-    const formInputs = document.querySelectorAll('#ajoutAbonnementForm input, #ajoutAbonnementForm select');
-    formInputs.forEach(input => {
-        input.addEventListener('change', generateQRCode);
-        input.addEventListener('input', generateQRCode);
-    });
-});
 </script>

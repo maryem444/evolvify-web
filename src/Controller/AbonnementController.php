@@ -1,5 +1,8 @@
 <?php
 namespace App\Controller;
+use Endroid\QrCode\QrCode;
+use Endroid\QrCode\Writer\PngWriter;
+
 
 use App\Entity\Abonnement;
 use App\Entity\StatusAbonnement;
@@ -21,7 +24,7 @@ final class AbonnementController extends AbstractController
             'abonnements' => $abonnements,
         ]);
     }
-
+    
     #[Route('/abonnement/new', name: 'abonnement_new', methods: ['POST'])]
     public function new(Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
