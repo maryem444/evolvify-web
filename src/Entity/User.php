@@ -16,7 +16,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(name: "id_employe", type: 'integer')]
-    private ?int $id_employe = null;
+    private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 255)]
     #[Assert\NotBlank]
@@ -33,6 +33,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private ?string $password = null;
+
 
     #[ORM\Column(name: "profilePhoto", type: 'string', length: 255, nullable: true)]
     private ?string $profilePhoto = null;
@@ -84,11 +85,56 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: 'datetime', nullable: true)]
     private ?\DateTimeInterface $resetTokenExpiration = null;
 
+
+    // Add this property to your User entity
+    #[ORM\Column(name: "facial_data", type: 'text', nullable: true)]
+    private ?string $facialData = null;
+
+    // Add the getter and setter methods
+    public function getFacialData(): ?string
+    {
+        return $this->facialData;
+    }
+
+    public function setFacialData(?string $facialData): self
+    {
+        $this->facialData = $facialData;
+        return $this;
+    }
+
+    // Add a field to track if facial recognition is set up
+    #[ORM\Column(name: "facial_auth_enabled", type: 'boolean', nullable: false)]
+    private bool $facialAuthEnabled = false;
+
+    public function isFacialAuthEnabled(): bool
+    {
+        return $this->facialAuthEnabled;
+    }
+
+    public function setFacialAuthEnabled(bool $facialAuthEnabled): self
+    {
+        $this->facialAuthEnabled = $facialAuthEnabled;
+        return $this;
+    }
+
+    #[ORM\Column(name: "face_image_filename", type: 'string', length: 255, nullable: true)]
+private ?string $faceImageFilename = null;
+
+public function getFaceImageFilename(): ?string
+{
+    return $this->faceImageFilename;
+}
+
+public function setFaceImageFilename(?string $faceImageFilename): self
+{
+    $this->faceImageFilename = $faceImageFilename;
+    return $this;
+}
     // === GETTERS & SETTERS ===
 
     public function getId(): ?int
     {
-        return $this->id_employe;
+        return $this->id;
     }
 
     public function getFirstname(): string
@@ -286,7 +332,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
     public function getRoles(): array
     {
-        return ['ROLE_' . strtoupper($this->role)];
+        // Return primary role based on the database value and include ROLE_USER for basic access
+        return ['ROLE_' . strtoupper($this->role), 'ROLE_USER'];
     }
 
     public function eraseCredentials(): void {}
@@ -297,7 +344,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         return sprintf(
             "Employee{id=%d, firstname='%s', lastname='%s', email='%s', role='%s'}",
-            $this->id_employe,
+            $this->id,
             $this->firstname,
             $this->lastname,
             $this->email,
@@ -307,6 +354,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function equals(User $employee): bool
     {
-        return $this->id_employe === $employee->getId();
+        return $this->id === $employee->getId();
     }
 }

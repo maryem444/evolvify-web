@@ -22,7 +22,9 @@ security:
       provider: app_user_provider
 
       # Updated to use your existing CustomAuthenticator
-      custom_authenticator: App\Security\CustomAuthenticator
+      custom_authenticators:
+                - App\Security\CustomAuthenticator
+                - App\Security\FacialAuthenticator
 
       # Logout configuration
       logout:
@@ -40,13 +42,9 @@ security:
   # Access control based on path and roles
   access_control:
     - { path: ^/login, roles: PUBLIC_ACCESS }
-    - {
-        path: ^/profile,
-        roles:
-          [ROLE_RESPONSABLE_RH, ROLE_CHEF_PROJET, ROLE_EMPLOYEE, ROLE_CONDIDAT],
-      }
-    - { path: ^/dashboard, roles: ROLE_RESPONSABLE_RH } # Only HR Managers can access dashboard
+    - { path: ^/facial-login, roles: PUBLIC_ACCESS }
+    - { path: ^/profile, roles: [ROLE_RESPONSABLE_RH, ROLE_CHEF_PROJET, ROLE_EMPLOYEE, ROLE_CONDIDAT] }
+    - { path: ^/dashboard, roles: ROLE_RESPONSABLE_RH }
     - { path: ^/reset-password, roles: PUBLIC_ACCESS }
     - { path: ^/verify-code, roles: PUBLIC_ACCESS }
     - { path: ^/forgot-password, roles: PUBLIC_ACCESS }
-
