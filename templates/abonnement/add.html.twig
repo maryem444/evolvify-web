@@ -97,6 +97,89 @@ document.addEventListener('DOMContentLoaded', function() {
     if (modalElement && modalElement.classList.contains('show')) {
         initializeQRSystem();
     }
+
+    // Gérer la soumission du formulaire
+    const form = document.getElementById('ajoutAbonnementForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            console.log("Formulaire soumis");
+            
+            // Code de traitement du formulaire existant...
+            const formData = new FormData(this);
+            console.log("Données du formulaire:", Array.from(formData.entries()));
+            
+            // Convertir la date du format DD/MM/YYYY au format YYYY-MM-DD pour le backend
+            const dateDebutInput = formData.get('date_debut');
+            if (dateDebutInput) {
+                const dateParts = dateDebutInput.split('/');
+                if (dateParts.length === 3) {
+                    const formattedDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+                    formData.set('date_debut', formattedDate);
+                }
+            }
+            
+            // Remplacez cette URL par l'URL réelle de votre endpoint d'API
+            fetch('/abonnement/new', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                console.log("Status de la réponse:", response.status);
+                
+                // Le reste du code de traitement de la réponse...
+                if (response.redirected) {
+                    window.location.href = response.url;
+                    return;
+                }
+                
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        try {
+                            return JSON.parse(text);
+                        } catch (e) {
+                            console.error("Réponse non-JSON reçue:", text);
+                            throw new Error('Erreur serveur: ' + response.status + ' ' + text.substring(0, 100));
+                        }
+                    });
+                }
+                
+                return response.text().then(text => {
+                    try {
+                        return JSON.parse(text);
+                    } catch (e) {
+                        if (text.includes('<html')) {
+                            window.location.href = '/abonnement';
+                            return { success: true };
+                        }
+                        return { message: text };
+                    }
+                });
+            })
+            .then(data => {
+                console.log("Données reçues:", data);
+                
+                if (data.success) {
+                    alert('Abonnement ajouté avec succès');
+                    window.location.href = '/abonnement';
+                } else if (data.error) {
+                    alert('Erreur: ' + data.error);
+                } else if (data.message) {
+                    alert('Message: ' + data.message);
+                    if (data.message.toLowerCase().includes('succès')) {
+                        window.location.href = '/abonnement';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Erreur lors de la requête:', error);
+                alert('Une erreur s\'est produite: ' + error.message);
+            });
+        });
+    }
 });
 
 function setCurrentDate() {
