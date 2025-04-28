@@ -65,6 +65,7 @@ class CardsController extends AbstractController
   }
 
   #[Route('/projets/cards/{id}/edit', name: 'projet_edit_card')]
+  
 public function edit(Request $request, Projet $projet, EntityManagerInterface $entityManager): Response
 {
   $oldFilePath = $projet->getUploadedFiles(); // Stockez le chemin de l'ancien fichier
