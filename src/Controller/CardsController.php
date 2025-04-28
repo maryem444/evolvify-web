@@ -16,10 +16,15 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class CardsController extends AbstractController
 {
+  // Dans App\Controller\CardsController.php
   #[Route('/projets/cards', name: 'projets_cards')]
   public function listProjetsCards(ProjetRepository $projetRepository): Response
   {
-    $projets = $projetRepository->getProjetListQB();
+    // Récupérer l'utilisateur connecté
+    $user = $this->getUser();
+
+    // Passer l'utilisateur au repository pour filtrer les projets
+    $projets = $projetRepository->getProjetListQB($user);
 
     return $this->render('projets/cards.html.twig', [
       'projets' => $projets
@@ -65,53 +70,53 @@ class CardsController extends AbstractController
   }
 
   #[Route('/projets/cards/{id}/edit', name: 'projet_edit_card')]
-  
-public function edit(Request $request, Projet $projet, EntityManagerInterface $entityManager): Response
-{
-  $oldFilePath = $projet->getUploadedFiles(); // Stockez le chemin de l'ancien fichier
 
-  $form = $this->createForm(ProjetType::class, $projet);
-  $form->handleRequest($request);
+  public function edit(Request $request, Projet $projet, EntityManagerInterface $entityManager): Response
+  {
+    $oldFilePath = $projet->getUploadedFiles(); // Stockez le chemin de l'ancien fichier
 
-  if ($form->isSubmitted() && $form->isValid()) {
-    /** @var UploadedFile $file */
-    $file = $form->get('uploaded_files')->getData();
+    $form = $this->createForm(ProjetType::class, $projet);
+    $form->handleRequest($request);
 
-    if ($file) {
-      $uploadsDirectory = $this->getParameter('uploads_directory');
-      $newFilename = uniqid() . '.' . $file->guessExtension();
+    if ($form->isSubmitted() && $form->isValid()) {
+      /** @var UploadedFile $file */
+      $file = $form->get('uploaded_files')->getData();
 
-      try {
-        // Supprimer l'ancien fichier s'il existe
-        if ($oldFilePath) {
-          $fullOldPath = $this->getParameter('kernel.project_dir') . '/public/' . $oldFilePath;
-          if (file_exists($fullOldPath)) {
-            unlink($fullOldPath);
+      if ($file) {
+        $uploadsDirectory = $this->getParameter('uploads_directory');
+        $newFilename = uniqid() . '.' . $file->guessExtension();
+
+        try {
+          // Supprimer l'ancien fichier s'il existe
+          if ($oldFilePath) {
+            $fullOldPath = $this->getParameter('kernel.project_dir') . '/public/' . $oldFilePath;
+            if (file_exists($fullOldPath)) {
+              unlink($fullOldPath);
+            }
           }
-        }
 
-        $file->move($uploadsDirectory, $newFilename);
-        $projet->setUploadedFiles('uploads/' . $newFilename); // Stocker le nouveau chemin
-      } catch (FileException $e) {
-        $this->addFlash('danger', 'Erreur lors du téléchargement du fichier.');
+          $file->move($uploadsDirectory, $newFilename);
+          $projet->setUploadedFiles('uploads/' . $newFilename); // Stocker le nouveau chemin
+        } catch (FileException $e) {
+          $this->addFlash('danger', 'Erreur lors du téléchargement du fichier.');
+        }
       }
+
+      // Sauvegarder les modifications en base de données - LIGNE MANQUANTE AJOUTÉE
+      $entityManager->flush();
+
+      $this->addFlash('success', 'Projet modifié avec succès !');
+
+      // Rediriger explicitement vers la vue en cartes
+      return $this->redirectToRoute('projets_cards');
     }
 
-    // Sauvegarder les modifications en base de données - LIGNE MANQUANTE AJOUTÉE
-    $entityManager->flush();
-
-    $this->addFlash('success', 'Projet modifié avec succès !');
-
-    // Rediriger explicitement vers la vue en cartes
-    return $this->redirectToRoute('projets_cards');
+    return $this->render('projets/edit.html.twig', [
+      'form' => $form->createView(),
+      'projet' => $projet,
+      'redirect_route' => 'projets_cards' // Passer la route de redirection au template
+    ]);
   }
-
-  return $this->render('projets/edit.html.twig', [
-    'form' => $form->createView(),
-    'projet' => $projet,
-    'redirect_route' => 'projets_cards' // Passer la route de redirection au template
-  ]);
-}
   #[Route('/projets/cards/{id}/details', name: 'projet_details_card')]
   public function details(Projet $projet): Response
   {
