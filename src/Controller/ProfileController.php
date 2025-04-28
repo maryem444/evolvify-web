@@ -13,6 +13,10 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Bundle\SecurityBundle\Security;
+
+
 class ProfileController extends AbstractController
 {
     #[Route('/profile', name: 'app_profile', methods: ['GET', 'POST'])]
@@ -80,6 +84,7 @@ class ProfileController extends AbstractController
         $response = $this->render('profile/index.html.twig', [
             'user' => $user,
             'photoForm' => $photoForm->createView(),
+            'isOwnProfile' => true, // <--- add this line!
         ]);
 
         // Set cache headers to prevent back-button issues after logout
@@ -265,6 +270,26 @@ class ProfileController extends AbstractController
         ]);
     }
 
+    #[Route('/user/{id}/profile', name: 'app_user_profile')]
+    public function showProfile(User $user, Security $security): Response
+    {
+        $currentUser = $security->getUser();
+    
+        $isOwnProfile = false;
+        if ($currentUser instanceof User) {
+            $isOwnProfile = ($currentUser->getId() === $user->getId());
+        }
+    
+        $photoForm = $this->createForm(ProfilePhotoType::class, $user);
+    
+        return $this->render('profile/index.html.twig', [
+            'photoForm' => $photoForm->createView(),
+            'user' => $user,
+            'isOwnProfile' => $isOwnProfile,
+        ]);
+    }
+    
+    
     #[Route('/logout', name: 'app_logout')]
     public function logout(): void
     {

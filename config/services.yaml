@@ -4,11 +4,9 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
-    profile_photo_base_url: 'http://localhost/evolvify/'
-    uploads_directory: '%kernel.project_dir%/public/uploads'
-
-services:
-    # ... existing services configuration
+  profile_photo_base_url: "http://localhost/evolvify/"
+  facial_images_directory: "%kernel.project_dir%/public/uploads/facial"
+  uploads_directory: "%kernel.project_dir%/public/uploads"
 services:
   # default configuration for services in *this* file
   _defaults:
@@ -16,7 +14,6 @@ services:
     autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
 
   # makes classes in src/ available to be used as services
-  # this creates a service per class whose id is the fully-qualified class name
   App\:
     resource: "../src/"
     exclude:
@@ -24,10 +21,7 @@ services:
       - "../src/Entity/"
       - "../src/Kernel.php"
 
-    # Explicitly define the custom authenticator service
+  # Explicitly define the custom authenticator service
   App\Security\CustomAuthenticator:
-        arguments:
-            $urlGenerator: '@router'
-
-    # add more service definitions when explicit configuration is needed
-    # please note that last definitions always *replace* previous ones
+    arguments:
+      $urlGenerator: "@router"

@@ -24,12 +24,23 @@ class UserController extends AbstractController
     /**
      * Affiche la liste des utilisateurs et le formulaire d'ajout dans le modal.
      */
+    /**
+     * Affiche la liste des utilisateurs et le formulaire d'ajout dans le modal.
+     */
     #[Route('/users', name: 'user_index')]
     public function index(UserRepository $userRepository, Request $request, EntityManagerInterface $em): Response
     {
         // Récupérer tous les utilisateurs depuis la base de données
+        // Récupérer tous les utilisateurs depuis la base de données
         $users = $userRepository->findAll();
 
+        // Créer un formulaire vide pour l'ajout d'un nouvel utilisateur
+        $user = new User();
+        $form = $this->createForm(UserType::class, $user, [
+            'is_new_user' => true // Option personnalisée pour le formulaire
+        ]);
+
+        // Rendre la vue avec la liste des utilisateurs et le formulaire
         // Créer un formulaire vide pour l'ajout d'un nouvel utilisateur
         $user = new User();
         $form = $this->createForm(UserType::class, $user, [
@@ -59,38 +70,50 @@ public function show(User $user): JsonResponse
         'role' => $role // Now sending without "ROLE_" prefix
     ]);
 }
+#[Route('/user/delete/{id}', name: 'user_delete', methods: ['DELETE'])]
+public function deleteUser(int $id, EntityManagerInterface $em): JsonResponse
+{
+    // Recherche de l'utilisateur par ID
+    $user = $em->getRepository(User::class)->find($id);
 
-    #[Route('/user/delete/{id}', name: 'user_delete', methods: ['DELETE'])]
-    public function deleteUser(int $id, EntityManagerInterface $em): JsonResponse
-    {
-        // Recherche de l'utilisateur par ID
-        $user = $em->getRepository(User::class)->find($id);
-
-        // Vérifie si l'utilisateur a été trouvé
-        if (!$user) {
-            return new JsonResponse([
-                'status' => 'error',
-                'message' => 'Utilisateur non trouvé'
-            ], 404);  // 404 Not Found
-        }
-
-        try {
-            // Suppression de l'utilisateur
-            $em->remove($user);
-            $em->flush();
-
-            return new JsonResponse([
-                'status' => 'success',
-                'message' => 'Utilisateur supprimé avec succès'
-            ]);
-        } catch (\Exception $e) {
-            return new JsonResponse([
-                'status' => 'error',
-                'message' => 'Une erreur est survenue : ' . $e->getMessage()
-            ], 500);  // 500 Internal Server Error
-        }
+    // Vérifie si l'utilisateur a été trouvé
+    if (!$user) {
+        return new JsonResponse([
+            'status' => 'error',
+            'message' => 'Utilisateur non trouvé'
+        ], 404);  // 404 Not Found
     }
 
+    try {
+        // Add debugging information
+        error_log('Tentative de suppression de l\'utilisateur ID: ' . $id);
+        
+        // Check for related entities (you'll need to replace these with your actual relationships)
+        // For example:
+        // $relatedEntities = $em->getRepository(RelatedEntity::class)->findBy(['user' => $user]);
+        // foreach ($relatedEntities as $entity) {
+        //     $em->remove($entity);
+        // }
+        
+        // Suppression de l'utilisateur
+        $em->remove($user);
+        $em->flush();
+
+        return new JsonResponse([
+            'status' => 'success',
+            'message' => 'Utilisateur supprimé avec succès'
+        ]);
+    } catch (\Exception $e) {
+        // Enhanced error logging
+        error_log('Erreur lors de la suppression de l\'utilisateur ID ' . $id . ': ' . $e->getMessage());
+        error_log('Trace: ' . $e->getTraceAsString());
+        
+        return new JsonResponse([
+            'status' => 'error',
+            'message' => 'Une erreur est survenue : ' . $e->getMessage()
+        ], 500);  // 500 Internal Server Error
+    }
+}
     /**
      * Ajouter un nouvel utilisateur et envoyer un email de création de mot de passe
      */

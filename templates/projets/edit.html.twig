@@ -150,23 +150,39 @@
 	<script src="https://cdn.ckeditor.com/ckeditor5/40.0.0/classic/ckeditor.js"></script>
 	<script>
 		$(document).ready(function () {
-            $('.select2').select2({placeholder: "Sélectionnez les utilisateurs", allowClear: true, width: '100%'}).val($('.select2').val()).trigger('change');
-            
-            // Initialize CKEditor 5
-            ClassicEditor
-                .create(document.querySelector('#{{ form.description.vars.id }}'), {
-                    toolbar: ['bold', 'italic', 'bulletedList', 'numberedList', 'heading'],
-                    heading: {
-                        options: [
-                            { model: 'paragraph', title: 'Paragraphe', class: 'ck-heading_paragraph' },
-                            { model: 'heading1', view: 'h1', title: 'Titre 1', class: 'ck-heading_heading1' },
-                            { model: 'heading2', view: 'h2', title: 'Titre 2', class: 'ck-heading_heading2' }
-                        ]
-                    }
-                })
-                .catch(error => {
-                    console.error(error);
-                });
-        });
+$('.select2').select2({placeholder: "Sélectionnez les utilisateurs", allowClear: true, width: '100%'}).val($('.select2').val()).trigger('change');
+
+// Initialize CKEditor 5
+ClassicEditor.create(document.querySelector('#{{ form.description.vars.id }}'), {
+toolbar: [
+'bold',
+'italic',
+'bulletedList',
+'numberedList',
+'heading'
+],
+heading: {
+options: [
+{
+model: 'paragraph',
+title: 'Paragraphe',
+class: 'ck-heading_paragraph'
+}, {
+model: 'heading1',
+view: 'h1',
+title: 'Titre 1',
+class: 'ck-heading_heading1'
+}, {
+model: 'heading2',
+view: 'h2',
+title: 'Titre 2',
+class: 'ck-heading_heading2'
+}
+]
+}
+}).catch(error => {
+console.error(error);
+});
+});
 	</script>
 {% endblock %}

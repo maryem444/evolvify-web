@@ -125,49 +125,49 @@ class ProjetController extends AbstractController
 
 
     #[Route('/projet/{id}/edit', name: 'projet_edit')]
-public function edit(Request $request, Projet $projet, EntityManagerInterface $entityManager): Response
-{
-    $oldFilePath = $projet->getUploadedFiles(); // Stockez le chemin de l'ancien fichier
+    public function edit(Request $request, Projet $projet, EntityManagerInterface $entityManager): Response
+    {
+        $oldFilePath = $projet->getUploadedFiles(); // Stockez le chemin de l'ancien fichier
 
-    $form = $this->createForm(ProjetType::class, $projet);
-    $form->handleRequest($request);
+        $form = $this->createForm(ProjetType::class, $projet);
+        $form->handleRequest($request);
 
-    if ($form->isSubmitted() && $form->isValid()) {
-        /** @var UploadedFile $file */
-        $file = $form->get('uploaded_files')->getData();
+        if ($form->isSubmitted() && $form->isValid()) {
+            /** @var UploadedFile $file */
+            $file = $form->get('uploaded_files')->getData();
 
-        if ($file) {
-            $uploadsDirectory = $this->getParameter('uploads_directory');
-            $newFilename = uniqid() . '.' . $file->guessExtension();
+            if ($file) {
+                $uploadsDirectory = $this->getParameter('uploads_directory');
+                $newFilename = uniqid() . '.' . $file->guessExtension();
 
-            try {
-                // Supprimer l'ancien fichier s'il existe
-                if ($oldFilePath) {
-                    $fullOldPath = $this->getParameter('kernel.project_dir') . '/public/' . $oldFilePath;
-                    if (file_exists($fullOldPath)) {
-                        unlink($fullOldPath);
+                try {
+                    // Supprimer l'ancien fichier s'il existe
+                    if ($oldFilePath) {
+                        $fullOldPath = $this->getParameter('kernel.project_dir') . '/public/' . $oldFilePath;
+                        if (file_exists($fullOldPath)) {
+                            unlink($fullOldPath);
+                        }
                     }
+
+                    $file->move($uploadsDirectory, $newFilename);
+                    $projet->setUploadedFiles('uploads/' . $newFilename); // Stocker le nouveau chemin
+                } catch (FileException $e) {
+                    $this->addFlash('danger', 'Erreur lors du téléchargement du fichier.');
                 }
-
-                $file->move($uploadsDirectory, $newFilename);
-                $projet->setUploadedFiles('uploads/' . $newFilename); // Stocker le nouveau chemin
-            } catch (FileException $e) {
-                $this->addFlash('danger', 'Erreur lors du téléchargement du fichier.');
             }
+
+            // Save changes to database - THIS LINE WAS MISSING
+            $entityManager->flush();
+
+            $this->addFlash('success', 'Projet modifié avec succès !');
+            return $this->redirectToRoute('projets_list');
         }
-        
-        // Save changes to database - THIS LINE WAS MISSING
-        $entityManager->flush();
 
-        $this->addFlash('success', 'Projet modifié avec succès !');
-        return $this->redirectToRoute('projets_list');
+        return $this->render('projets/edit.html.twig', [
+            'form' => $form->createView(),
+            'projet' => $projet,
+        ]);
     }
-
-    return $this->render('projets/edit.html.twig', [
-        'form' => $form->createView(),
-        'projet' => $projet,
-    ]);
-}
 
     #[Route('/projet/{id}/taches', name: 'projet_taches')]
     public function showTaches(Projet $projet, TacheRepository $tacheRepository): Response
