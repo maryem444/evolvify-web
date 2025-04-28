@@ -471,6 +471,19 @@
 			border-collapse: separate;
 			border-spacing: 0;
 		}
+		// Ajoutez ceci à votre bloc de style CSS
+		.clickable-row {
+			cursor: pointer;
+		}
+
+		.profile-photo {
+			cursor: pointer;
+			transition: transform 0.2s;
+		}
+
+		.profile-photo:hover {
+			transform: scale(1.1);
+		}
 	</style>
 {% endblock %}
 
@@ -597,6 +610,21 @@ updateActiveBadges();
 });
 });
 
+// Gestion du clic sur une ligne du tableau
+    $('#add-row').on('click', 'tr.clickable-row', function(event) {
+        // Ignorer si le clic est sur un bouton d'action
+        if (!$(event.target).closest('.form-button-action').length) {
+            window.location = $(this).data('href');
+        }
+    });
+    
+    // Gestion du clic sur une photo de profil (prioritaire sur le clic de ligne)
+    $('#add-row').on('click', '.profile-photo', function(event) {
+        event.stopPropagation(); // Empêche la propagation du clic à la ligne
+        const row = $(this).closest('tr.clickable-row');
+        window.location = row.data('href');
+    });
+
 // Dynamiser les interactions utilisateur
 document.addEventListener('DOMContentLoaded', function () { // Animations pour les filtres
 const filterItems = document.querySelectorAll('.filter-item');
@@ -621,10 +649,29 @@ bsAlert.close();
 }, 5000);
 });
 });
+
+document.addEventListener('DOMContentLoaded', function () { // Auto-hide alerts after 5 seconds
+const alerts = document.querySelectorAll('.alert');
+alerts.forEach(alert => {
+setTimeout(() => {
+const bsAlert = new bootstrap.Alert(alert);
+bsAlert.close();
+}, 5000);
+});
+
+// Optional: Code to handle page refresh after modal submission
+// This can help ensure flash messages are displayed
+if (window.location.search.includes('added=true')) {
+history.replaceState({}, document.title, window.location.pathname);
+}
+});
+
+
 	</script>
 {% endblock %}
 
 {% block content %}
+
 	<div class="col-md-12">
 		<div class="card">
 			<div class="card-header">
@@ -721,12 +768,16 @@ bsAlert.close();
 						</thead>
 						<tbody>
 							{% for user in users %}
-								<tr>
+							<tr class="clickable-row" data-href="{{ path('app_user_profile', {'id': user.id}) }}">
 									<td class="text-center">
 										{% if user.profilePhoto %}
-											<img src="{{ user.profilePhoto }}" alt="{{ user.firstname }}'s profile" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+											<img src="{{ user.profilePhoto }}" alt="{{ user.firstname }}'s profile" 
+												class="rounded-circle profile-photo" 
+												style="width: 40px; height: 40px; object-fit: cover;">
 										{% else %}
-											<img src="{{ asset('assets/img/profile.png') }}" alt="Default profile" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+											<img src="{{ asset('assets/img/profile.png') }}" alt="Default profile" 
+												class="rounded-circle profile-photo" 
+												style="width: 40px; height: 40px; object-fit: cover;">
 										{% endif %}
 									</td>
 									<td>{{ user.firstname }}</td>
@@ -753,6 +804,7 @@ bsAlert.close();
 												<i class="fa-solid fa-user-pen fa-2x"></i>
 												<!-- Slightly bigger size fa-lg -->
 											</button>
+
 											<button type="button" class="btn btn-link btn-danger delete-user-btn" data-bs-toggle="modal" data-bs-target="#deleteUserModal" data-user-id="{{ user.id }}" data-user-name="{{ user.firstname }} {{ user.lastname }}">
 												<i class="fa-solid fa-trash fa-2x"></i>
 												<!-- Slightly bigger size -->

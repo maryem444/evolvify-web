@@ -1,313 +1,308 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Créez votre mot de passe</title>
-    <link rel="icon" href="{{ asset('assets/img/logo1.png') }}" type="image/x-icon">
-    <link rel="stylesheet" type="text/css" href="{{ asset('login/vendor/bootstrap/css/bootstrap.min.css') }}">
-    <link rel="stylesheet" type="text/css" href="{{ asset('login/fonts/font-awesome-4.7.0/css/font-awesome.min.css') }}">
-    <link rel="stylesheet" type="text/css" href="{{ asset('login/fonts/iconic/css/material-design-iconic-font.min.css') }}">
-    <link rel="stylesheet" type="text/css" href="{{ asset('login/vendor/animate/animate.css') }}">
-    <link rel="stylesheet" type="text/css" href="{{ asset('login/vendor/css-hamburgers/hamburgers.min.css') }}">
-    <link rel="stylesheet" type="text/css" href="{{ asset('login/vendor/animsition/css/animsition.min.css') }}">
-    <link rel="stylesheet" type="text/css" href="{{ asset('login/vendor/select2/select2.min.css') }}">
-    <link rel="stylesheet" type="text/css" href="{{ asset('login/vendor/daterangepicker/daterangepicker.css') }}">
-    <link rel="stylesheet" type="text/css" href="{{ asset('login/css/util.css') }}">
-    <link rel="stylesheet" type="text/css" href="{{ asset('login/css/main.css') }}">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Créez votre mot de passe</title>
+		<link rel="icon" href="{{ asset('assets/img/logo1.png') }}" type="image/x-icon">
+		<link rel="stylesheet" type="text/css" href="{{ asset('login/vendor/bootstrap/css/bootstrap.min.css') }}">
+		<link rel="stylesheet" type="text/css" href="{{ asset('login/fonts/font-awesome-4.7.0/css/font-awesome.min.css') }}">
+		<link rel="stylesheet" type="text/css" href="{{ asset('login/fonts/iconic/css/material-design-iconic-font.min.css') }}">
+		<link rel="stylesheet" type="text/css" href="{{ asset('login/vendor/animate/animate.css') }}">
+		<link rel="stylesheet" type="text/css" href="{{ asset('login/vendor/css-hamburgers/hamburgers.min.css') }}">
+		<link rel="stylesheet" type="text/css" href="{{ asset('login/vendor/animsition/css/animsition.min.css') }}">
+		<link rel="stylesheet" type="text/css" href="{{ asset('login/vendor/select2/select2.min.css') }}">
+		<link rel="stylesheet" type="text/css" href="{{ asset('login/vendor/daterangepicker/daterangepicker.css') }}">
+		<link rel="stylesheet" type="text/css" href="{{ asset('login/css/util.css') }}">
+		<link rel="stylesheet" type="text/css" href="{{ asset('login/css/main.css') }}">
 
-    <style>
-        .strength-meter {
-            height: 5px;
-            width: 100%;
-            margin-top: 10px;
-            display: flex;
-        }
+		<style>
+			.strength-meter {
+				height: 5px;
+				width: 100%;
+				margin-top: 10px;
+				display: flex;
+			}
 
-        .strength-segment {
-            height: 100%;
-            flex: 1;
-            margin-right: 3px;
-            background-color: #e6e6e6;
-        }
+			.strength-segment {
+				height: 100%;
+				flex: 1;
+				margin-right: 3px;
+				background-color: #e6e6e6;
+			}
 
-        .strength-segment:last-child {
-            margin-right: 0;
-        }
+			.strength-segment:last-child {
+				margin-right: 0;
+			}
 
-        .segment-red {
-            background-color: #ff4d4d !important;
-        }
+			.segment-red {
+				background-color: #ff4d4d !important;
+			}
 
-        .segment-yellow {
-            background-color: #ffd633 !important;
-        }
+			.segment-yellow {
+				background-color: #ffd633 !important;
+			}
 
-        .segment-green {
-            background-color: #2eb82e !important;
-        }
+			.segment-green {
+				background-color: #2eb82e !important;
+			}
 
-        .toggle-password {
-            position: absolute;
-            right: 15px;
-            top: 55%;
-            transform: translateY(-50%);
-            cursor: pointer;
-            color: #666;
-            opacity: 0.7;
-            font-size: 22px;
-            transition: opacity 0.2s;
-        }
-        
-        .toggle-password:hover {
-            opacity: 1;
-        }
+			.toggle-password {
+				position: absolute;
+				right: 15px;
+				top: 55%;
+				transform: translateY(-50%);
+				cursor: pointer;
+				color: #666;
+				opacity: 0.7;
+				font-size: 22px;
+				transition: opacity 0.2s;
+			}
 
-        .input-wrapper {
-            position: relative;
-        }
-        
-        .strength-text {
-            font-size: 12px;
-            margin-top: 5px;
-            text-align: right;
-        }
-        
-        .text-danger {
-            color: #ff4d4d;
-        }
-        
-        .text-warning {
-            color: #ffd633;
-        }
-        
-        .text-success {
-            color: #2eb82e;
-        }
-        
-        .passwords-match-message {
-            font-size: 12px;
-            margin-top: 5px;
-            text-align: right;
-        }
-    </style>
-</head>
-<body>
-    <div class="limiter">
-        <div class="container-login100" style="background-image: url('{{ asset('login/images/bg-01.jpg') }}');">
-            <div class="wrap-login100 p-l-55 p-r-55 p-t-65 p-b-54">
-                <form method="post" class="login100-form validate-form" id="passwordForm" action="{{ path('app_reset_password', {'token': token}) }}">
-                    <span class="login100-form-title p-b-49">
-                        Créez votre mot de passe
-                    </span>
+			.toggle-password:hover {
+				opacity: 1;
+			}
 
-                    {% if error is defined and error %}
-                        <div class="alert alert-danger" role="alert">
-                            {{ error.messageKey|trans(error.messageData, 'security') }}
-                        </div>
-                    {% endif %}
+			.input-wrapper {
+				position: relative;
+			}
 
-                    {% for flash_error in app.flashes('reset_password_error') %}
-                        <div class="alert alert-danger" role="alert">{{ flash_error }}</div>
-                    {% endfor %}
+			.strength-text {
+				font-size: 12px;
+				margin-top: 5px;
+				text-align: right;
+			}
 
-                    {# Add CSRF token #}
-                    <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+			.text-danger {
+				color: #ff4d4d;
+			}
 
-                    <div class="wrap-input100 validate-input input-wrapper" data-validate="Le mot de passe est requis">
-                        <span class="label-input100">Mot de passe</span>
-                        <input class="input100" type="password" id="password" name="password" placeholder="Entrez votre mot de passe" required>
-                        <i class="fa fa-eye-slash toggle-password" id="togglePassword"></i>
-                        <span class="focus-input100" data-symbol="&#xf190;"></span>
-                        <div class="strength-meter mt-2">
-                            <div class="strength-segment" id="segment1"></div>
-                            <div class="strength-segment" id="segment2"></div>
-                            <div class="strength-segment" id="segment3"></div>
-                            <div class="strength-segment" id="segment4"></div>
-                        </div>
-                        <div class="strength-text" id="strengthText"></div>
-                    </div>
+			.text-warning {
+				color: #ffd633;
+			}
 
-                    <div class="wrap-input100 validate-input m-t-23 input-wrapper" data-validate="La confirmation du mot de passe est requise">
-                        <span class="label-input100">Confirmez le mot de passe</span>
-                        <input class="input100" type="password" id="confirmPassword" name="confirm_password" placeholder="Confirmez votre mot de passe" required>
-                        <i class="fa fa-eye-slash toggle-password" id="toggleConfirmPassword"></i>
-                        <span class="focus-input100" data-symbol="&#xf190;"></span>
-                        <div class="passwords-match-message" id="passwordsMatchMessage"></div>
-                    </div>
+			.text-success {
+				color: #2eb82e;
+			}
 
-                    <div class="container-login100-form-btn m-t-31">
-                        <div class="wrap-login100-form-btn">
-                            <div class="login100-form-bgbtn"></div>
-                            <button class="login100-form-btn" type="submit" id="submitBtn" disabled>
-                                Confirmer
-                            </button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+			.passwords-match-message {
+				font-size: 12px;
+				margin-top: 5px;
+				text-align: right;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="limiter">
+			<div class="container-login100" style="background-image: url('{{ asset('login/images/bg-01.jpg') }}');">
+				<div class="wrap-login100 p-l-55 p-r-55 p-t-65 p-b-54">
+					<form method="post" class="login100-form validate-form" id="passwordForm" action="{{ path('app_reset_password', {'token': token}) }}">
+						<span class="login100-form-title p-b-49">
+							Créez votre mot de passe
+						</span>
 
-    <script src="{{ asset('login/vendor/jquery/jquery-3.2.1.min.js') }}"></script>
-    <script src="{{ asset('login/vendor/animsition/js/animsition.min.js') }}"></script>
-    <script src="{{ asset('login/vendor/bootstrap/js/popper.js') }}"></script>
-    <script src="{{ asset('login/vendor/bootstrap/js/bootstrap.min.js') }}"></script>
-    <script src="{{ asset('login/vendor/select2/select2.min.js') }}"></script>
-    <script src="{{ asset('login/vendor/daterangepicker/moment.min.js') }}"></script>
-    <script src="{{ asset('login/vendor/daterangepicker/daterangepicker.js') }}"></script>
-    <script src="{{ asset('login/vendor/countdowntime/countdowntime.js') }}"></script>
-    <script src="{{ asset('login/js/main.js') }}"></script>
-    
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const passwordInput = document.getElementById('password');
-            const confirmPasswordInput = document.getElementById('confirmPassword');
-            const togglePassword = document.getElementById('togglePassword');
-            const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
-            const submitBtn = document.getElementById('submitBtn');
-            const strengthText = document.getElementById('strengthText');
-            const passwordsMatchMessage = document.getElementById('passwordsMatchMessage');
+						{% if error is defined and error %}
+							<div class="alert alert-danger" role="alert">
+								{{ error.messageKey|trans(error.messageData, 'security') }}
+							</div>
+						{% endif %}
 
-            const segments = [
-                document.getElementById('segment1'), 
-                document.getElementById('segment2'), 
-                document.getElementById('segment3'), 
-                document.getElementById('segment4')
-            ];
+						{% for flash_error in app.flashes('reset_password_error') %}
+							<div class="alert alert-danger" role="alert">{{ flash_error }}</div>
+						{% endfor %}
 
-            let passwordVisible = false;
-            let confirmPasswordVisible = false;
+						{# Add CSRF token #}
+						<input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
 
-            togglePassword.addEventListener('click', function () {
-                passwordVisible = !passwordVisible;
-                passwordInput.type = passwordVisible ? 'text' : 'password';
-                if (passwordVisible) {
-                    this.classList.remove('fa-eye-slash');
-                    this.classList.add('fa-eye');
-                } else {
-                    this.classList.remove('fa-eye');
-                    this.classList.add('fa-eye-slash');
-                }
-            });
+						<div class="wrap-input100 validate-input input-wrapper" data-validate="Le mot de passe est requis">
+							<span class="label-input100">Mot de passe</span>
+							<input class="input100" type="password" id="password" name="password" placeholder="Entrez votre mot de passe" required>
+							<i class="fa fa-eye-slash toggle-password" id="togglePassword"></i>
+							<span class="focus-input100" data-symbol="&#xf190;"></span>
+							<div class="strength-meter mt-2">
+								<div class="strength-segment" id="segment1"></div>
+								<div class="strength-segment" id="segment2"></div>
+								<div class="strength-segment" id="segment3"></div>
+								<div class="strength-segment" id="segment4"></div>
+							</div>
+							<div class="strength-text" id="strengthText"></div>
+						</div>
 
-            toggleConfirmPassword.addEventListener('click', function () {
-                confirmPasswordVisible = !confirmPasswordVisible;
-                confirmPasswordInput.type = confirmPasswordVisible ? 'text' : 'password';
-                if (confirmPasswordVisible) {
-                    this.classList.remove('fa-eye-slash');
-                    this.classList.add('fa-eye');
-                } else {
-                    this.classList.remove('fa-eye');
-                    this.classList.add('fa-eye-slash');
-                }
-            });
+						<div class="wrap-input100 validate-input m-t-23 input-wrapper" data-validate="La confirmation du mot de passe est requise">
+							<span class="label-input100">Confirmez le mot de passe</span>
+							<input class="input100" type="password" id="confirmPassword" name="confirm_password" placeholder="Confirmez votre mot de passe" required>
+							<i class="fa fa-eye-slash toggle-password" id="toggleConfirmPassword"></i>
+							<span class="focus-input100" data-symbol="&#xf190;"></span>
+							<div class="passwords-match-message" id="passwordsMatchMessage"></div>
+						</div>
 
-            function checkStrength(password) {
-                let strength = 0;
-                
-                if (password.length === 0) {
-                    return 0;
-                }
-                
-                if (password.length >= 8) 
-                    strength++;
+						<div class="container-login100-form-btn m-t-31">
+							<div class="wrap-login100-form-btn">
+								<div class="login100-form-bgbtn"></div>
+								<button class="login100-form-btn" type="submit" id="submitBtn" disabled>
+									Confirmer
+								</button>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
 
-                if (/[a-z]/.test(password) && /[A-Z]/.test(password)) 
-                    strength++;
+		<script src="{{ asset('login/vendor/jquery/jquery-3.2.1.min.js') }}"></script>
+		<script src="{{ asset('login/vendor/animsition/js/animsition.min.js') }}"></script>
+		<script src="{{ asset('login/vendor/bootstrap/js/popper.js') }}"></script>
+		<script src="{{ asset('login/vendor/bootstrap/js/bootstrap.min.js') }}"></script>
+		<script src="{{ asset('login/vendor/select2/select2.min.js') }}"></script>
+		<script src="{{ asset('login/vendor/daterangepicker/moment.min.js') }}"></script>
+		<script src="{{ asset('login/vendor/daterangepicker/daterangepicker.js') }}"></script>
+		<script src="{{ asset('login/vendor/countdowntime/countdowntime.js') }}"></script>
+		<script src="{{ asset('login/js/main.js') }}"></script>
 
-                if (/\d/.test(password)) 
-                    strength++;
+		<script>
+			document.addEventListener('DOMContentLoaded', function () {
+				const passwordInput = document.getElementById('password');
+				const confirmPasswordInput = document.getElementById('confirmPassword');
+				const togglePassword = document.getElementById('togglePassword');
+				const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
+				const submitBtn = document.getElementById('submitBtn');
+				const strengthText = document.getElementById('strengthText');
+				const passwordsMatchMessage = document.getElementById('passwordsMatchMessage');
 
-                if (/[^A-Za-z0-9]/.test(password)) 
-                    strength++;
+				const segments = [document.getElementById('segment1'), document.getElementById('segment2'), document.getElementById('segment3'), document.getElementById('segment4')];
 
-                return strength;
-            }
+				let passwordVisible = false;
+				let confirmPasswordVisible = false;
 
-            function updateStrengthMeter(strength) {
-                // Update segments
-                segments.forEach((seg, i) => {
-                    seg.className = 'strength-segment';
-                    if (i < strength) {
-                        if (strength === 1) 
-                            seg.classList.add('segment-red');
-                        else if (strength === 2) 
-                            seg.classList.add('segment-yellow');
-                        else 
-                            seg.classList.add('segment-green');
-                    }
-                });
-                
-                // Update strength text
-                if (passwordInput.value.length === 0) {
-                    strengthText.textContent = '';
-                    strengthText.className = 'strength-text';
-                } else if (strength === 1) {
-                    strengthText.textContent = 'Très faible';
-                    strengthText.className = 'strength-text text-danger';
-                } else if (strength === 2) {
-                    strengthText.textContent = 'Faible';
-                    strengthText.className = 'strength-text text-warning';
-                } else if (strength === 3) {
-                    strengthText.textContent = 'Fort';
-                    strengthText.className = 'strength-text text-success';
-                } else if (strength === 4) {
-                    strengthText.textContent = 'Très fort';
-                    strengthText.className = 'strength-text text-success';
-                }
-            }
+				togglePassword.addEventListener('click', function () {
+					passwordVisible = !passwordVisible;
+					passwordInput.type = passwordVisible ? 'text' : 'password';
+					if (passwordVisible) {
+						this.classList.remove('fa-eye-slash');
+						this.classList.add('fa-eye');
+					} else {
+						this.classList.remove('fa-eye');
+						this.classList.add('fa-eye-slash');
+					}
+				});
 
-            function checkPasswordsMatch() {
-                const password = passwordInput.value;
-                const confirmPassword = confirmPasswordInput.value;
-                
-                if (confirmPassword.length === 0) {
-                    passwordsMatchMessage.textContent = '';
-                    return false;
-                }
-                
-                if (password === confirmPassword) {
-                    passwordsMatchMessage.textContent = 'Les mots de passe correspondent';
-                    passwordsMatchMessage.className = 'passwords-match-message text-success';
-                    return true;
-                } else {
-                    passwordsMatchMessage.textContent = 'Les mots de passe ne correspondent pas';
-                    passwordsMatchMessage.className = 'passwords-match-message text-danger';
-                    return false;
-                }
-            }
+				toggleConfirmPassword.addEventListener('click', function () {
+					confirmPasswordVisible = !confirmPasswordVisible;
+					confirmPasswordInput.type = confirmPasswordVisible ? 'text' : 'password';
+					if (confirmPasswordVisible) {
+						this.classList.remove('fa-eye-slash');
+						this.classList.add('fa-eye');
+					} else {
+						this.classList.remove('fa-eye');
+						this.classList.add('fa-eye-slash');
+					}
+				});
 
-            function validateForm() {
-                const password = passwordInput.value;
-                const strength = checkStrength(password);
-                updateStrengthMeter(strength);
-                
-                const passwordsMatch = checkPasswordsMatch();
-                
-                // Enable submit button only if:
-                // 1. Password strength is at least 3 (Fort)
-                // 2. Both passwords match
-                // 3. Both fields are not empty
-                const isValid = (strength === 4 && passwordsMatch && password.length > 0 && confirmPasswordInput.value.length > 0);
-                
-                submitBtn.disabled = !isValid;
-            }
+				function checkStrength(password) {
+					let strength = 0;
 
-            passwordInput.addEventListener('input', validateForm);
-            confirmPasswordInput.addEventListener('input', validateForm);
-        });
-    </script>
-    
-    <script>
-        // Prevent back navigation for password reset flow
-        (function() {
-            window.history.pushState(null, null, window.location.href);
-            window.onpopstate = function() {
-                window.history.pushState(null, null, window.location.href);
-                alert('Pour des raisons de sécurité, veuillez utiliser les boutons de navigation fournis.');
-            };
-        })();
-    </script>
-</body>
+					if (password.length === 0) {
+						return 0;
+					}
+
+					if (password.length >= 8) 
+						strength++;
+
+					if (/[a-z]/.test(password) && /[A-Z]/.test(password)) 
+						strength++;
+
+					if (/\d/.test(password)) 
+						strength++;
+
+					if (/[^A-Za-z0-9]/.test(password)) 
+						strength++;
+
+					return strength;
+				}
+
+				function updateStrengthMeter(strength) {
+					// Update segments
+					segments.forEach((seg, i) => {
+						seg.className = 'strength-segment';
+						if (i < strength) {
+							if (strength === 1) 
+								seg.classList.add('segment-red');
+							else if (strength === 2) 
+								seg.classList.add('segment-yellow');
+							else 
+								seg.classList.add('segment-green');
+						}
+					});
+
+					// Update strength text
+					if (passwordInput.value.length === 0) {
+						strengthText.textContent = '';
+						strengthText.className = 'strength-text';
+					} else if (strength === 1) {
+						strengthText.textContent = 'Très faible';
+						strengthText.className = 'strength-text text-danger';
+					} else if (strength === 2) {
+						strengthText.textContent = 'Faible';
+						strengthText.className = 'strength-text text-warning';
+					} else if (strength === 3) {
+						strengthText.textContent = 'Fort';
+						strengthText.className = 'strength-text text-success';
+					} else if (strength === 4) {
+						strengthText.textContent = 'Très fort';
+						strengthText.className = 'strength-text text-success';
+					}
+				}
+
+				function checkPasswordsMatch() {
+					const password = passwordInput.value;
+					const confirmPassword = confirmPasswordInput.value;
+
+					if (confirmPassword.length === 0) {
+						passwordsMatchMessage.textContent = '';
+						return false;
+					}
+
+					if (password === confirmPassword) {
+						passwordsMatchMessage.textContent = 'Les mots de passe correspondent';
+						passwordsMatchMessage.className = 'passwords-match-message text-success';
+						return true;
+					} else {
+						passwordsMatchMessage.textContent = 'Les mots de passe ne correspondent pas';
+						passwordsMatchMessage.className = 'passwords-match-message text-danger';
+						return false;
+					}
+				}
+
+				function validateForm() {
+					const password = passwordInput.value;
+					const strength = checkStrength(password);
+					updateStrengthMeter(strength);
+
+					const passwordsMatch = checkPasswordsMatch();
+
+					// Enable submit button only if:
+					// 1. Password strength is at least 3 (Fort)
+					// 2. Both passwords match
+					// 3. Both fields are not empty
+					const isValid = (strength === 4 && passwordsMatch && password.length > 0 && confirmPasswordInput.value.length > 0);
+
+					submitBtn.disabled = !isValid;
+				}
+
+				passwordInput.addEventListener('input', validateForm);
+				confirmPasswordInput.addEventListener('input', validateForm);
+			});
+		</script>
+
+		<script>
+			// Prevent back navigation for password reset flow
+			(function () {
+				window.history.pushState(null, null, window.location.href);
+				window.onpopstate = function () {
+					window.history.pushState(null, null, window.location.href);
+					alert('Pour des raisons de sécurité, veuillez utiliser les boutons de navigation fournis.');
+				};
+			})();
+		</script>
+	</body>
 </html>

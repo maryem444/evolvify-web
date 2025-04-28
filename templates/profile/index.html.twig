@@ -44,7 +44,7 @@
 							{% if user.profilePhoto %}
 								<img src="{{ user.profilePhotoUrl }}" alt="Photo de profil" class="img-fluid rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
 							{% else %}
-								<img src="{{ asset('assets/img/profile.jpg') }}" alt="Photo de profil par défaut" class="img-fluid rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
+								<img src="{{ asset('assets/img/profile.png') }}" alt="Photo de profil par défaut" class="img-fluid rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
 							{% endif %}
 						</div>
 
@@ -72,10 +72,12 @@
 						</p>
 
 						<div class="text-center mt-4">
+						{% if isOwnProfile is not same as(true) %}
 							<button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#contactModal">
 								<i class="fas fa-envelope me-1"></i>
 								Envoyer un message
 							</button>
+							{% endif %}
 						</div>
 					</div>
 
@@ -83,9 +85,13 @@
 					<div class="col-md-8">
 						<div class="d-flex justify-content-between align-items-center mb-4">
 							<h4 class="mb-0">Informations personnelles</h4>
+							{% if isOwnProfile %}
+
 							<button class="btn btn-sm btn-outline-primary rounded-circle" data-bs-toggle="modal" data-bs-target="#personalInfoModal">
 								<i class="fas fa-pencil-alt"></i>
 							</button>
+							{% endif %}
+
 						</div>
 
 						<div class="row g-3">
@@ -209,7 +215,7 @@
 											{% if user.profilePhoto %}
 												<img src="{{ user.profilePhotoUrl }}" alt="Photo de profil actuelle" id="photoPreview" class="img-fluid rounded-circle mb-2" style="width: 100px; height: 100px; object-fit: cover;">
 											{% else %}
-												<img src="{{ asset('assets/img/profile.jpg') }}" alt="Photo de profil par défaut" id="photoPreview" class="img-fluid rounded-circle mb-2" style="width: 100px; height: 100px; object-fit: cover;">
+												<img src="{{ asset('assets/img/profile.png') }}" alt="Photo de profil par défaut" id="photoPreview" class="img-fluid rounded-circle mb-2" style="width: 100px; height: 100px; object-fit: cover;">
 											{% endif %}
 										</div>
 									</div>
@@ -312,7 +318,444 @@
 		</div>
 	</div>
 
-	{% block javascripts %}
+	{# Add this after your personalInfoModal #}
+
+<!-- Facial Recognition Setup Modal -->
+<div class="modal fade" id="facialRecognitionModal" tabindex="-1" aria-labelledby="facialRecognitionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="facialRecognitionModalLabel">Configuration de la reconnaissance faciale</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-4">
+                    <div class="alert {{ user.facialAuthEnabled ? 'alert-success' : 'alert-info' }}">
+                        <i class="fas {{ user.facialAuthEnabled ? 'fa-check-circle' : 'fa-info-circle' }} me-2"></i>
+                        {% if user.facialAuthEnabled %}
+                            La reconnaissance faciale est activée sur votre compte.
+                        {% else %}
+                            La reconnaissance faciale n'est pas encore configurée.
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="video-container position-relative mb-4" style="text-align: center;">
+                    <video id="facialSetupVideo" autoplay playsinline style="width: 100%; max-width: 400px; border-radius: 10px; margin: 0 auto;"></video>
+                    <div id="facialScanner" class="position-absolute top-0 start-0 w-100 h-100" style="border: 2px solid #00ff00; border-radius: 10px; animation: scanning 2s infinite; display: none;"></div>
+                    <canvas id="facialCanvas" style="display: none;"></canvas>
+                </div>
+
+                <div id="facialStatus" class="text-center mb-3">
+                    <span class="text-primary">
+                        <i class="fas fa-info-circle"></i> Cliquez sur "Démarrer la configuration" pour commencer
+                    </span>
+                </div>
+
+                <div class="d-flex justify-content-center mb-3">
+                    <div class="btn-group" id="facialControlButtons">
+                        <button type="button" class="btn btn-primary" id="startFacialSetupBtn">
+                            <i class="fas fa-camera"></i> Démarrer la configuration
+                        </button>
+                        <button type="button" class="btn btn-success" id="captureFaceBtn" style="display: none;">
+                            <i class="fas fa-camera"></i> Capturer
+                        </button>
+                    </div>
+                </div>
+
+                <div class="text-center mb-3">
+                    <button type="button" class="btn btn-danger" id="disableFacialAuthBtn" style="{{ user.facialAuthEnabled ? '' : 'display: none;' }}">
+                        <i class="fas fa-times-circle"></i> Désactiver la reconnaissance faciale
+                    </button>
+                </div>
+
+                <div class="text-muted small mt-4">
+                    <p><i class="fas fa-shield-alt me-2"></i> <strong>Note de sécurité:</strong> La reconnaissance faciale est une méthode d'authentification pratique, mais pas aussi sécurisée qu'un mot de passe fort. Pour une sécurité optimale, utilisez-la comme méthode secondaire.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                <button type="button" class="btn btn-primary" id="saveFacialDataBtn" style="display: none;">
+                    Enregistrer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Add this button to your profile details section, right before the closing div #}
+{# Around line 95, after the button for contactModal #}
+<div class="text-center mt-2">
+	{% if isOwnProfile %}
+
+    <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#facialRecognitionModal">
+        <i class="fas fa-user-shield me-1"></i>
+        Configurer la reconnaissance faciale
+    </button>
+
+	{% endif %}
+
+</div>
+
+{# Add this to your javascripts block #}
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        function previewPhoto(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                
+                reader.onload = function (e) {
+                    document.getElementById('photoPreview').src = e.target.result;
+                };
+                
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Face Recognition Setup
+        document.addEventListener('DOMContentLoaded', function() {
+            const facialRecognitionModal = document.getElementById('facialRecognitionModal');
+            if (!facialRecognitionModal) return;
+
+            // Elements
+            const startBtn = document.getElementById('startFacialSetupBtn');
+            const captureBtn = document.getElementById('captureFaceBtn');
+            const saveBtn = document.getElementById('saveFacialDataBtn');
+            const disableBtn = document.getElementById('disableFacialAuthBtn');
+            const video = document.getElementById('facialSetupVideo');
+            const canvas = document.getElementById('facialCanvas');
+            const scanner = document.getElementById('facialScanner');
+            const status = document.getElementById('facialStatus');
+            
+            let stream = null;
+            let faceDetected = false;
+            let capturedImageData = null;
+
+            // Check if face-api.js is loaded
+            function loadFaceAPI() {
+                return new Promise((resolve, reject) => {
+                    if (typeof faceapi !== 'undefined') {
+                        resolve();
+                        return;
+                    }
+                    
+                    const script = document.createElement('script');
+script.src = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js';
+                    script.onload = () => resolve();
+                    script.onerror = () => reject(new Error('Failed to load face-api.js'));
+                    document.head.appendChild(script);
+                });
+            }
+
+            // Load face detection models
+            async function loadModels() {
+                status.innerHTML = '<span class="text-primary"><i class="fas fa-spinner fa-spin"></i> Chargement des modèles...</span>';
+                
+                try {
+                    await Promise.all([
+                        faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
+                        faceapi.nets.faceLandmark68Net.loadFromUri('/models'),
+                        faceapi.nets.faceRecognitionNet.loadFromUri('/models')
+                    ]);
+                    
+                    return true;
+                } catch (error) {
+                    console.error('Error loading face models:', error);
+                    status.innerHTML = '<span class="text-danger"><i class="fas fa-exclamation-triangle"></i> Erreur lors du chargement des modèles</span>';
+                    return false;
+                }
+            }
+
+            // Start camera
+            async function startCamera() {
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+                    video.srcObject = stream;
+                    
+                    return true;
+                } catch (err) {
+                    console.error('Error accessing camera:', err);
+                    status.innerHTML = '<span class="text-danger"><i class="fas fa-exclamation-triangle"></i> Impossible d\'accéder à la caméra. Veuillez autoriser l\'accès.</span>';
+                    return false;
+                }
+            }
+
+            // Stop camera
+            function stopCamera() {
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                    video.srcObject = null;
+                }
+            }
+
+            // Start face detection
+            function startFaceDetection() {
+                let faceCheckInterval = setInterval(async () => {
+                    if (!video.srcObject) {
+                        clearInterval(faceCheckInterval);
+                        return;
+                    }
+                    
+                    try {
+                        const detection = await faceapi.detectSingleFace(
+                            video, 
+                            new faceapi.TinyFaceDetectorOptions()
+                        ).withFaceLandmarks();
+                        
+                        if (detection) {
+                            faceDetected = true;
+                            status.innerHTML = '<span class="text-success"><i class="fas fa-check-circle"></i> Visage détecté! Vous pouvez capturer maintenant.</span>';
+                            captureBtn.style.display = 'inline-block';
+                        } else {
+                            faceDetected = false;
+                            status.innerHTML = '<span class="text-warning"><i class="fas fa-user-alt-slash"></i> Aucun visage détecté. Positionnez-vous face à la caméra.</span>';
+                        }
+                    } catch (error) {
+                        console.error('Face detection error:', error);
+                    }
+                }, 500);
+                
+                // Store the interval ID in case we need to clear it
+                video.dataset.faceCheckInterval = faceCheckInterval;
+            }
+
+            // Initialize setup
+            startBtn.addEventListener('click', async function() {
+                startBtn.disabled = true;
+                startBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Initialisation...';
+                
+                try {
+                    // Load face-api.js if needed
+                    await loadFaceAPI();
+                    
+                    // Load models
+                    const modelsLoaded = await loadModels();
+                    if (!modelsLoaded) {
+                        startBtn.disabled = false;
+                        startBtn.innerHTML = '<i class="fas fa-camera"></i> Réessayer';
+                        return;
+                    }
+                    
+                    // Start camera
+                    const cameraStarted = await startCamera();
+                    if (!cameraStarted) {
+                        startBtn.disabled = false;
+                        startBtn.innerHTML = '<i class="fas fa-camera"></i> Réessayer';
+                        return;
+                    }
+                    
+                    // Show scanner animation
+                    scanner.style.display = 'block';
+                    
+                    // Start face detection
+                    startFaceDetection();
+                    
+                    // Hide start button, show capture button
+                    startBtn.style.display = 'none';
+                    captureBtn.style.display = 'inline-block';
+                    
+                    status.innerHTML = '<span class="text-primary"><i class="fas fa-search"></i> Recherche de visage...</span>';
+                    
+                } catch (error) {
+                    console.error('Setup error:', error);
+                    status.innerHTML = '<span class="text-danger"><i class="fas fa-exclamation-triangle"></i> Une erreur est survenue</span>';
+                    startBtn.disabled = false;
+                    startBtn.innerHTML = '<i class="fas fa-camera"></i> Réessayer';
+                }
+            });
+
+            // Capture face
+            captureBtn.addEventListener('click', async function() {
+                if (!faceDetected) {
+                    status.innerHTML = '<span class="text-warning"><i class="fas fa-exclamation-circle"></i> Aucun visage détecté. Veuillez vous positionner face à la caméra.</span>';
+                    return;
+                }
+                
+                // Setup canvas and draw video frame
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                // Get face data with descriptor
+                try {
+                    const detection = await faceapi.detectSingleFace(
+                        canvas, 
+                        new faceapi.TinyFaceDetectorOptions()
+                    ).withFaceLandmarks().withFaceDescriptor();
+                    
+                    if (!detection) {
+                        status.innerHTML = '<span class="text-danger"><i class="fas fa-times-circle"></i> Impossible d\'extraire les caractéristiques du visage. Veuillez réessayer.</span>';
+                        return;
+                    }
+                    
+                    // Convert image to data URL for preview and server submission
+                    capturedImageData = {
+                        imageData: canvas.toDataURL('image/jpeg'),
+                        faceDescriptor: Array.from(detection.descriptor)
+                    };
+                    
+                    status.innerHTML = '<span class="text-success"><i class="fas fa-check-circle"></i> Visage capturé avec succès!</span>';
+                    saveBtn.style.display = 'block';
+                    
+                    // Optionally show preview
+                    const previewImg = document.createElement('img');
+                    previewImg.src = capturedImageData.imageData;
+                    previewImg.style.maxWidth = '150px';
+                    previewImg.style.borderRadius = '10px';
+                    previewImg.style.marginTop = '10px';
+                    
+                    const previewContainer = document.createElement('div');
+                    previewContainer.className = 'text-center mt-3';
+                    previewContainer.appendChild(previewImg);
+                    
+                    // Remove previous preview if exists
+                    const oldPreview = document.querySelector('.facial-preview');
+                    if (oldPreview) oldPreview.remove();
+                    
+                    // Add preview class for easy removal later
+                    previewContainer.classList.add('facial-preview');
+                    
+                    status.parentNode.insertBefore(previewContainer, status.nextSibling);
+                    
+                } catch (error) {
+                    console.error('Face capture error:', error);
+                    status.innerHTML = '<span class="text-danger"><i class="fas fa-exclamation-triangle"></i> Erreur lors de la capture</span>';
+                }
+            });
+
+// Save facial data
+saveBtn.addEventListener('click', async function() {
+    if (!capturedImageData) {
+        status.innerHTML = '<span class="text-warning"><i class="fas fa-exclamation-circle"></i> Aucune donnée faciale à enregistrer</span>';
+        return;
+    }
+    
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enregistrement...';
+    
+    try {
+        const response = await fetch('{{ path("app_save_facial_data") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token("save_facial_data") }}'
+            },
+            body: JSON.stringify(capturedImageData)
+        });
+        
+        // Ajoutez cette partie pour mieux déboguer
+        const responseText = await response.text();
+        let result;
+        
+        try {
+            result = JSON.parse(responseText);
+        } catch (error) {
+            console.error('Invalid JSON response:', responseText);
+            status.innerHTML = '<span class="text-danger"><i class="fas fa-times-circle"></i> Réponse serveur invalide</span>';
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = 'Enregistrer';
+            return;
+        }
+        
+        if (result.success) {
+            // Reste du code inchangé...
+        } else {
+            status.innerHTML = '<span class="text-danger"><i class="fas fa-times-circle"></i> ' + (result.message || 'Erreur lors de l\'enregistrement') + '</span>';
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = 'Enregistrer';
+        }
+    } catch (error) {
+        console.error('Save error:', error);
+        status.innerHTML = '<span class="text-danger"><i class="fas fa-exclamation-triangle"></i> Erreur de connexion</span>';
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = 'Enregistrer';
+    }
+});
+
+            // Disable facial recognition
+            disableBtn.addEventListener('click', async function() {
+                disableBtn.disabled = true;
+                disableBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Désactivation...';
+                
+                try {
+                    const response = await fetch('{{ path("app_disable_facial_auth") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token("disable_facial_auth") }}'
+                        }
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        status.innerHTML = '<span class="text-success"><i class="fas fa-check-circle"></i> La reconnaissance faciale a été désactivée avec succès</span>';
+                        
+                        // Update UI
+                        disableBtn.style.display = 'none';
+                        
+                        // Update alert status
+                        const alertDiv = document.querySelector('.modal-body .alert');
+                        if (alertDiv) {
+                            alertDiv.className = 'alert alert-info';
+                            alertDiv.innerHTML = '<i class="fas fa-info-circle me-2"></i> La reconnaissance faciale n\'est pas encore configurée.';
+                        }
+                    } else {
+                        status.innerHTML = '<span class="text-danger"><i class="fas fa-times-circle"></i> ' + (result.message || 'Erreur lors de la désactivation') + '</span>';
+                        disableBtn.disabled = false;
+                        disableBtn.innerHTML = '<i class="fas fa-times-circle"></i> Désactiver la reconnaissance faciale';
+                    }
+                } catch (error) {
+                    console.error('Disable error:', error);
+                    status.innerHTML = '<span class="text-danger"><i class="fas fa-exclamation-triangle"></i> Erreur de connexion</span>';
+                    disableBtn.disabled = false;
+                    disableBtn.innerHTML = '<i class="fas fa-times-circle"></i> Désactiver la reconnaissance faciale';
+                }
+            });
+
+            // Clean up when modal is closed
+            facialRecognitionModal.addEventListener('hidden.bs.modal', function() {
+                stopCamera();
+                
+                // Clear any interval
+                if (video.dataset.faceCheckInterval) {
+                    clearInterval(parseInt(video.dataset.faceCheckInterval));
+                }
+                
+                // Reset UI
+                scanner.style.display = 'none';
+                captureBtn.style.display = 'none';
+                saveBtn.style.display = 'none';
+                startBtn.style.display = 'inline-block';
+                startBtn.disabled = false;
+                startBtn.innerHTML = '<i class="fas fa-camera"></i> Démarrer la configuration';
+                
+                status.innerHTML = '<span class="text-primary"><i class="fas fa-info-circle"></i> Cliquez sur "Démarrer la configuration" pour commencer</span>';
+                
+                // Remove any preview
+                const oldPreview = document.querySelector('.facial-preview');
+                if (oldPreview) oldPreview.remove();
+                
+                // Clear captured data
+                capturedImageData = null;
+                faceDetected = false;
+            });
+        });
+    // Add CSS for the scanning animation
+    document.addEventListener('DOMContentLoaded', function() {
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes scanning {
+                0% { box-shadow: 0 0 0 0 rgba(0, 255, 0, 0.2); }
+                50% { box-shadow: 0 0 0 10px rgba(0, 255, 0, 0.2); }
+                100% { box-shadow: 0 0 0 0 rgba(0, 255, 0, 0.2); }
+            }
+        `;
+        document.head.appendChild(style);
+    });
+</script>
+
 		<script>
 			function previewPhoto(input) {
 				if (input.files && input.files[0]) {

@@ -1,0 +1,59 @@
+<!-- Popup d'ajout de moyen de transport -->
+<div class="modal fade" id="ajoutMoyenTransportModal" tabindex="-1" aria-labelledby="ajoutMoyenTransportLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ajoutMoyenTransportLabel">Ajouter un Moyen de Transport</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="ajoutMoyenTransportForm">
+                    <div class="mb-3">
+                        <label for="type_moyen" class="form-label">Type</label>
+                        <input type="text" id="type_moyen" name="type_moyen" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="capacité" class="form-label">Capacité</label>
+                        <input type="number" id="capacité" name="capacité" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="immatriculation" class="form-label">Immatriculation</label>
+                        <input type="text" id="immatriculation" name="immatriculation" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Statut</label>
+                        <select id="status" name="status" class="form-control">
+                            <option value="DISPONIBLE">Disponible</option>
+                            <option value="EN_MAINTENANCE">En Maintenance</option>
+                            <option value="EN_PANNE">En Panne</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Ajouter</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('ajoutMoyenTransportForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch('{{ path('app_moyentransport_new') }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert(data.error);
+        } else {
+            alert('Moyen de transport ajouté avec succès');
+            location.reload();
+        }
+    })
+    .catch(error => console.error('Erreur:', error));
+});
+</script>
