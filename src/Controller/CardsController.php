@@ -18,18 +18,22 @@ class CardsController extends AbstractController
 {
   // Dans App\Controller\CardsController.php
   #[Route('/projets/cards', name: 'projets_cards')]
-  public function listProjetsCards(ProjetRepository $projetRepository): Response
-  {
-    // Récupérer l'utilisateur connecté
-    $user = $this->getUser();
+public function listProjetsCards(ProjetRepository $projetRepository): Response
+{
+  // Récupérer l'utilisateur connecté
+  $user = $this->getUser();
 
-    // Passer l'utilisateur au repository pour filtrer les projets
-    $projets = $projetRepository->getProjetListQB($user);
+  // Passer l'utilisateur au repository pour filtrer les projets
+  $projets = $projetRepository->getProjetListQB($user);
+  
+  // Calculer le nombre total de projets
+  $totalProjets = count($projets);
 
-    return $this->render('projets/cards.html.twig', [
-      'projets' => $projets
-    ]);
-  }
+  return $this->render('projets/cards.html.twig', [
+    'projets' => $projets,
+    'totalProjets' => $totalProjets
+  ]);
+}
 
   #[Route('/projets/cards/add', name: 'projet_add_card')]
   public function addProjet(Request $request, ManagerRegistry $doctrine): Response

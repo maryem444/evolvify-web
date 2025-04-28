@@ -319,157 +319,184 @@
 				opacity: 0;
 				visibility: hidden;
 			}
-
-			
+		}
+		.project-counter {
+			display: flex;
+			align-items: center;
+			margin-right: 15px;
+		}
+		.project-counter .badge {
+			font-size: 14px;
+			padding: 8px 12px;
+			background: linear-gradient(to right, #034694, #2196F3);
+			color: white;
+			border-radius: 20px;
+			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+		}
+		.header-buttons {
+			display: flex;
+			align-items: center;
 		}
 	</style>
 {% endblock %}
 
 {% block content %}
 	<div class="container-fluid">
-    {% for label, messages in app.flashes %}
-        {% for message in messages %}
-            <div class="flash-message flash-{{ label }}" id="flash-message-{{ loop.index }}">
-                {% if label == 'success' %}
-                    <i class="fas fa-check-circle"></i>
-                {% elseif label == 'error' %}
-                    <i class="fas fa-exclamation-circle"></i>
-                {% elseif label == 'warning' %}
-                    <i class="fas fa-exclamation-triangle"></i>
-                {% elseif label == 'info' %}
-                    <i class="fas fa-info-circle"></i>
-                {% endif %}
-                {{ message }}
-            </div>
-        {% endfor %}
-    {% endfor %}
+		{% for label, messages in app.flashes %}
+			{% for message in messages %}
+				<div class="flash-message flash-{{ label }}" id="flash-message-{{ loop.index }}">
+					{% if label == 'success' %}
+						<i class="fas fa-check-circle"></i>
+					{% elseif label == 'error' %}
+						<i class="fas fa-exclamation-circle"></i>
+					{% elseif label == 'warning' %}
+						<i class="fas fa-exclamation-triangle"></i>
+					{% elseif label == 'info' %}
+						<i class="fas fa-info-circle"></i>
+					{% endif %}
+					{{ message }}
+				</div>
+			{% endfor %}
+		{% endfor %}
 
-    <div class="page-header">
-        <h1 class="page-title">🗂️ Projets</h1>
-        <div class="header-buttons">
-            {% if is_granted('ROLE_CHEF_PROJET') %}
-                <a href="{{ path('projet_add_card') }}" class="btn-add-projet">
-                    <i class="fas fa-plus"></i>Ajouter Projet
-                </a>
-            {% else %}
-                <a href="#" class="btn-add-projet" style="opacity: 0.5; cursor: not-allowed; pointer-events: none;">
-                    <i class="fas fa-plus"></i>Ajouter Projet
-                </a>
-            {% endif %}
-        </div>
-    </div>
-    
-    {# Ajouter ceci juste après la div.page-header #}
-    <div id="notification-container" class="mb-4" style="display: none;">
-        <div class="alert alert-warning notification-alert" role="alert">
-            <div class="d-flex align-items-center">
-                <div class="me-3">
-                    <i class="fas fa-exclamation-triangle fa-2x"></i>
-                </div>
-                <div>
-                    <h5 class="notification-title mb-1"></h5>
-                    <p class="notification-content mb-0"></p>
-                </div>
-                <button type="button" class="btn-close ms-auto" aria-label="Close" onclick="dismissNotification()"></button>
-            </div>
-        </div>
-    </div>
-    
-    <div class="card">
-        <div class="card-body">
-            <div class="project-cards">
-                {% for projet in projets %}
-                    <div class="project-card">
-                        <div class="project-card-header">
-                            {{ projet.name }}
-                            <span style="float: right; font-size: 12px; background-color: rgba(255,255,255,0.3); padding: 2px 6px; border-radius: 4px;">{{ projet.abbreviation }}</span>
-                        </div>
-                        <div class="project-card-body">
-                            <div class="project-description">
-                                {{ projet.description|raw }}
-                            </div>
+		<div class="page-header">
+			<h1 class="page-title">🗂️ Projets</h1>
+			<div class="header-buttons">
+				{% if is_granted('ROLE_CHEF_PROJET') %}
+					<div class="project-counter">
+						<span class="badge bg-primary rounded-pill">
+							nombre totale des projet :
+							{{ totalProjets }}
+						</span>
+					</div>
+					<a href="{{ path('projet_add_card') }}" class="btn-add-projet">
+						<i class="fas fa-plus"></i>Ajouter Projet
+					</a>
+				{% else %}
+					<div class="project-counter">
+						<span class="badge bg-primary rounded-pill">
+							nombre totale des projets :
+							{{ totalProjets }}</span>
+					</div>
+					<a href="#" class="btn-add-projet" style="opacity: 0.5; cursor: not-allowed; pointer-events: none;">
+						<i class="fas fa-plus"></i>Ajouter Projet
+					</a>
+				{% endif %}
+			</div>
+		</div>
 
-                            <div class="mt-3">
-                                {% if projet.status == constant('App\\Entity\\StatutProjet::IN_PROGRESS') %}
-                                    <span class="project-status bg-warning text-dark">En cours</span>
-                                {% else %}
-                                    <span class="project-status bg-success text-white">Terminé</span>
-                                {% endif %}
-                            </div>
+		{# Ajouter ceci juste après la div.page-header #}
+		<div id="notification-container" class="mb-4" style="display: none;">
+			<div class="alert alert-warning notification-alert" role="alert">
+				<div class="d-flex align-items-center">
+					<div class="me-3">
+						<i class="fas fa-exclamation-triangle fa-2x"></i>
+					</div>
+					<div>
+						<h5 class="notification-title mb-1"></h5>
+						<p class="notification-content mb-0"></p>
+					</div>
+					<button type="button" class="btn-close ms-auto" aria-label="Close" onclick="dismissNotification()"></button>
+				</div>
+			</div>
+		</div>
 
-                            <div style="margin-top: 10px;">
-                                <strong>Utilisateurs assignés :</strong>
-                                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px;">
-                                    {% for user in projet.assignedUsers %}
-                                        {% set initials = '' %}
-                                        {% if user.firstname and user.lastname %}
-                                            {% set initials = user.firstname|first|upper ~ user.lastname|first|upper %}
-                                        {% else %}
-                                            {% set initials = 'N/A' %}
-                                        {% endif %}
+		<div class="card">
+			<div class="card-body">
+				<div class="project-cards">
+					{% for projet in projets %}
+						<div class="project-card">
+							<div class="project-card-header">
+								{{ projet.name }}
+								<span style="float: right; font-size: 12px; background-color: rgba(255,255,255,0.3); padding: 2px 6px; border-radius: 4px;">{{ projet.abbreviation }}</span>
+							</div>
+							<div class="project-card-body">
+								<div class="project-description">
+									{{ projet.description|raw }}
+								</div>
 
-                                        {% set colors = ['#007bff', '#28a745', '#dc3545', '#ffc107', '#17a2b8'] %}
-                                        {% set color = colors[loop.index0 % colors|length] %}
+								<div class="mt-3">
+									{% if projet.status == constant('App\\Entity\\StatutProjet::IN_PROGRESS') %}
+										<span class="project-status bg-warning text-dark">En cours</span>
+									{% else %}
+										<span class="project-status bg-success text-white">Terminé</span>
+									{% endif %}
+								</div>
 
-                                        <div style="width: 35px; height: 35px; background-color: {{ color }}; color: white; display: flex; justify-content: center; align-items: center; border-radius: 50%; font-weight: bold; font-size: 13px;" title="{{ user.firstname }} {{ user.lastname }}">
-                                            {{ initials }}
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                            </div>
+								<div style="margin-top: 10px;">
+									<strong>Utilisateurs assignés :</strong>
+									<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px;">
+										{% for user in projet.assignedUsers %}
+											{% set initials = '' %}
+											{% if user.firstname and user.lastname %}
+												{% set initials = user.firstname|first|upper ~ user.lastname|first|upper %}
+											{% else %}
+												{% set initials = 'N/A' %}
+											{% endif %}
 
-                            <div class="project-dates">
-                                <div>
-                                    <i class="fas fa-calendar-alt text-primary"></i>
-                                    Début:
-                                    {{ projet.starterAt ? projet.starterAt|date('d/m/Y') : 'Non défini' }}
-                                </div>
-                                <div>
-                                    <i class="fas fa-calendar-check text-danger"></i>
-                                    Fin:
-                                    {{ projet.endDate ? projet.endDate|date('d/m/Y') : 'Non défini' }}
-                                </div>
-                            </div>
-                        </div>
-                        <div class="project-card-footer">
-                            <div class="project-card-actions">
-                                {# Nouvelle icône pour voir les détails #}
-                                <a href="{{ path('projet_details_card', { 'id': projet.id }) }}" title="Voir les détails">
-                                    <i class="fas fa-eye" style="color: #2196F3;"></i>
-                                </a>
-                                {% if is_granted('ROLE_CHEF_PROJET') %}
-                                    {# Boutons actifs pour les chefs de projet #}
-                                    <a href="{{ path('projet_edit_card', { 'id': projet.id }) }}" title="Modifier">
-                                        <i class="fas fa-edit" style="color: #4CAF50;"></i>
-                                    </a>
-                                    <form action="{{ path('projet_delete_card', {'id': projet.id, 'returnTo': 'list'}) }}" method="post" class="delete-form" style="display:inline;">
-                                        <button type="submit" style="border: none; background: none; padding: 0;">
-                                            <i class="fas fa-trash" title="Supprimer" style="color: #F44336; cursor: pointer;"></i>
-                                        </button>
-                                    </form>
-                                {% else %}
-                                    {# Boutons désactivés pour les employés #}
-                                    <a href="#" title="Modifier (Réservé aux chefs de projet)" style="opacity: 0.5; cursor: not-allowed; pointer-events: none;">
-                                        <i class="fas fa-edit" style="color: #4CAF50;"></i>
-                                    </a>
-                                    <span style="opacity: 0.5; cursor: not-allowed;">
-                                        <i class="fas fa-trash" title="Supprimer (Réservé aux chefs de projet)" style="color: #F44336;"></i>
-                                    </span>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                {% else %}
-                    <div class="col-12">
-                        <div class="alert alert-info">
-                            Aucun projet n'a été trouvé.
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-</div>
+											{% set colors = ['#007bff', '#28a745', '#dc3545', '#ffc107', '#17a2b8'] %}
+											{% set color = colors[loop.index0 % colors|length] %}
+
+											<div style="width: 35px; height: 35px; background-color: {{ color }}; color: white; display: flex; justify-content: center; align-items: center; border-radius: 50%; font-weight: bold; font-size: 13px;" title="{{ user.firstname }} {{ user.lastname }}">
+												{{ initials }}
+											</div>
+										{% endfor %}
+									</div>
+								</div>
+
+								<div class="project-dates">
+									<div>
+										<i class="fas fa-calendar-alt text-primary"></i>
+										Début:
+										{{ projet.starterAt ? projet.starterAt|date('d/m/Y') : 'Non défini' }}
+									</div>
+									<div>
+										<i class="fas fa-calendar-check text-danger"></i>
+										Fin:
+										{{ projet.endDate ? projet.endDate|date('d/m/Y') : 'Non défini' }}
+									</div>
+								</div>
+							</div>
+							<div class="project-card-footer">
+								<div
+									class="project-card-actions">
+									{# Nouvelle icône pour voir les détails #}
+									<a href="{{ path('projet_details_card', { 'id': projet.id }) }}" title="Voir les détails">
+										<i class="fas fa-eye" style="color: #2196F3;"></i>
+									</a>
+									{% if is_granted('ROLE_CHEF_PROJET') %}
+										{# Boutons actifs pour les chefs de projet #}
+										<a href="{{ path('projet_edit_card', { 'id': projet.id }) }}" title="Modifier">
+											<i class="fas fa-edit" style="color: #4CAF50;"></i>
+										</a>
+										<form action="{{ path('projet_delete_card', {'id': projet.id, 'returnTo': 'list'}) }}" method="post" class="delete-form" style="display:inline;">
+											<button type="submit" style="border: none; background: none; padding: 0;">
+												<i class="fas fa-trash" title="Supprimer" style="color: #F44336; cursor: pointer;"></i>
+											</button>
+										</form>
+									{% else %}
+										{# Boutons désactivés pour les employés #}
+										<a href="#" title="Modifier (Réservé aux chefs de projet)" style="opacity: 0.5; cursor: not-allowed; pointer-events: none;">
+											<i class="fas fa-edit" style="color: #4CAF50;"></i>
+										</a>
+										<span style="opacity: 0.5; cursor: not-allowed;">
+											<i class="fas fa-trash" title="Supprimer (Réservé aux chefs de projet)" style="color: #F44336;"></i>
+										</span>
+									{% endif %}
+								</div>
+							</div>
+						</div>
+					{% else %}
+						<div class="col-12">
+							<div class="alert alert-info">
+								Aucun projet n'a été trouvé.
+							</div>
+						</div>
+					{% endfor %}
+				</div>
+			</div>
+		</div>
+	</div>
 	<script>
 		document.addEventListener('DOMContentLoaded', function () { // Sélectionner tous les formulaires de suppression
 var deleteForms = document.querySelectorAll('.delete-form');
