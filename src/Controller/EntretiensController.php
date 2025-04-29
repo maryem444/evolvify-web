@@ -52,7 +52,7 @@ class EntretiensController extends AbstractController
 
         try {
             $email = (new Email())
-                ->from('cherif.sarra@esprit.tn')
+                ->from('maryemsassi.dev@gmail.com')
                 ->to($emailCandidat)
                 ->subject('Votre entretien')
                 ->html('
@@ -109,7 +109,7 @@ class EntretiensController extends AbstractController
 
         try {
             $email = (new Email())
-                ->from('cherif.sarra@esprit.tn')
+                ->from('maryemsassi.dev@gmail.com')
                 ->to($emailCandidat)
                 ->subject('Votre entretien')
                 ->html('
