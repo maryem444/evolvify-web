@@ -1,0 +1,410 @@
+<!-- Popup d'ajout d'abonnement -->
+<div class="modal fade" id="ajoutAbonnementModal" tabindex="-1" aria-labelledby="ajoutAbonnementLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ajoutAbonnementLabel">Ajouter un Abonnement</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <!-- Colonne du formulaire (à gauche) -->
+                    <div class="col-md-8">
+                        <form id="ajoutAbonnementForm">
+                            <!-- Vos champs de formulaire existants -->
+                            <div class="mb-3">
+                                <label for="type_Ab" class="form-label">Type</label>
+                                <select id="type_Ab" name="type_Ab" class="form-control">
+                                    <option value="Mensuel">Mensuel</option>
+                                    <option value="Trimestriel">Trimestriel</option>
+                                    <option value="Annuel">Annuel</option>
+                                </select>
+                            </div>
+
+                            <!-- Date de début automatiquement remplie -->
+                            <div class="mb-3">
+                                <label for="date_debut" class="form-label">Date de Début</label>
+                                <input type="text" id="date_debut" name="date_debut" class="form-control" readonly>
+                            </div>
+
+                            <!-- Date d'expiration -->
+                            <div class="mb-3">
+                                <label for="date_exp" class="form-label">Date d'Expiration</label>
+                                <input type="date" id="date_exp" name="date_exp" class="form-control" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="prix" class="form-label">Prix</label>
+                                <input type="number" id="prix" name="prix" class="form-control" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="id_employe" class="form-label">Employé</label>
+                                <input type="number" id="id_employe" name="id_employe" class="form-control" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="status" class="form-label">Statut</label>
+                                <select id="status" name="status" class="form-control">
+                                    <option value="ACTIF">ACTIF</option>
+                                    <option value="EXPIRE">EXPIRE</option>
+                                    <option value="SUSPENDU">SUSPENDU</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" class="btn btn-success">Enregistrer</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        </form>
+                    </div>
+
+                    <!-- Colonne pour le QR code (à droite) -->
+                    <div class="col-md-4">
+                        <div class="card p-3">
+                            <h6 class="text-center mb-2">QR Code Abonnement</h6>
+                            <div id="qrcode" class="text-center" style="min-height: 180px;"></div>
+                            <p class="text-center small mt-2">Ce QR code contient les informations de l'abonnement</p>
+                            <button id="downloadQRCode" class="btn btn-primary mt-2">
+                                <i class="fas fa-download"></i> Télécharger QR Code
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Inclure la bibliothèque QRCode.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script>
+// Variable pour stocker l'instance QR code
+let qrCodeInstance = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("Document chargé, configuration des écouteurs...");
+    
+    // Observer l'ouverture de la modal
+    const modalElement = document.getElementById('ajoutAbonnementModal');
+    if (modalElement) {
+        modalElement.addEventListener('shown.bs.modal', function() {
+            console.log("Modal ouverte");
+            initializeQRSystem();
+        });
+    }
+    
+    // Initialiser le système immédiatement si la modal est déjà ouverte
+    if (modalElement && modalElement.classList.contains('show')) {
+        initializeQRSystem();
+    }
+
+    // Gérer la soumission du formulaire
+    const form = document.getElementById('ajoutAbonnementForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            console.log("Formulaire soumis");
+            
+            // Code de traitement du formulaire existant...
+            const formData = new FormData(this);
+            console.log("Données du formulaire:", Array.from(formData.entries()));
+            
+            // Convertir la date du format DD/MM/YYYY au format YYYY-MM-DD pour le backend
+            const dateDebutInput = formData.get('date_debut');
+            if (dateDebutInput) {
+                const dateParts = dateDebutInput.split('/');
+                if (dateParts.length === 3) {
+                    const formattedDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+                    formData.set('date_debut', formattedDate);
+                }
+            }
+            
+            // Remplacez cette URL par l'URL réelle de votre endpoint d'API
+            fetch('/abonnement/new', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                console.log("Status de la réponse:", response.status);
+                
+                // Le reste du code de traitement de la réponse...
+                if (response.redirected) {
+                    window.location.href = response.url;
+                    return;
+                }
+                
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        try {
+                            return JSON.parse(text);
+                        } catch (e) {
+                            console.error("Réponse non-JSON reçue:", text);
+                            throw new Error('Erreur serveur: ' + response.status + ' ' + text.substring(0, 100));
+                        }
+                    });
+                }
+                
+                return response.text().then(text => {
+                    try {
+                        return JSON.parse(text);
+                    } catch (e) {
+                        if (text.includes('<html')) {
+                            window.location.href = '/abonnement';
+                            return { success: true };
+                        }
+                        return { message: text };
+                    }
+                });
+            })
+            .then(data => {
+                console.log("Données reçues:", data);
+                
+                if (data.success) {
+                    alert('Abonnement ajouté avec succès');
+                    window.location.href = '/abonnement';
+                } else if (data.error) {
+                    alert('Erreur: ' + data.error);
+                } else if (data.message) {
+                    alert('Message: ' + data.message);
+                    if (data.message.toLowerCase().includes('succès')) {
+                        window.location.href = '/abonnement';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Erreur lors de la requête:', error);
+                alert('Une erreur s\'est produite: ' + error.message);
+            });
+        });
+    }
+});
+
+function setCurrentDate() {
+    // Obtenir la date actuelle
+    const currentDate = new Date();
+    
+    // Format de la date au format "DD/MM/YYYY"
+    const day = String(currentDate.getDate()).padStart(2, '0');
+    const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+    const year = currentDate.getFullYear();
+    
+    const formattedDate = `${day}/${month}/${year}`;
+    
+    // Essayer de trouver le champ de date de début de différentes manières
+    // 1. Par ID exact
+    const dateField = document.getElementById('date_debut');
+    
+    // 2. Par sélecteur de champ dans le formulaire
+    if (!dateField || dateField.value === '') {
+        const dateFields = document.querySelector('#ajoutAbonnementForm input[name="date_debut"]');
+        if (dateFields) dateFields.value = formattedDate;
+    } else {
+        dateField.value = formattedDate;
+    }
+    
+    // 3. Par tous les champs sous "Date de Début"
+    const dateLabels = document.querySelectorAll('label');
+    dateLabels.forEach(label => {
+        if (label.textContent.includes('Date de Début')) {
+            const nextInput = label.nextElementSibling;
+            if (nextInput && nextInput.tagName === 'INPUT') {
+                nextInput.value = formattedDate;
+            }
+            
+            // Essayer de trouver le champ dans le même groupe
+            const parent = label.parentElement;
+            if (parent) {
+                const inputs = parent.querySelectorAll('input');
+                inputs.forEach(input => {
+                    input.value = formattedDate;
+                });
+            }
+        }
+    });
+}
+
+
+
+function checkRequiredFields() {
+    const requiredFields = ['date_exp', 'prix', 'id_employe'];
+    return requiredFields.every(id => {
+        const value = document.getElementById(id)?.value;
+        return value !== undefined && value !== '';
+    });
+}
+
+function generateQRCode() {
+    try {
+        console.log("Tentative de génération du QR code...");
+        
+        // Récupérer les valeurs du formulaire
+        const type = document.getElementById('type_Ab').value;
+        const dateDebut = document.getElementById('date_debut').value;
+        const dateExp = document.getElementById('date_exp').value;
+        const prix = document.getElementById('prix').value;
+        const idEmploye = document.getElementById('id_employe').value;
+        const status = document.getElementById('status').value;
+        
+        // Créer un format compact mais lisible
+        const qrText = `ABONNEMENT\n` +
+                       `Type:${type.substring(0, 3)}\n` + // 3 premiers caractères
+                       `Debut:${dateDebut.replace(/\//g, '')}\n` + // Supprime les /
+                       `Exp:${dateExp.replace(/\//g, '')}\n` + // Supprime les /
+                       `Prix:${prix}\n` +
+                       `Emp:${idEmploye}\n` +
+                       `Statut:${status.substring(0, 1)}`; // 1er caractère
+        
+        console.log("Texte compressé pour QR code:", qrText);
+        
+        const qrContainer = document.getElementById('qrcode');
+        if (!qrContainer) {
+            console.error("Conteneur QR code non trouvé");
+            return;
+        }
+        
+        // Effacer le QR code existant
+        qrContainer.innerHTML = '';
+        
+        if (typeof QRCode === 'undefined') {
+            console.error("La bibliothèque QRCode n'est pas disponible");
+            qrContainer.innerHTML = '<div class="alert alert-danger">Bibliothèque QR Code non chargée</div>';
+            return;
+        }
+        
+        // Créer le nouveau QR code avec correction d'erreur maximale
+        qrCodeInstance = new QRCode(qrContainer, {
+            text: qrText,
+            width: 180,
+            height: 180,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+        
+        console.log("QR code généré avec succès");
+    } catch (error) {
+        console.error("Erreur lors de la génération du QR code:", error);
+        const qrContainer = document.getElementById('qrcode');
+        if (qrContainer) {
+            qrContainer.innerHTML = `<div class="alert alert-danger">Erreur: ${error.message}</div>`;
+        }
+    }
+}
+
+function setupQRCodeDownload() {
+    const downloadBtn = document.getElementById('downloadQRCode');
+    if (!downloadBtn) return;
+    
+    downloadBtn.addEventListener('click', function() {
+        try {
+            const qrCodeCanvas = document.querySelector('#qrcode canvas');
+            if (!qrCodeCanvas) {
+                alert('Veuillez d\'abord générer un QR code');
+                return;
+            }
+            
+            const dataURL = qrCodeCanvas.toDataURL('image/png');
+            const type = document.getElementById('type_Ab').value || 'Abonnement';
+            const dateDebut = document.getElementById('date_debut').value?.replace(/\//g, '-') || 'date';
+            
+            const downloadLink = document.createElement('a');
+            downloadLink.href = dataURL;
+            downloadLink.download = `QRCode_${type}_${dateDebut}.png`;
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        } catch (error) {
+            console.error("Erreur lors du téléchargement:", error);
+            alert("Erreur lors du téléchargement: " + error.message);
+        }
+    });
+}
+
+function initializeDefaultValues() {
+    const typeSelect = document.getElementById('type_Ab');
+    const dateExpField = document.getElementById('date_exp');
+    const prixField = document.getElementById('prix');
+    
+    if (typeSelect && dateExpField) {
+        const currentDate = new Date();
+        let expDate = new Date(currentDate);
+        
+        switch(typeSelect.value) {
+            case 'Mensuel':
+                expDate.setMonth(expDate.getMonth() + 1);
+                if (prixField && !prixField.value) prixField.value = '30';
+                break;
+            case 'Trimestriel':
+                expDate.setMonth(expDate.getMonth() + 3);
+                if (prixField && !prixField.value) prixField.value = '80';
+                break;
+            case 'Annuel':
+                expDate.setFullYear(expDate.getFullYear() + 1);
+                if (prixField && !prixField.value) prixField.value = '300';
+                break;
+        }
+        
+        if (!dateExpField.value) {
+            const day = String(expDate.getDate()).padStart(2, '0');
+            const month = String(expDate.getMonth() + 1).padStart(2, '0');
+            const year = expDate.getFullYear();
+            dateExpField.value = `${day}/${month}/${year}`;
+        }
+    }
+    
+    if (!document.getElementById('id_employe').value) {
+        document.getElementById('id_employe').value = '1';
+    }
+     // Ajouter un écouteur pour ajuster automatiquement les champs quand le type change
+    typeSelect.addEventListener('change', initializeDefaultValues);
+}
+
+function initializeQRSystem() {
+    console.log("Initialisation du système QR code...");
+    
+    setCurrentDate();
+    initializeDefaultValues();
+     generateQRCode();
+    setupQRCodeDownload();
+    
+    // Générer le QR code initial
+    if (checkRequiredFields()) {
+        generateQRCode();
+    }
+    
+    // Écouter les changements dans le formulaire
+    const formInputs = document.querySelectorAll('#ajoutAbonnementForm input, #ajoutAbonnementForm select');
+    formInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            if (checkRequiredFields()) {
+                generateQRCode();
+            }
+        });
+        
+        if (input.type === 'text' || input.type === 'number' || input.type === 'date') {
+            input.addEventListener('input', function() {
+                clearTimeout(input.timeout);
+                input.timeout = setTimeout(function() {
+                    if (checkRequiredFields()) {
+                        generateQRCode();
+                    }
+                }, 500);
+            });
+        }
+    });
+    
+    // Mettre à jour quand le type change
+    const typeSelect = document.getElementById('type_Ab');
+    if (typeSelect) {
+        typeSelect.addEventListener('change', function() {
+            initializeDefaultValues();
+            if (checkRequiredFields()) {
+                generateQRCode();
+            }
+        });
+    }
+}
+</script>

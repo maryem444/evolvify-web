@@ -274,7 +274,11 @@ class ProfileController extends AbstractController
     public function showProfile(User $user, Security $security): Response
     {
         $currentUser = $security->getUser();
-        $isOwnProfile = ($currentUser && $currentUser->getId() === $user->getId());
+    
+        $isOwnProfile = false;
+        if ($currentUser instanceof User) {
+            $isOwnProfile = ($currentUser->getId() === $user->getId());
+        }
     
         $photoForm = $this->createForm(ProfilePhotoType::class, $user);
     
@@ -284,6 +288,7 @@ class ProfileController extends AbstractController
             'isOwnProfile' => $isOwnProfile,
         ]);
     }
+    
     
     #[Route('/logout', name: 'app_logout')]
     public function logout(): void

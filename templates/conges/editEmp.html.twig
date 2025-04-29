@@ -1,0 +1,200 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier Demande de Congé{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="margin-top: 6rem;">
+    
+    {# Affichage des messages flash #}
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ label == 'error' ? 'danger' : label }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-warning text-white">
+                    <h4 class="mb-0">Modifier Demande de Congé</h4>
+                </div>
+                <div class="card-body">
+                    <form action="{{ path('app_employe_conge_edit', {'id': conge.id}) }}" method="post" id="editCongeForm" novalidate>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="type" class="form-label">Type de Congé <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="type" name="type" required>
+                                        <option value="">Sélectionner un type</option>
+                                        {% for value, label in types %}
+                                            <option value="{{ value }}" {% if conge.type and conge.type.value == value %}selected{% endif %}>{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="invalid-feedback">
+                                        Le type de congé est obligatoire.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="reason" class="form-label">Raison <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="reason" name="reason" required>
+                                        <option value="">Sélectionner une raison</option>
+                                        {% for value, label in reasons %}
+                                            <option value="{{ value }}" {% if conge.reason and conge.reason.value == value %}selected{% endif %}>{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="invalid-feedback">
+                                        La raison du congé est obligatoire.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="leaveStart" class="form-label">Date de début <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="leaveStart" name="leaveStart" value="{{ conge.leaveStart|date('Y-m-d') }}" required>
+                                    <div class="invalid-feedback">
+                                        La date de début est obligatoire et doit être une date valide.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="leaveEnd" class="form-label">Date de fin <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="leaveEnd" name="leaveEnd" value="{{ conge.leaveEnd|date('Y-m-d') }}" required>
+                                    <div class="invalid-feedback">
+                                        La date de fin est obligatoire, doit être une date valide et postérieure à la date de début.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description / Commentaire</label>
+                            <textarea class="form-control" id="description" name="description" rows="4">{{ conge.description }}</textarea>
+                            <div class="form-text">Veuillez fournir des détails supplémentaires si nécessaire.</div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Statut actuel</label>
+                                <div>
+                                    {% if conge.status %}
+                                        <span class="badge rounded-pill bg-{{ conge.status.value == 'ACCEPTE' ? 'success' : (conge.status.value == 'REFUSE' ? 'danger' : (conge.status.value == 'EN_COURS' ? 'warning' : 'secondary')) }} p-2">
+                                            {{ conge.status.label }}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge rounded-pill bg-secondary p-2">Non défini</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Jours calculés</label>
+                                <div>
+                                    <span class="badge bg-info p-2">{{ conge.numberOfDays }} jour(s)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{{ path('app_employe_conge_index') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i> Retour
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-1"></i> Enregistrer
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    .card {
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .card-header {
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+    }
+    .text-danger {
+        color: #dc3545 !important;
+    }
+    .is-invalid {
+        border-color: #dc3545 !important;
+    }
+    .badge {
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const leaveStartInput = document.getElementById('leaveStart');
+        const leaveEndInput = document.getElementById('leaveEnd');
+        const form = document.getElementById('editCongeForm');
+        
+        // Set minimum date to today for new requests
+        // For existing requests, let's allow dates in the past in case we need to correct them
+        // const today = new Date().toISOString().split('T')[0];
+        // leaveStartInput.setAttribute('min', today);
+        
+        // Update end date minimum when start date changes
+        leaveStartInput.addEventListener('change', function() {
+            leaveEndInput.setAttribute('min', leaveStartInput.value);
+            if (leaveEndInput.value && new Date(leaveEndInput.value) < new Date(leaveStartInput.value)) {
+                leaveEndInput.value = leaveStartInput.value;
+            }
+        });
+
+        // Custom client-side validation
+        form.addEventListener('submit', function(event) {
+            let isValid = true;
+            const requiredFields = form.querySelectorAll('[required]');
+            
+            // Reset previous validation state
+            requiredFields.forEach(field => {
+                field.classList.remove('is-invalid');
+            });
+            
+            // Validate required fields
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    field.classList.add('is-invalid');
+                    isValid = false;
+                }
+            });
+            
+            // Validate date range
+            if (leaveStartInput.value && leaveEndInput.value) {
+                const startDate = new Date(leaveStartInput.value);
+                const endDate = new Date(leaveEndInput.value);
+                
+                if (endDate < startDate) {
+                    leaveEndInput.classList.add('is-invalid');
+                    isValid = false;
+                }
+            }
+            
+            if (!isValid) {
+                event.preventDefault();
+            }
+        });
+    });
+</script>
+{% endblock %}

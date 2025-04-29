@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Formulaire avec carte</title>
+    <!-- Ajout des ressources Leaflet -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+    <!-- Ajouter le plugin de routage Leaflet -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.min.js"></script>
+    <style>
+        .form-map-container {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .form-container {
+            flex: 1;
+            min-width: 300px;
+            padding-right: 15px;
+        }
+        .map-container {
+            flex: 1;
+            min-width: 300px;
+            height: 400px;
+        }
+        #map {
+            height: 100%;
+            width: 100%;
+            border-radius: 5px;
+        }
+        .route-info {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        /* Supprimer l'aspect grisé des champs en lecture seule */
+        input[readonly] {
+            background-color: #fff !important;
+            cursor: not-allowed;
+        }
+        /* Ajouter une classe pour les alertes */
+        .alert {
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+            color: #721c24;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Popup d'ajout de trajet -->
+<div class="modal fade" id="ajoutTrajetModal" tabindex="-1" aria-labelledby="ajoutTrajetLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ajoutTrajetLabel">Ajouter un Trajet</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-map-container">
+                    <div class="form-container">
+                        <form id="ajoutTrajetForm" method="POST">
+                            <div class="mb-3">
+                                <label for="point_dep" class="form-label">Point de départ</label>
+                                <input type="text" id="point_dep" name="point_dep" class="form-control" required autofocus placeholder="Ex: Nabeul">
+                            </div>
+                            <div class="mb-3">
+                                <label for="point_arr" class="form-label">Point d'arrivée</label>
+                                <input type="text" id="point_arr" name="point_arr" class="form-control" required placeholder="Ex: Ariana">
+                            </div>
+                            <div class="mb-3">
+                                <label for="distance" class="form-label">Distance (en km)</label>
+                                <input type="number" id="distance" name="distance" class="form-control" step="0.01" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="durée_estimé" class="form-label">Durée estimée</label>
+                                <input type="time" id="durée_estimé" name="durée_estimé" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="id_moyen" class="form-label">Moyen de Transport</label>
+                                <select id="id_moyen" name="id_moyen" class="form-control" required>
+                                {% for moyen in moyentransport %}
+                                    <option value="{{ moyen.id_moyen }}">{{ moyen.type_moyen }} ({{ moyen.immatriculation }})</option>
+                                {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="id_employe" class="form-label">Employé</label>
+                                <input type="number" id="id_employe" name="id_employe" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="status" class="form-label">Statut</label>
+                                <select id="status" name="status" class="form-control">
+                                     <option value="PLANIFIE">PLANIFIE</option>
+                                    <option value="EN_COURS">En Cours</option>
+                                    <option value="TERMINE">Terminé</option>
+                                    <option value="ANNULE">Annulé</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Ajouter</button>
+                        </form>
+                    </div>
+                    <div class="map-container">
+                        <div id="map"></div>
+                        <div class="route-info" id="route-info">
+                            Entrez le point de départ et d'arrivée pour voir le trajet.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Variable globale pour la carte
+var map = null;
+var routingControl = null;
+
+// Initialiser la carte uniquement quand la modale est ouverte
+function initMap() {
+    if (map !== null) {
+        // Si la carte existe déjà, juste invalidate size pour la redimensionner
+        map.invalidateSize();
+        return;
+    }
+    
+    // Initialisation de la carte centrée sur la Tunisie
+    map = L.map('map').setView([36.8065, 10.1815], 8); // Tunis comme centre par défaut
+
+    // Ajout de la couche OpenStreetMap
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+    
+    console.log("Carte initialisée");
+}
+
+// Fonction pour calculer directement la route
+function directRoute(startLat, startLng, endLat, endLng) {
+    console.log("Calcul d'itinéraire entre:", [startLat, startLng], "et", [endLat, endLng]);
+    
+    // Vérifier que la carte est initialisée
+    if (!map) {
+        console.error("Carte non initialisée, impossible de calculer l'itinéraire");
+        return;
+    }
+    
+    // Supprimer le contrôle de routage précédent s'il existe
+    if (routingControl) {
+        map.removeControl(routingControl);
+    }
+    
+    // Créer un nouveau contrôle de routage
+    routingControl = L.Routing.control({
+        waypoints: [
+            L.latLng(startLat, startLng),
+            L.latLng(endLat, endLng)
+        ],
+        router: new L.Routing.OSRMv1({
+            serviceUrl: 'https://routing.openstreetmap.de/routed-car/route/v1',
+            profile: 'car'
+        }),
+        lineOptions: {
+            styles: [{ color: '#3388ff', opacity: 0.7, weight: 6 }]
+        },
+        showAlternatives: false,
+        fitSelectedRoutes: true,
+        show: false // Ne pas montrer les instructions de l'itinéraire
+    }).addTo(map);
+    
+    // Attendez que l'itinéraire soit calculé
+    routingControl.on('routesfound', function(e) {
+        console.log("Route trouvée:", e);
+        var routes = e.routes;
+        var summary = routes[0].summary;
+        
+        // Mettre à jour les champs du formulaire
+        document.getElementById('distance').value = (summary.totalDistance / 1000).toFixed(2);
+        
+        // Formater la durée estimée
+        var totalSeconds = summary.totalTime;
+        var hours = Math.floor(totalSeconds / 3600);
+        var minutes = Math.floor((totalSeconds % 3600) / 60);
+        
+        document.getElementById('durée_estimé').value = 
+            (hours < 10 ? '0' + hours : hours) + ':' + 
+            (minutes < 10 ? '0' + minutes : minutes);
+        
+        // Afficher les informations de l'itinéraire
+        document.getElementById('route-info').innerHTML = 
+            '<strong>Distance:</strong> ' + (summary.totalDistance / 1000).toFixed(2) + ' km<br>' +
+            '<strong>Durée estimée:</strong> ' + hours + 'h ' + minutes + 'min';
+    });
+    
+    // Gérer les erreurs
+    routingControl.on('routingerror', function(e) {
+        console.error("Erreur de routage:", e);
+        document.getElementById('route-info').innerHTML = 
+            '<div class="alert">Erreur lors du calcul de l\'itinéraire. Vérifiez les adresses ou essayez des lieux plus précis.</div>';
+    });
+}
+
+// Fonction pour géocoder une adresse avec le contexte de la Tunisie
+function geocodeTunisia(address, callback) {
+    // Ajouter "Tunisie" à la recherche si ce n'est pas déjà inclus
+    if (!address.toLowerCase().includes('tunisie')) {
+        address += ', Tunisie';
+    }
+    
+    console.log("Recherche d'adresse:", address);
+    
+    // Utiliser l'API Nominatim pour le géocodage
+    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1&countrycodes=tn`)
+        .then(response => response.json())
+        .then(data => {
+            if (data && data.length > 0) {
+                console.log("Adresse trouvée:", data[0]);
+                callback(null, {
+                    lat: parseFloat(data[0].lat),
+                    lng: parseFloat(data[0].lon),
+                    name: data[0].display_name
+                });
+            } else {
+                console.error("Adresse non trouvée:", address);
+                callback("Adresse non trouvée: " + address);
+            }
+        })
+        .catch(error => {
+            console.error("Erreur de géocodage:", error);
+            callback("Erreur de géocodage: " + error);
+        });
+}
+
+// Fonction pour mettre à jour l'itinéraire quand les points changent
+function updateRoute() {
+    var pointDep = document.getElementById('point_dep').value.trim();
+    var pointArr = document.getElementById('point_arr').value.trim();
+    
+    // Vérifier si les deux champs sont remplis
+    if (!pointDep || !pointArr) {
+        return;
+    }
+    
+    // Vérifier que la carte est initialisée
+    if (!map) {
+        console.error("Carte non initialisée, impossible de mettre à jour l'itinéraire");
+        return;
+    }
+    
+    document.getElementById('route-info').innerHTML = "Recherche de l'itinéraire...";
+    
+    // Géocoder le point de départ
+    geocodeTunisia(pointDep, function(errDep, resultDep) {
+        if (errDep) {
+            document.getElementById('route-info').innerHTML = 
+                '<div class="alert">Erreur: ' + errDep + '</div>';
+            return;
+        }
+        
+        // Géocoder le point d'arrivée
+        geocodeTunisia(pointArr, function(errArr, resultArr) {
+            if (errArr) {
+                document.getElementById('route-info').innerHTML = 
+                    '<div class="alert">Erreur: ' + errArr + '</div>';
+                return;
+            }
+            
+            // Calculer l'itinéraire entre les deux points
+            directRoute(resultDep.lat, resultDep.lng, resultArr.lat, resultArr.lng);
+        });
+    });
+}
+
+// Attendre que le DOM soit complètement chargé
+document.addEventListener('DOMContentLoaded', function() {
+    // Récupérer les références aux champs du formulaire
+    var depField = document.getElementById('point_dep');
+    var arrField = document.getElementById('point_arr');
+    
+    // Créer un délai pour éviter trop d'appels API pendant la saisie
+    var typingTimer;
+    var doneTypingInterval = 1000; // 1 seconde
+    
+    // Ajouter les écouteurs d'événements seulement si les éléments existent
+    if (depField && arrField) {
+        depField.addEventListener('keyup', function() {
+            clearTimeout(typingTimer);
+            if (depField.value && arrField.value) {
+                typingTimer = setTimeout(updateRoute, doneTypingInterval);
+            }
+        });
+        
+        arrField.addEventListener('keyup', function() {
+            clearTimeout(typingTimer);
+            if (depField.value && arrField.value) {
+                typingTimer = setTimeout(updateRoute, doneTypingInterval);
+            }
+        });
+        
+        // Exécuter aussi lors de la perte de focus
+        depField.addEventListener('blur', function() {
+            if (depField.value && arrField.value) {
+                clearTimeout(typingTimer);
+                updateRoute();
+            }
+        });
+        
+        arrField.addEventListener('blur', function() {
+            if (depField.value && arrField.value) {
+                clearTimeout(typingTimer);
+                updateRoute();
+            }
+        });
+    }
+    
+    // Gestion de la soumission du formulaire
+    var form = document.getElementById('ajoutTrajetForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            
+            const formData = new FormData(this);
+        
+            fetch('{{ path('trajet_new') }}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error || 'Une erreur est survenue lors de l\'ajout du trajet.');
+                } else {
+                    alert('Trajet ajouté avec succès');
+                    document.getElementById('ajoutTrajetForm').reset();
+                    document.getElementById('route-info').innerHTML = "Entrez le point de départ et d'arrivée pour voir le trajet.";
+                    if (routingControl && map) {
+                        map.removeControl(routingControl);
+                        routingControl = null;
+                    }
+                    var modal = bootstrap.Modal.getInstance(document.getElementById('ajoutTrajetModal'));
+                    if (modal) modal.hide();
+                    location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                alert('Une erreur est survenue lors de la requête.');
+            });
+        });
+    }
+    
+    // S'assurer que la carte est correctement chargée à l'ouverture de la modale
+    var modal = document.getElementById('ajoutTrajetModal');
+    if (modal) {
+        modal.addEventListener('shown.bs.modal', function () {
+            // Initialiser la carte lorsque la modal est affichée
+            setTimeout(function() {
+                initMap();
+                
+                // Test des valeurs existantes
+                if (depField && arrField && depField.value && arrField.value) {
+                    updateRoute();
+                }
+            }, 300); // Attendre un peu plus longtemps pour que la modale soit complètement affichée
+        });
+    }
+    
+    // Pour la première ouverture de la page, vérifier si la modale est déjà visible
+    if (modal && window.getComputedStyle(modal).display !== 'none') {
+        setTimeout(initMap, 300);
+    }
+});
+</script>
+</body>
+</html>

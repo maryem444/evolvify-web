@@ -1,0 +1,191 @@
+<!-- Popup d'édition d'abonnement -->
+<div class="modal fade" id="editAbonnementModal" tabindex="-1" aria-labelledby="editAbonnementLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editAbonnementLabel">Modifier un Abonnement</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editAbonnementForm" method="POST">
+                    <input type="hidden" name="id_Ab" id="id_Ab">
+                    
+                    <div class="mb-3">
+                        <label for="type_Ab" class="form-label">Type</label>
+                        <select id="type_Ab" name="type_Ab" class="form-control">
+                            <option value="Mensuel">Mensuel</option>
+                            <option value="Trimestriel">Trimestriel</option>
+                            <option value="Annuel">Annuel</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="date_debut" class="form-label">Date de Début</label>
+                        <input type="date" class="form-control" name="date_debut" id="date_debut" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="date_exp" class="form-label">Date d'Expiration</label>
+                        <input type="date" class="form-control" name="date_exp" id="date_exp" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="prix" class="form-label">Prix</label>
+                        <input type="number" class="form-control" name="prix" id="prix" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_employe" class="form-label">Employé</label>
+                        <input type="number" class="form-control" name="id_employe" id="id_employe" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Statut</label>
+                        <select name="status" id="status" class="form-control">
+                            <option value="ACTIF">ACTIF</option>
+                            <option value="EXPIRE">EXPIRE</option>
+                            <option value="SUSPENDU">SUSPENDU</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Mettre à jour</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" aria-label="Close">Annuler</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function formatDateForInput(date) {
+    if (!date) return '';
+    
+    // Si la date est une chaîne au format YYYY-MM-DD, la retourner directement
+    if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        return date;
+    }
+    
+    // Créer un objet Date
+    const d = new Date(date);
+    
+    // Vérifier si la date est valide
+    if (isNaN(d.getTime())) {
+        console.error('Date invalide:', date);
+        return '';
+    }
+    
+    // Formater au format YYYY-MM-DD
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+// Événement lors de l'ouverture de la modal d'édition
+document.getElementById('editAbonnementModal').addEventListener('show.bs.modal', function (event) {
+    // Bouton qui a déclenché la modal
+    const button = event.relatedTarget;
+    
+    // Récupérer l'ID de l'abonnement depuis l'attribut data-*
+    const id = button.getAttribute('data-id');
+    
+    // Réinitialiser le formulaire pour éviter de conserver des données précédentes
+    document.getElementById('editAbonnementForm').reset();
+    
+    // Si un ID est présent, charger les données de l'abonnement
+    if (id) {
+        fetch(`/abonnement/${id}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Réponse réseau incorrecte');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Données reçues:', data); // Débogage
+                
+                // Remplir le formulaire avec les données reçues
+                document.getElementById('id_Ab').value = data.id_Ab;
+                document.getElementById('type_Ab').value = data.type_Ab;
+                
+                // Supprimer le readonly pour permettre l'édition temporairement
+                const dateDebutInput = document.getElementById('date_debut');
+                dateDebutInput.removeAttribute('readonly');
+                
+                // Formater et définir les dates
+                const dateDebut = formatDateForInput(data.date_debut);
+                const dateExp = formatDateForInput(data.date_exp);
+                
+                console.log('Date de début formatée:', dateDebut); // Débogage
+                console.log('Date d\'expiration formatée:', dateExp); // Débogage
+                
+                // Définir les valeurs après un court délai pour s'assurer que le DOM est prêt
+                setTimeout(() => {
+                    document.getElementById('date_debut').value = dateDebut;
+                    document.getElementById('date_exp').value = dateExp;
+                    
+                    // Remettre readonly après avoir défini la valeur si nécessaire
+                    if (data.id_Ab) {
+                        dateDebutInput.setAttribute('readonly', 'readonly');
+                    }
+                    
+                    document.getElementById('prix').value = data.prix;
+                    document.getElementById('id_employe').value = data.id_employe;
+                    document.getElementById('status').value = data.status;
+                }, 50);
+            })
+            .catch(error => {
+                console.error('Erreur lors du chargement des données:', error);
+                alert('Erreur lors du chargement des données de l\'abonnement');
+            });
+    } else {
+        // Si nouvel abonnement, définir la date de début à aujourd'hui
+        const today = new Date();
+        setTimeout(() => {
+            document.getElementById('date_debut').value = formatDateForInput(today);
+        }, 50);
+    }
+});
+
+// Gestion de la soumission du formulaire d'édition
+document.getElementById('editAbonnementForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const id = document.getElementById('id_Ab').value;
+    const formData = new FormData(this);
+    
+    // Vérifier que les dates ne sont pas vides avant de soumettre
+    const dateDebut = document.getElementById('date_debut').value;
+    const dateExp = document.getElementById('date_exp').value;
+    
+    if (!dateDebut || !dateExp) {
+        alert('Les dates ne peuvent pas être vides');
+        return;
+    }
+    
+    fetch(`/abonnement/edit/${id}`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Erreur lors de la soumission du formulaire');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.error) {
+            alert(data.error);
+        } else {
+            alert('Abonnement mis à jour avec succès');
+            // Fermer la modal et rafraîchir la page
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editAbonnementModal'));
+            modal.hide();
+            location.reload();
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        alert('Une erreur est survenue lors de la mise à jour');
+    });
+});
+</script>

@@ -3,18 +3,19 @@
 namespace App\Controller;
 
 use App\Entity\User;
-use App\Entity\Project;
-use App\Entity\Task;
+use App\Entity\Projet;
+use App\Entity\Tache;
+use App\Entity\Conge;
 use App\Entity\Absence;
-use App\Repository\EmployeeRepository;
-use App\Repository\ProjectRepository;
-use App\Repository\TaskRepository;
-use App\Repository\AbsenceRepository;
+use App\Entity\Abonnement;
+use App\Entity\MoyenTransport;
+use App\Entity\StatutProjet;
+use App\Entity\StatutTache;
+use App\Entity\CongeStatus;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Http\Attribute\CurrentUser;
 
 class DashboardController extends AbstractController
 {
@@ -22,59 +23,104 @@ class DashboardController extends AbstractController
     public function index(
         EntityManagerInterface $entityManager
     ): Response {
-        // Ensure user is fully authenticated (uses session)
-        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+        // Ensure user is fully authenticated and has admin role
+        $this->denyAccessUnlessGranted('ROLE_RESPONSABLE_RH');
         
         // Get current user
         $user = $this->getUser();
         
         // Get repositories
-        $employeeRepository = $entityManager->getRepository(User::class);
-        $projectRepository = $entityManager->getRepository(Project::class);
-        $taskRepository = $entityManager->getRepository(Task::class);
+        $userRepository = $entityManager->getRepository(User::class);
+        $projetRepository = $entityManager->getRepository(Projet::class);
+        $tacheRepository = $entityManager->getRepository(Tache::class);
+        $congeRepository = $entityManager->getRepository(Conge::class);
         $absenceRepository = $entityManager->getRepository(Absence::class);
+        $abonnementRepository = $entityManager->getRepository(Abonnement::class);
+        $transportRepository = $entityManager->getRepository(MoyenTransport::class);
         
         // Get counts for statistics cards
-        $employeCount = $employeeRepository->count([]);
-        $projectCount = $projectRepository->count([]);
-        $taskCount = $taskRepository->count([]);
+        $employeeCount = $userRepository->count([]);
+        $projectCount = $projetRepository->count([]);
+        $taskCount = $tacheRepository->count([]);
+        $congeCount = $congeRepository->count([]);
         $absenceCount = $absenceRepository->count([]);
+        $abonnementCount = $abonnementRepository->count([]);
+        $transportCount = $transportRepository->count([]);
+
+        // Get recent users (last 6)
+        $recentEmployees = $userRepository->findBy(
+            [], 
+            ['id' => 'DESC'],
+            6
+        );
 
         // Get recent projects (last 5)
-        $recentProjects = $projectRepository->findBy(
+        $recentProjects = $projetRepository->findBy(
             [], 
-            ['id' => 'DESC'], // Assuming newer projects have higher IDs
+            ['id_projet' => 'DESC'],
             5
         );
 
-        // Get project status counts (adapt field names to your actual schema)
-        $plannedProjects = $projectRepository->count(['status' => 'IN_PROGRESS']) ?? 0;
-        $inProgressProjects = $projectRepository->count(['status' => 'COMPLETED']) ?? 0;
+        // Get project status distribution - matching template keys
+        $projectsByStatus = [
+            'EN_COURS' => $projetRepository->count(['status' => StatutProjet::IN_PROGRESS]) ?? 0,
+            'COMPLETE' => $projetRepository->count(['status' => StatutProjet::COMPLETED]) ?? 0,
+        ];
 
-        // Get upcoming absences
+        // Get task status distribution - matching template keys
+        $tasksByStatus = [
+            'A_FAIRE' => $tacheRepository->count(['status' => StatutTache::TO_DO]) ?? 0,
+            'EN_COURS' => $tacheRepository->count(['status' => StatutTache::IN_PROGRESS]) ?? 0,
+            'TERMINE' => $tacheRepository->count(['status' => StatutTache::DONE]) ?? 0,
+        ];
+
+        // Get leave status distribution - matching template keys
+        $congesByStatus = [
+            'APPROUVE' => $congeRepository->count(['statusString' => CongeStatus::ACCEPTE->value]) ?? 0,
+            'EN_ATTENTE' => $congeRepository->count(['statusString' => CongeStatus::EN_COURS->value]) ?? 0,
+            'REFUSE' => $congeRepository->count(['statusString' => CongeStatus::REFUSE->value]) ?? 0,
+        ];
+
+        // Get upcoming leaves (next 5)
         $today = new \DateTime();
-        $upcomingAbsences = $absenceRepository->createQueryBuilder('a')
-            ->where('a.startDate >= :today')
+        $upcomingConges = $congeRepository->createQueryBuilder('c')
+            ->where('c.leaveStart >= :today')
             ->setParameter('today', $today)
-            ->orderBy('a.startDate', 'ASC')
+            ->orderBy('c.leaveStart', 'ASC')
             ->setMaxResults(5)
             ->getQuery()
             ->getResult();
 
-        // Get recently registered employees
-        $recentEmployees = $employeeRepository->findBy(
+        // Get recent absences
+        $recentAbsences = $absenceRepository->findBy(
             [], 
-            ['id' => 'DESC'], // Assuming newer employees have higher IDs
-            6
+            ['id' => 'DESC'],
+            5
         );
 
-        // Prepare data for charts
+        // Get gender distribution data
+        $maleCount = $userRepository->count(['gender' => 'HOMME']) ?? 0;
+        $femaleCount = $userRepository->count(['gender' => 'FEMME']) ?? 0;
+        $genderDistribution = [
+            'HOMME' => $maleCount,
+            'FEMME' => $femaleCount,
+        ];
+
+        // Get role distribution data
+        $roleDistribution = [
+            'RESPONSABLE_RH' => $userRepository->count(['role' => 'RESPONSABLE_RH']) ?? 0,
+            'CHEF_PROJET' => $userRepository->count(['role' => 'CHEF_PROJET']) ?? 0,
+            'EMPLOYEE' => $userRepository->count(['role' => 'EMPLOYEE']) ?? 0,
+            'CONDIDAT' => $userRepository->count(['role' => 'CONDIDAT']) ?? 0,
+        ];
+
+        // Generate monthly data for charts (last 6 months)
         $chartLabels = [];
         $projectData = [];
         $taskData = [];
+        $congeData = [];
         $absenceData = [];
 
-        // Generate last 6 months for chart
         for ($i = 5; $i >= 0; $i--) {
             $date = new \DateTime("first day of -$i month");
             $chartLabels[] = $date->format('M Y');
@@ -83,55 +129,70 @@ class DashboardController extends AbstractController
             $monthEnd = clone $date;
             $monthEnd->modify('last day of this month');
             
-            // Count projects created in this month (adapt to your schema)
-            try {
-                $projectData[] = $projectRepository->createQueryBuilder('p')
-                    ->select('COUNT(p.id)')
-                    ->where('p.id IS NOT NULL')
-                    ->getQuery()
-                    ->getSingleScalarResult() / 6; // Simplification pour distribuer visuellement
-            } catch (\Exception $e) {
-                $projectData[] = 0;
-            }
+            // Count projects created in this month
+            $monthlyProjects = $projetRepository->createQueryBuilder('p')
+                ->select('COUNT(p.id_projet)')
+                ->where('p.dateCreation BETWEEN :start AND :end')
+                ->setParameter('start', $monthStart)
+                ->setParameter('end', $monthEnd)
+                ->getQuery()
+                ->getSingleScalarResult();
+            $projectData[] = $monthlyProjects;
             
-            // Count tasks created in this month (adapt to your schema)
-            try {
-                $taskData[] = $taskRepository->createQueryBuilder('t')
-                    ->select('COUNT(t.id)')
-                    ->where('t.id IS NOT NULL')
-                    ->getQuery()
-                    ->getSingleScalarResult() / 6; // Simplification pour distribuer visuellement
-            } catch (\Exception $e) {
-                $taskData[] = 0;
-            }
+            // Count tasks created in this month
+            $monthlyTasks = $tacheRepository->createQueryBuilder('t')
+                ->select('COUNT(t.id)')
+                ->where('t.dateCreation BETWEEN :start AND :end')
+                ->setParameter('start', $monthStart)
+                ->setParameter('end', $monthEnd)
+                ->getQuery()
+                ->getSingleScalarResult();
+            $taskData[] = $monthlyTasks;
             
-            // Count absences in this month (adapt to your schema)
-            try {
-                $absenceData[] = $absenceRepository->createQueryBuilder('a')
-                    ->select('COUNT(a.id)')
-                    ->where('a.id IS NOT NULL')
-                    ->getQuery()
-                    ->getSingleScalarResult() / 6; // Simplification pour distribuer visuellement
-            } catch (\Exception $e) {
-                $absenceData[] = 0;
-            }
+            // Count leaves created in this month
+            $monthlyConges = $congeRepository->createQueryBuilder('c')
+                ->select('COUNT(c.id)')
+                ->where('c.dateCreation BETWEEN :start AND :end')
+                ->setParameter('start', $monthStart)
+                ->setParameter('end', $monthEnd)
+                ->getQuery()
+                ->getSingleScalarResult();
+            $congeData[] = $monthlyConges;
+            
+            // Count absences in this month
+            $monthlyAbsences = $absenceRepository->createQueryBuilder('a')
+                ->select('COUNT(a.id)')
+                ->where('a.dateabsence BETWEEN :start AND :end')
+                ->setParameter('start', $monthStart)
+                ->setParameter('end', $monthEnd)
+                ->getQuery()
+                ->getSingleScalarResult();
+            $absenceData[] = $monthlyAbsences;
         }
         
         // Create response with all data
-        $response = $this->render('dashboard/index.html.twig', [
+        $response = $this->render('dashboard.html.twig', [
             'user' => $user,
-            'employeCount' => $employeCount,
+            'employeeCount' => $employeeCount,
             'projectCount' => $projectCount,
             'taskCount' => $taskCount,
+            'congeCount' => $congeCount,
             'absenceCount' => $absenceCount,
-            'recentProjects' => $recentProjects,
-            'upcomingAbsences' => $upcomingAbsences,
+            'abonnementCount' => $abonnementCount,
+            'transportCount' => $transportCount,
             'recentEmployees' => $recentEmployees,
-            'plannedProjects' => $plannedProjects,
-            'inProgressProjects' => $inProgressProjects,
+            'recentProjects' => $recentProjects,
+            'upcomingConges' => $upcomingConges,
+            'recentAbsences' => $recentAbsences,
+            'projectsByStatus' => $projectsByStatus,
+            'tasksByStatus' => $tasksByStatus, 
+            'congesByStatus' => $congesByStatus,
+            'genderDistribution' => $genderDistribution,
+            'roleDistribution' => $roleDistribution,
             'chartLabels' => $chartLabels,
             'projectData' => $projectData,
             'taskData' => $taskData,
+            'congeData' => $congeData,
             'absenceData' => $absenceData,
         ]);
         

@@ -1,0 +1,232 @@
+{% extends 'base.html.twig' %}
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .filter-section {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .filter-row {
+            margin-bottom: 15px;
+        }
+        .pagination {
+            margin-top: 20px;
+        }
+        .pagination-info {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+    </style>
+{% endblock %}
+{% block title %}Gestion des Congés{% endblock %}
+
+{% block content %}
+    <div class="container-fluid" style="margin-top: 8rem;">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>Gestion des Congés</h1>
+            {# Bouton Ajouter supprimé #}
+        </div>
+
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="alert alert-{{ label }} alert-dismissible fade show">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endfor %}
+
+        <!-- Filtres -->
+        <div class="card filter-section mb-4">
+            <div class="card-body">
+                <form method="get" action="{{ path('app_conge_index') }}" id="filter-form">
+                    <div class="row filter-row">
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                                <input type="text" name="search" class="form-control" placeholder="Rechercher par nom/prénom..." value="{{ searchTerm }}">
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                                        <option value="">Tous les statuts</option>
+                                        {% for value, label in statuses %}
+                                            <option value="{{ value }}" {% if selectedStatus == value %}selected{% endif %}>{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <select name="type" class="form-select form-select-sm" onchange="this.form.submit()">
+                                        <option value="">Tous les types</option>
+                                        {% for value, label in types %}
+                                            <option value="{{ value }}" {% if selectedType == value %}selected{% endif %}>{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <select name="reason" class="form-select form-select-sm" onchange="this.form.submit()">
+                                        <option value="">Toutes les raisons</option>
+                                        {% for value, label in reasons %}
+                                            <option value="{{ value }}" {% if selectedReason == value %}selected{% endif %}>{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12 text-end">
+                            <button type="submit" class="btn btn-sm btn-primary">Filtrer</button>
+                            <a href="{{ path('app_conge_index') }}" class="btn btn-sm btn-outline-secondary">Réinitialiser</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-light">
+                Liste des demandes de congés
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Employé</th>
+                                <th>Type</th>
+                                <th>Date début</th>
+                                <th>Date fin</th>
+                                <th>Jours</th>
+                                <th>Raison</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if conges|length > 0 %}
+                                {% for conge in conges %}
+                                    <tr>
+                                        <td>
+                                            {% if conge.employe %}
+                                                {{ conge.employe.firstname }} {{ conge.employe.lastname }}
+                                            {% else %}
+                                                ID: {{ conge.idEmploye }}
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ conge.type ? conge.type.label : 'Non défini' }}</td>
+                                        <td>{{ conge.leaveStart|date('d/m/Y') }}</td>
+                                        <td>{{ conge.leaveEnd|date('d/m/Y') }}</td>
+                                        <td>{{ conge.numberOfDays }}</td>
+                                        <td>{{ conge.reason ? conge.reason.label : 'Non défini' }}</td>
+                                        <td>
+                                            <span class="badge rounded-pill bg-{{ conge.status ? (conge.status.value == 'ACCEPTE' ? 'success' : (conge.status.value == 'REFUSE' ? 'danger' : (conge.status.value == 'EN_COURS' ? 'warning' : 'secondary'))) : 'secondary' }}">
+                                                {{ conge.status ? conge.status.label : 'Non défini' }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="{{ path('app_conge_show', {'id': conge.id}) }}" class="btn btn-sm btn-info" title="Voir">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                {# Boutons Modifier et Supprimer supprimés #}
+                                            </div>
+
+                                            {# Modal de suppression conservé au cas où vous voudriez le réutiliser plus tard #}
+                                            <div class="modal fade" id="deleteModal{{ conge.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ conge.id }}" aria-hidden="true">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="deleteModalLabel{{ conge.id }}">Confirmation de suppression</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            Êtes-vous sûr de vouloir supprimer cette demande de congé ?
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                                            <form action="{{ path('app_conge_delete', {'id': conge.id}) }}" method="post">
+                                                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ conge.id) }}">
+                                                                <button type="submit" class="btn btn-danger">Supprimer</button>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="8" class="text-center py-4">Aucun congé trouvé</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Pagination -->
+            <div class="card-footer">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="pagination-info">
+                            Affichage de {{ conges|length }} sur {{ totalItems }} entrées
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <nav aria-label="Pagination des congés">
+                            <ul class="pagination pagination-sm justify-content-end mb-0">
+                                <li class="page-item {{ currentPage == 1 ? 'disabled' : '' }}">
+                                    <a class="page-link" href="{{ path('app_conge_index', {'page': currentPage - 1, 'search': searchTerm, 'status': selectedStatus, 'type': selectedType, 'reason': selectedReason}) }}" aria-label="Précédent">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                                
+                                {% for i in max(1, currentPage - 2)..min(maxPages, currentPage + 2) %}
+                                    <li class="page-item {{ currentPage == i ? 'active' : '' }}">
+                                        <a class="page-link" href="{{ path('app_conge_index', {'page': i, 'search': searchTerm, 'status': selectedStatus, 'type': selectedType, 'reason': selectedReason}) }}">{{ i }}</a>
+                                    </li>
+                                {% endfor %}
+                                
+                                <li class="page-item {{ currentPage == maxPages ? 'disabled' : '' }}">
+                                    <a class="page-link" href="{{ path('app_conge_index', {'page': currentPage + 1, 'search': searchTerm, 'status': selectedStatus, 'type': selectedType, 'reason': selectedReason}) }}" aria-label="Suivant">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        // Enable Bootstrap tooltips
+        document.addEventListener('DOMContentLoaded', function() {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            });
+            
+            // Soumettre le formulaire lorsque l'input de recherche perd le focus
+            document.querySelector('input[name="search"]').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    document.getElementById('filter-form').submit();
+                }
+            });
+        });
+    </script>
+{% endblock %}

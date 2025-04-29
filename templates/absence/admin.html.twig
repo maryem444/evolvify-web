@@ -1,0 +1,387 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Employee Attendance Management{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        .attendance-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            overflow-x: auto;
+        }
+        .calendar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 0 20px;
+        }
+        .month-selector {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .month-year {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .calendar-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            min-width: 1200px;
+        }
+        .calendar-table th {
+            background-color: #f8f9fa;
+            padding: 12px;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+            text-align: center;
+            min-width: 120px;
+        }
+        .calendar-table td {
+            padding: 8px;
+            border: 1px solid #ebedf2;
+            vertical-align: middle;
+        }
+        .employee-col {
+            position: sticky;
+            left: 0;
+            background: white;
+            z-index: 10;
+            border-right: 2px solid #dee2e6;
+            min-width: 250px;
+            padding: 12px !important;
+        }
+        .employee-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .employee-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .employee-details {
+            flex-grow: 1;
+        }
+        .employee-name {
+            font-weight: 500;
+            color: #2c3e50;
+            margin-bottom: 2px;
+        }
+        .employee-service {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        .status-cell {
+            text-align: center;
+            position: relative;
+        }
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+        .status-badge:hover {
+            transform: translateY(-2px);
+        }
+        .status-PRESENT {
+            background: #4CAF50;
+            color: white;
+        }
+        .status-ABSENT {
+            background: #F25961;
+            color: white;
+        }
+        .status-EN_CONGE {
+            background: #1572E8;
+            color: white;
+        }
+        .status-unknown {
+            background: #ebedf2;
+            color: #6c757d;
+        }
+        .status-menu {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 1000;
+            display: none;
+            min-width: 150px;
+        }
+        .status-menu.show {
+            display: block;
+        }
+        .status-option {
+            padding: 8px 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.3s;
+        }
+        .status-option:hover {
+            background: #f8f9fa;
+        }
+        .status-option i {
+            width: 16px;
+        }
+        .weekend {
+            background-color: #f8f9fa;
+        }
+        .today {
+            background-color: #fff8e1;
+        }
+        .search-box {
+            position: relative;
+            width: 300px;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px 10px 35px;
+            border: 1px solid #ebedf2;
+            border-radius: 6px;
+        }
+        .search-box i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+        }
+        .day-name {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 4px;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="container-fluid" style="margin-top: 10rem;">
+        <div class="attendance-card">
+            <div class="calendar-header">
+                <div class="month-selector">
+                    <button class="btn btn-outline-primary" onclick="changeMonth(-1)">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <h2 class="month-year">{{ month }} {{ year }}</h2>
+                    <button class="btn btn-outline-primary" onclick="changeMonth(1)">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+                <div class="action-buttons">
+                    <a href="{{ path('app_employee_attendance_export', {'month': month, 'year': year}) }}" class="btn btn-success">
+                        <i class="fas fa-file-export"></i> Export
+                    </a>
+                    <a href="{{ path('app_employee_attendance_statistics', {'month': month, 'year': year}) }}" class="btn btn-info">
+                        <i class="fas fa-chart-bar"></i> Statistics
+                    </a>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="calendar-table">
+                    <thead>
+                        <tr>
+                            <th class="employee-col">Employee</th>
+                            {% for day in days %}
+                                {% set currentDate = year ~ '-' ~ month|date('m') ~ '-' ~ "%02d"|format(day) %}
+                                {% set dayOfWeek = date(currentDate)|date('N') %}
+                                <th class="{{ dayOfWeek in [6, 7] ? 'weekend' : '' }} {{ currentDate == "now"|date('Y-m-d') ? 'today' : '' }}">
+                                    {{ day }}
+                                    <div class="day-name">{{ date(currentDate)|date('D')|capitalize }}</div>
+                                </th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for id, data in attendanceData %}
+                            <tr>
+                                <td class="employee-col">
+                                    <div class="employee-info">
+                                        <img src="https://ui-avatars.com/api/?name={{ data.employee.firstName }}+{{ data.employee.lastName }}&background=1572E8&color=ffffff" 
+                                             alt="Avatar" class="employee-avatar">
+                                        <div class="employee-details">
+                                            <div class="employee-name">{{ data.employee.firstName }} {{ data.employee.lastName }}</div>
+                                            <div class="employee-service">{{ data.employee.department ?? 'N/A' }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                {% for day in days %}
+                                    {% set currentDate = year ~ '-' ~ month|date('m') ~ '-' ~ "%02d"|format(day) %}
+                                    {% set dayOfWeek = date(currentDate)|date('N') %}
+                                    {% set absence = data.days[day] %}
+                                    <td class="status-cell {{ dayOfWeek in [6, 7] ? 'weekend' : '' }} {{ currentDate == "now"|date('Y-m-d') ? 'today' : '' }}"
+                                        data-employee="{{ id }}" 
+                                        data-date="{{ currentDate }}">
+                                        <div class="status-badge status-{{ absence ? absence.status.value : 'unknown' }}" onclick="toggleStatusMenu(this)">
+                                            {% if absence and absence.status.value == 'PRESENT' %}
+                                                <i class="fas fa-check"></i> Present
+                                            {% elseif absence and absence.status.value == 'ABSENT' %}
+                                                <i class="fas fa-times"></i> Absent
+                                            {% elseif absence and absence.status.value == 'EN_CONGE' %}
+                                                <i class="fas fa-umbrella-beach"></i> Leave
+                                            {% else %}
+                                                <i class="fas fa-question"></i> Not Marked
+                                            {% endif %}
+                                        </div>
+                                        <div class="status-menu">
+                                            {% for status in statusOptions %}
+                                                <div class="status-option" onclick="updateStatus('{{ status.value }}', this)">
+                                                    {% if status.value == 'PRESENT' %}
+                                                        <i class="fas fa-check text-success"></i> Present
+                                                    {% elseif status.value == 'ABSENT' %}
+                                                        <i class="fas fa-times text-danger"></i> Absent
+                                                    {% elseif status.value == 'EN_CONGE' %}
+                                                        <i class="fas fa-umbrella-beach text-primary"></i> Leave
+                                                    {% endif %}
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    </td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Close all menus when clicking elsewhere
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.status-cell')) {
+                    document.querySelectorAll('.status-menu').forEach(menu => {
+                        menu.classList.remove('show');
+                    });
+                }
+            });
+        });
+
+        function toggleStatusMenu(element) {
+            const menu = element.nextElementSibling;
+            if (menu) {
+                document.querySelectorAll('.status-menu').forEach(m => {
+                    if (m !== menu) m.classList.remove('show');
+                });
+                menu.classList.toggle('show');
+            }
+        }
+
+        function updateStatus(status, element) {
+            const cell = element.closest('.status-cell');
+            const employeeId = cell.dataset.employee;
+            const date = cell.dataset.date;
+            
+            // Prepare the request data
+            const data = {
+                employeeId: employeeId,
+                date: date,
+                status: status
+            };
+
+            // Send the AJAX request
+            fetch("{{ path('app_employee_attendance_update') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update the UI without reloading
+                    updateStatusUI(cell, status);
+                } else {
+                    alert('Error updating status: ' + (data.message || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error updating status. Please try again.');
+            });
+            
+            // Close the menu
+            cell.querySelector('.status-menu').classList.remove('show');
+        }
+        
+        function updateStatusUI(cell, status) {
+            const badge = cell.querySelector('.status-badge');
+            
+            // Remove all existing status classes
+            badge.classList.remove('status-PRESENT', 'status-ABSENT', 'status-EN_CONGE', 'status-unknown');
+            
+            // Add the new status class
+            badge.classList.add('status-' + status);
+            
+            // Update the icon and text
+            let newContent = '';
+            switch (status) {
+                case 'PRESENT':
+                    newContent = '<i class="fas fa-check"></i> Present';
+                    break;
+                case 'ABSENT':
+                    newContent = '<i class="fas fa-times"></i> Absent';
+                    break;
+                case 'EN_CONGE':
+                    newContent = '<i class="fas fa-umbrella-beach"></i> Leave';
+                    break;
+                default:
+                    newContent = '<i class="fas fa-question"></i> Not Marked';
+            }
+            
+            badge.innerHTML = newContent;
+        }
+
+        function changeMonth(increment) {
+            const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                           'July', 'August', 'September', 'October', 'November', 'December'];
+            
+            let currentMonth = months.indexOf("{{ month }}");
+            let currentYear = parseInt("{{ year }}");
+            
+            currentMonth += increment;
+            
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            } else if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            
+            window.location.href = "{{ path('app_employee_attendance_admin') }}?month=" + months[currentMonth] + "&year=" + currentYear;
+        }
+    </script>
+{% endblock %}

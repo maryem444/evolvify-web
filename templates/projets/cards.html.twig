@@ -1,0 +1,613 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Liste des Projets (Vue Cartes)
+{% endblock %}
+
+{% block stylesheets %}
+	<style>
+		.custom-confirm-dialog {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background-color: rgba(0, 0, 0, 0.5);
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			z-index: 9999;
+		}
+
+		.confirm-content {
+			width: 380px;
+			background-color: #fff3cd;
+			border: 2px solid #ffc107;
+			border-radius: 10px;
+			padding: 20px;
+			box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+			text-align: center;
+			animation: fadeIn 0.2s ease-out;
+		}
+
+		.confirm-header {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			margin-bottom: 15px;
+		}
+
+		.warning-icon {
+			color: #856404;
+			font-size: 40px;
+			margin-bottom: 10px;
+		}
+
+		.confirm-header h3 {
+			color: #856404;
+			font-size: 15px;
+			font-weight: bold;
+			margin: 5px 0;
+		}
+
+		.confirm-message {
+			color: #856404;
+			font-size: 13px;
+			margin-bottom: 20px;
+		}
+
+		.confirm-buttons {
+			display: flex;
+			justify-content: center;
+			gap: 15px;
+		}
+
+		.btn-cancel,
+		.btn-confirm {
+			padding: 8px 16px;
+			border-radius: 8px;
+			font-size: 13px;
+			border: none;
+			cursor: pointer;
+			transition: background-color 0.2s;
+		}
+
+		.btn-cancel {
+			background-color: #dddddd;
+			color: #333;
+		}
+
+		.btn-confirm {
+			background-color: #dc3545;
+			color: white;
+		}
+
+		.btn-cancel:hover {
+			background-color: #c8c8c8;
+		}
+
+		.btn-confirm:hover {
+			background-color: #c82333;
+		}
+
+		body.dialog-open {
+			overflow: hidden;
+		}
+
+		@keyframes fadeIn {
+			from {
+				opacity: 0;
+				transform: translateY(-20px);
+			}
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
+		}
+		.page-header {
+			margin-top: 120px;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+		}
+		.page-title {
+			margin: 0;
+			font-size: 24px;
+			color: #034694; /* Bleu marine */
+			font-weight: bold;
+		}
+		.header-buttons {
+			display: flex;
+			align-items: center;
+			gap: 10px; /* This adds space between the buttons */
+		}
+		.btn-add-projet {
+			background: linear-gradient(to right, #4CAF50, #2196F3);
+			color: white;
+			border: none;
+			padding: 8px 16px;
+			border-radius: 4px;
+			font-size: 14px;
+			font-weight: 500;
+			text-transform: uppercase;
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			text-decoration: none;
+			transition: opacity 0.3s ease;
+		}
+		.btn-add-projet:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+		}
+		.btn-add-projet i {
+			margin-right: 5px;
+		}
+
+		/* Styles spécifiques pour la vue en cartes */
+		.project-cards {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+			gap: 20px;
+			margin-top: 20px;
+		}
+		.project-card {
+			border-radius: 8px;
+			box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+			transition: transform 0.3s ease, box-shadow 0.3s ease;
+			overflow: hidden;
+			background-color: white;
+			height: 100%;
+			display: flex;
+			flex-direction: column;
+		}
+		.project-card:hover {
+			transform: translateY(-5px);
+			box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+		}
+		.project-card-header {
+			padding: 15px;
+			background-color: rgb(169, 243, 240);
+			color: #034694;
+			font-weight: bold;
+			font-size: 18px; /* Taille augmentée */
+		}
+		.project-card-body {
+			padding: 15px;
+			flex-grow: 1;
+		}
+		.project-card-footer {
+			padding: 15px;
+			background-color: #f5f5f5;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+		}
+		.project-status {
+			display: inline-block;
+			padding: 5px 10px;
+			border-radius: 15px;
+			font-size: 12px;
+			font-weight: 500;
+		}
+		.project-description {
+			margin: 10px 0;
+			color: #333; /* Couleur plus foncée */
+			height: 70px; /* Hauteur augmentée */
+			overflow: hidden;
+			text-overflow: ellipsis;
+			display: -webkit-box;
+			-webkit-line-clamp: 3;
+			-webkit-box-orient: vertical;
+			font-weight: bold; /* Texte en gras */
+			font-size: 15px; /* Taille augmentée */
+		}
+		.project-dates {
+			display: flex;
+			justify-content: space-between;
+			margin-top: 15px;
+			font-size: 13px;
+			color: #666;
+		}
+		.project-card-actions {
+			display: flex;
+			gap: 15px;
+		}
+		.view-toggle {
+			display: flex;
+			gap: 10px;
+			margin-left: 10px;
+		}
+		.view-toggle a {
+			display: flex;
+			align-items: center;
+			padding: 6px 12px;
+			border-radius: 4px;
+			color: #555;
+			text-decoration: none;
+			background-color: #f0f0f0;
+		}
+		.view-toggle a.active {
+			background-color: #e0e0e0;
+			color: #000;
+			font-weight: 500;
+		}
+		.view-toggle a i {
+			margin-right: 5px;
+		}
+		.notification-alert {
+			animation: slide-in 0.5s ease-out forwards;
+			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+			border-left: 4px solid #ffc107;
+		}
+
+		@keyframes slide-in {
+			0% {
+				transform: translateY(-20px);
+				opacity: 0;
+			}
+			100% {
+				transform: translateY(0);
+				opacity: 1;
+			}
+		}
+
+		.notification-title {
+			font-weight: 600;
+			color: #856404;
+		}
+
+		.notification-content {
+			font-size: 14px;
+			color: #6c757d;
+		}
+		.flash-message {
+			position: fixed;
+			top: 20px;
+			right: 20px;
+			padding: 15px 20px;
+			border-radius: 8px;
+			color: white;
+			box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+			z-index: 9999;
+			display: flex;
+			align-items: center;
+			animation: slideIn 0.3s ease-out forwards, fadeOut 0.5s ease-in 4s forwards;
+		}
+
+		.flash-success {
+			background-color: #28a745;
+			border-left: 5px solid #1e7e34;
+		}
+
+		.flash-error {
+			background-color: #dc3545;
+			border-left: 5px solid #bd2130;
+		}
+
+		.flash-warning {
+			background-color: #ffc107;
+			border-left: 5px solid #d39e00;
+			color: #333;
+		}
+
+		.flash-info {
+			background-color: #17a2b8;
+			border-left: 5px solid #117a8b;
+		}
+
+		.flash-message i {
+			margin-right: 10px;
+			font-size: 18px;
+		}
+
+		@keyframes slideIn {
+			from {
+				transform: translateX(100%);
+				opacity: 0;
+			}
+			to {
+				transform: translateX(0);
+				opacity: 1;
+			}
+		}
+
+		@keyframes fadeOut {
+			from {
+				opacity: 1;
+			}
+			to {
+				opacity: 0;
+				visibility: hidden;
+			}
+
+			
+		}
+	</style>
+{% endblock %}
+
+{% block content %}
+	<div class="container-fluid">
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="flash-message flash-{{ label }}" id="flash-message-{{ loop.index }}">
+                {% if label == 'success' %}
+                    <i class="fas fa-check-circle"></i>
+                {% elseif label == 'error' %}
+                    <i class="fas fa-exclamation-circle"></i>
+                {% elseif label == 'warning' %}
+                    <i class="fas fa-exclamation-triangle"></i>
+                {% elseif label == 'info' %}
+                    <i class="fas fa-info-circle"></i>
+                {% endif %}
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    <div class="page-header">
+        <h1 class="page-title">🗂️ Projets</h1>
+        <div class="header-buttons">
+            {% if is_granted('ROLE_CHEF_PROJET') %}
+                <a href="{{ path('projet_add_card') }}" class="btn-add-projet">
+                    <i class="fas fa-plus"></i>Ajouter Projet
+                </a>
+            {% else %}
+                <a href="#" class="btn-add-projet" style="opacity: 0.5; cursor: not-allowed; pointer-events: none;">
+                    <i class="fas fa-plus"></i>Ajouter Projet
+                </a>
+            {% endif %}
+        </div>
+    </div>
+    
+    {# Ajouter ceci juste après la div.page-header #}
+    <div id="notification-container" class="mb-4" style="display: none;">
+        <div class="alert alert-warning notification-alert" role="alert">
+            <div class="d-flex align-items-center">
+                <div class="me-3">
+                    <i class="fas fa-exclamation-triangle fa-2x"></i>
+                </div>
+                <div>
+                    <h5 class="notification-title mb-1"></h5>
+                    <p class="notification-content mb-0"></p>
+                </div>
+                <button type="button" class="btn-close ms-auto" aria-label="Close" onclick="dismissNotification()"></button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            <div class="project-cards">
+                {% for projet in projets %}
+                    <div class="project-card">
+                        <div class="project-card-header">
+                            {{ projet.name }}
+                            <span style="float: right; font-size: 12px; background-color: rgba(255,255,255,0.3); padding: 2px 6px; border-radius: 4px;">{{ projet.abbreviation }}</span>
+                        </div>
+                        <div class="project-card-body">
+                            <div class="project-description">
+                                {{ projet.description|raw }}
+                            </div>
+
+                            <div class="mt-3">
+                                {% if projet.status == constant('App\\Entity\\StatutProjet::IN_PROGRESS') %}
+                                    <span class="project-status bg-warning text-dark">En cours</span>
+                                {% else %}
+                                    <span class="project-status bg-success text-white">Terminé</span>
+                                {% endif %}
+                            </div>
+
+                            <div style="margin-top: 10px;">
+                                <strong>Utilisateurs assignés :</strong>
+                                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px;">
+                                    {% for user in projet.assignedUsers %}
+                                        {% set initials = '' %}
+                                        {% if user.firstname and user.lastname %}
+                                            {% set initials = user.firstname|first|upper ~ user.lastname|first|upper %}
+                                        {% else %}
+                                            {% set initials = 'N/A' %}
+                                        {% endif %}
+
+                                        {% set colors = ['#007bff', '#28a745', '#dc3545', '#ffc107', '#17a2b8'] %}
+                                        {% set color = colors[loop.index0 % colors|length] %}
+
+                                        <div style="width: 35px; height: 35px; background-color: {{ color }}; color: white; display: flex; justify-content: center; align-items: center; border-radius: 50%; font-weight: bold; font-size: 13px;" title="{{ user.firstname }} {{ user.lastname }}">
+                                            {{ initials }}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <div class="project-dates">
+                                <div>
+                                    <i class="fas fa-calendar-alt text-primary"></i>
+                                    Début:
+                                    {{ projet.starterAt ? projet.starterAt|date('d/m/Y') : 'Non défini' }}
+                                </div>
+                                <div>
+                                    <i class="fas fa-calendar-check text-danger"></i>
+                                    Fin:
+                                    {{ projet.endDate ? projet.endDate|date('d/m/Y') : 'Non défini' }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="project-card-footer">
+                            <div class="project-card-actions">
+                                {# Nouvelle icône pour voir les détails #}
+                                <a href="{{ path('projet_details_card', { 'id': projet.id }) }}" title="Voir les détails">
+                                    <i class="fas fa-eye" style="color: #2196F3;"></i>
+                                </a>
+                                {% if is_granted('ROLE_CHEF_PROJET') %}
+                                    {# Boutons actifs pour les chefs de projet #}
+                                    <a href="{{ path('projet_edit_card', { 'id': projet.id }) }}" title="Modifier">
+                                        <i class="fas fa-edit" style="color: #4CAF50;"></i>
+                                    </a>
+                                    <form action="{{ path('projet_delete_card', {'id': projet.id, 'returnTo': 'list'}) }}" method="post" class="delete-form" style="display:inline;">
+                                        <button type="submit" style="border: none; background: none; padding: 0;">
+                                            <i class="fas fa-trash" title="Supprimer" style="color: #F44336; cursor: pointer;"></i>
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    {# Boutons désactivés pour les employés #}
+                                    <a href="#" title="Modifier (Réservé aux chefs de projet)" style="opacity: 0.5; cursor: not-allowed; pointer-events: none;">
+                                        <i class="fas fa-edit" style="color: #4CAF50;"></i>
+                                    </a>
+                                    <span style="opacity: 0.5; cursor: not-allowed;">
+                                        <i class="fas fa-trash" title="Supprimer (Réservé aux chefs de projet)" style="color: #F44336;"></i>
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            Aucun projet n'a été trouvé.
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+	<script>
+		document.addEventListener('DOMContentLoaded', function () { // Sélectionner tous les formulaires de suppression
+var deleteForms = document.querySelectorAll('.delete-form');
+
+deleteForms.forEach(function (form) {
+form.addEventListener('submit', function (event) {
+event.preventDefault();
+
+// Créer une div pour notre boîte de dialogue personnalisée
+var confirmDialog = document.createElement('div');
+confirmDialog.className = 'custom-confirm-dialog';
+
+confirmDialog.innerHTML = `
+                        <div class="confirm-content">
+                            <div class="confirm-header">
+                                <i class="fas fa-exclamation-triangle warning-icon"></i>
+                                <h3>Attention !</h3>
+                            </div>
+                            <p class="confirm-message">Êtes-vous sûr de vouloir supprimer ce projet ?</p>
+                            <div class="confirm-buttons">
+                                <button type="button" class="btn-cancel">Annuler</button>
+                                <button type="button" class="btn-confirm">Supprimer</button>
+                            </div>
+                        </div>
+                    `;
+
+// Ajouter la boîte de dialogue au body
+document.body.appendChild(confirmDialog);
+document.body.classList.add('dialog-open');
+
+// Gestionnaire pour le bouton Annuler
+confirmDialog.querySelector('.btn-cancel').addEventListener('click', function () {
+closeDialog();
+});
+
+// Gestionnaire pour le bouton Supprimer
+confirmDialog.querySelector('.btn-confirm').addEventListener('click', function () {
+closeDialog();
+form.submit();
+});
+
+// Fermer si on clique en dehors
+confirmDialog.addEventListener('click', function (e) {
+if (e.target === confirmDialog) {
+closeDialog();
+}
+});
+
+function closeDialog() {
+document.body.removeChild(confirmDialog);
+document.body.classList.remove('dialog-open');
+}
+});
+});
+});
+	</script>
+	<script>
+		document.addEventListener('DOMContentLoaded', function () {
+// Code existant...
+
+// Charger les notifications au chargement de la page
+checkDeadlineNotifications();
+
+// Vérifier les notifications toutes les heures
+setInterval(checkDeadlineNotifications, 3600000);
+});
+
+function checkDeadlineNotifications() {
+fetch('{{ path('check_deadlines') }}').then(response => response.json()).then(data => {
+if (data.notifications && data.notifications.length > 0) { // Afficher la première notification
+showNotification(data.notifications[0]);
+
+// Stocker les autres notifications si nécessaire
+localStorage.setItem('pendingNotifications', JSON.stringify(data.notifications.slice(1)));
+}
+}).catch(error => console.error('Erreur lors de la vérification des deadlines:', error));
+}
+
+function showNotification(notification) {
+const container = document.getElementById('notification-container');
+const title = container.querySelector('.notification-title');
+const content = container.querySelector('.notification-content');
+
+title.textContent = notification.subject;
+content.textContent = notification.content;
+
+container.style.display = 'block';
+
+// Animation pour faire apparaître la notification
+container.style.opacity = '0';
+container.style.transform = 'translateY(-20px)';
+container.style.transition = 'opacity 0.5s, transform 0.5s';
+
+setTimeout(() => {
+container.style.opacity = '1';
+container.style.transform = 'translateY(0)';
+}, 50);
+}
+
+function dismissNotification() {
+const container = document.getElementById('notification-container');
+
+// Animation pour faire disparaître la notification
+container.style.opacity = '0';
+container.style.transform = 'translateY(-20px)';
+
+setTimeout(() => {
+container.style.display = 'none';
+
+// Afficher la prochaine notification s'il y en a
+const pendingNotifications = JSON.parse(localStorage.getItem('pendingNotifications') || '[]');
+if (pendingNotifications.length > 0) {
+const nextNotification = pendingNotifications.shift();
+localStorage.setItem('pendingNotifications', JSON.stringify(pendingNotifications));
+showNotification(nextNotification);
+}
+}, 500);
+}
+	</script>
+	<script>
+		// Gestion des flash messages
+document.addEventListener('DOMContentLoaded', function () {
+const flashMessages = document.querySelectorAll('.flash-message');
+
+flashMessages.forEach(function (message) { // Suppression automatique après 5 secondes
+setTimeout(function () {
+if (message && message.parentNode) {
+message.parentNode.removeChild(message);
+}
+}, 5000);
+
+// Permettre la fermeture manuelle en cliquant
+message.addEventListener('click', function () {
+if (message.parentNode) {
+message.parentNode.removeChild(message);
+}
+});
+});
+});
+	</script>
+{% endblock %}
