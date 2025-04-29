@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Projet;
 use App\Entity\StatutProjet;
+use App\Entity\User;
 use Symfony\Component\HttpFoundation\Request;
 use App\Form\ProjetType;
 use App\Repository\ProjetRepository;
@@ -13,6 +14,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Twilio\Rest\Client;
 
 class CardsController extends AbstractController
 {
@@ -25,9 +27,16 @@ class CardsController extends AbstractController
 
     // Passer l'utilisateur au repository pour filtrer les projets
     $projets = $projetRepository->getProjetListQB($user);
+    
+    // Calculer le nombre total de projets
+    $totalProjets = count($projets);
+
+    // Vérifier automatiquement les deadlines et envoyer des notifications
+    $this->checkAndNotifyProjectDeadlines($projetRepository);
 
     return $this->render('projets/cards.html.twig', [
-      'projets' => $projets
+      'projets' => $projets,
+      'totalProjets' => $totalProjets
     ]);
   }
 
@@ -70,7 +79,6 @@ class CardsController extends AbstractController
   }
 
   #[Route('/projets/cards/{id}/edit', name: 'projet_edit_card')]
-
   public function edit(Request $request, Projet $projet, EntityManagerInterface $entityManager): Response
   {
     $oldFilePath = $projet->getUploadedFiles(); // Stockez le chemin de l'ancien fichier
@@ -102,7 +110,7 @@ class CardsController extends AbstractController
         }
       }
 
-      // Sauvegarder les modifications en base de données - LIGNE MANQUANTE AJOUTÉE
+      // Sauvegarder les modifications en base de données
       $entityManager->flush();
 
       $this->addFlash('success', 'Projet modifié avec succès !');
@@ -117,11 +125,131 @@ class CardsController extends AbstractController
       'redirect_route' => 'projets_cards' // Passer la route de redirection au template
     ]);
   }
+
   #[Route('/projets/cards/{id}/details', name: 'projet_details_card')]
-  public function details(Projet $projet): Response
+  public function details(Projet $projet, ProjetRepository $projetRepository): Response
   {
+    // Vérifier automatiquement les deadlines ici aussi
+    $this->checkAndNotifyProjectDeadlines($projetRepository);
+    
     return $this->render('projets/details.html.twig', [
       'projet' => $projet
     ]);
+  }
+
+  /**
+   * Méthode privée pour vérifier les deadlines et envoyer des notifications
+   * Cette méthode est appelée automatiquement lors de l'accès à l'interface des cartes
+   */
+  private function checkAndNotifyProjectDeadlines(ProjetRepository $projetRepository): void
+  {
+    // Récupérer les projets dont la deadline est demain
+    $projects = $projetRepository->findProjectsWithDeadlineTomorrow();
+    
+    // Si des projets ont été trouvés, envoyer des notifications
+    if (!empty($projects)) {
+      foreach ($projects as $project) {
+        // Récupérer tous les employés assignés à ce projet
+        $assignedUsers = $project->getAssignedUsers();
+        
+        if (count($assignedUsers) > 0) {
+          foreach ($assignedUsers as $user) {
+            // Vérifier que l'utilisateur a un numéro de téléphone
+            if ($user->getNumTel()) {
+              // Créer un message personnalisé pour l'employé
+              $message = "Rappel: Le projet '{$project->getName()}' sur lequel vous travaillez a sa deadline demain ({$project->getEndDate()->format('d/m/Y')}).";
+              
+              // Convertir le numéro de téléphone (integer) en chaîne de caractères
+              $phoneNumber = '+' . $user->getNumTel();
+              
+              // Envoyer le SMS
+              $this->sendSmsNotification($phoneNumber, $message);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Route exposée pour la vérification manuelle des deadlines
+   * Cette route peut être utilisée pour des tests ou pour des tâches planifiées
+   */
+  #[Route('/projets/check-deadlines', name: 'check_project_deadlines')]
+  public function checkProjectDeadlines(ProjetRepository $projetRepository): Response
+  {
+    // Récupérer les projets dont la deadline est demain
+    $projects = $projetRepository->findProjectsWithDeadlineTomorrow();
+    
+    // Compte des notifications envoyées
+    $notificationsSent = 0;
+    $notificationsFailed = 0;
+    
+    // Si des projets ont été trouvés, envoyer des notifications
+    if (!empty($projects)) {
+      foreach ($projects as $project) {
+        // Récupérer tous les employés assignés à ce projet
+        $assignedUsers = $project->getAssignedUsers();
+        
+        if (count($assignedUsers) > 0) {
+          foreach ($assignedUsers as $user) {
+            // Vérifier que l'utilisateur a un numéro de téléphone
+            if ($user->getNumTel()) {
+              // Créer un message personnalisé pour l'employé
+              $message = "Rappel: Le projet '{$project->getName()}' sur lequel vous travaillez a sa deadline demain ({$project->getEndDate()->format('d/m/Y')}).";
+              
+              // Convertir le numéro de téléphone (integer) en chaîne de caractères
+              $phoneNumber = '+' . $user->getNumTel();
+              
+              // Envoyer le SMS
+              $success = $this->sendSmsNotification($phoneNumber, $message);
+              
+              if ($success) {
+                $notificationsSent++;
+              } else {
+                $notificationsFailed++;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return new Response("Vérification des deadlines terminée. $notificationsSent notifications envoyées avec succès. $notificationsFailed notifications échouées.");
+  }
+
+  /**
+   * Méthode pour envoyer un SMS via l'API Twilio
+   */
+  private function sendSmsNotification(string $phoneNumber, string $message): bool
+  {
+    try {
+      // Récupérer les informations d'identification Twilio depuis les variables d'environnement
+      $sid = $_ENV['CTWILIO_ACCOUNT_SID'];
+      $token = $_ENV['CTWILIO_AUTH_TOKEN'];
+      $twilioNumber = $_ENV['CTWILIO_PHONE_NUMBER'];
+      
+      // Pour les tests, vous pouvez utiliser le numéro du chef de projet
+      $useTestNumber = true; // Définir sur true pour les tests si nécessaire
+      $recipientNumber = $useTestNumber ? $_ENV['CHEFDEPROJET_PHONE_NUMBER'] : $phoneNumber;
+      
+      // Créer un client Twilio
+      $twilio = new Client($sid, $token);
+      
+      // Envoyer le SMS
+      $twilio->messages->create(
+        $recipientNumber,
+        [
+          'from' => $twilioNumber,
+          'body' => $message
+        ]
+      );
+      
+      return true;
+    } catch (\Exception $e) {
+      // Journaliser l'erreur
+      error_log('Erreur Twilio: ' . $e->getMessage());
+      return false;
+    }
   }
 }
