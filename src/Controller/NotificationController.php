@@ -14,10 +14,10 @@ class NotificationController extends AbstractController
     public function checkDeadlines(DeadlineNotificationService $service): Response
     {
         $notifications = $service->checkUpcomingDeadlines();
-
+        
         // Pour le test, on renvoie juste les notifications
         return $this->json([
-            'notifications' => array_map(function ($notification) {
+            'notifications' => array_map(function($notification) {
                 return [
                     'subject' => $notification->getSubject(),
                     'content' => $notification->getContent(),
