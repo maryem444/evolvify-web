@@ -320,38 +320,25 @@ class ForgetPasswordController extends AbstractController
     private function validateReCaptcha($recaptchaResponse): bool
     {
         try {
-            // Debug information
-            error_log('Validating reCAPTCHA response: ' . substr($recaptchaResponse, 0, 20) . '...');
-            
-            // Check if key is configured - using environment variable
-            $secretKey = $_ENV['RECAPTCHA_SECRET_KEY'] ?? '';
-            if (empty($secretKey)) {
-                error_log('reCAPTCHA secret key is not set, skipping validation');
-                return false; // Changed to false to enforce validation
-            }
-            
-            // Check for dev environment skip
-            if (isset($_ENV['APP_ENV']) && $_ENV['APP_ENV'] === 'dev' && 
-                isset($_ENV['SKIP_RECAPTCHA_IN_DEV']) && $_ENV['SKIP_RECAPTCHA_IN_DEV'] === 'true') {
-                error_log('Skipping reCAPTCHA validation in dev environment');
-                return true;
-            }
-            
-            // Check if response is provided
+            $secretKey = $_ENV['RECAPTCHA_SECRET_KEY'];
+
+            // Vérifier si la réponse est fournie
             if (empty($recaptchaResponse)) {
                 error_log('reCAPTCHA validation failed: No response provided');
                 return false;
             }
             
-            // Make the verification request
+            // Faire la requête de vérification
             $url = 'https://www.google.com/recaptcha/api/siteverify';
             $data = [
-                'secret' => $secretKey, // Use the environment variable
+                'secret' => $secretKey,
                 'response' => $recaptchaResponse,
                 'remoteip' => $_SERVER['REMOTE_ADDR'] ?? null
             ];
             
-            // Use cURL for the request
+            error_log('Sending verification request to Google with data: ' . json_encode($data));
+            
+            // Utiliser cURL pour la requête
             $ch = curl_init($url);
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
@@ -360,38 +347,33 @@ class ForgetPasswordController extends AbstractController
             curl_setopt($ch, CURLOPT_TIMEOUT, 10);
             
             $response = curl_exec($ch);
-            $curlError = curl_error($ch);
-            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            error_log('Raw response from Google: ' . $response);
             
+            // Gérer les erreurs cURL
             if (curl_errno($ch)) {
-                error_log('reCAPTCHA verification cURL error: ' . $curlError);
-                curl_close($ch);
-                return false;
-            }
-            
-            if ($httpCode !== 200) {
-                error_log('reCAPTCHA verification failed with HTTP code: ' . $httpCode);
+                error_log('cURL error: ' . curl_error($ch));
                 curl_close($ch);
                 return false;
             }
             
             curl_close($ch);
             
-            // Parse the JSON response
+            // Analyser la réponse JSON
             $result = json_decode($response, true);
-            error_log('reCAPTCHA API response: ' . print_r($result, true));
             
             if ($result === null) {
-                error_log('reCAPTCHA verification failed: Invalid JSON response');
+                error_log('Invalid JSON response');
                 return false;
             }
             
-            // Check for success
+            error_log('Parsed reCAPTCHA response: ' . print_r($result, true));
+            
+            // Vérifier le succès
             if (isset($result['success']) && $result['success'] === true) {
                 error_log('reCAPTCHA verification successful');
                 return true;
             } else {
-                error_log('reCAPTCHA verification failed: ' . json_encode($result));
+                error_log('reCAPTCHA verification failed: ' . json_encode($result['error-codes'] ?? []));
                 return false;
             }
         } catch (\Exception $e) {
