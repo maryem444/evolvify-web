@@ -3,12 +3,33 @@
 {% block title %}Liste des Abonnements{% endblock %}
 
 {% block content %}
-    <div class="container-fluid mt-4">
+    <div class="container-fluid mt-5">
         <h1 class="mb-4">Liste des Abonnements</h1>
+
+        <!-- Filtres et recherche -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="input-group">
+                    <input type="text" id="searchInput" class="form-control" placeholder="Rechercher...">
+                    <button class="btn btn-outline-secondary" type="button" id="clearSearch">
+                        <i class="bi bi-x"></i> Effacer
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select id="statusFilter" class="form-select">
+                    <option value="">Tous les statuts</option>
+                    <option value="ACTIF">ACTIF</option>
+                    <option value="EXPIRE">EXPIRE</option>
+                    <option value="SUSPENDU">SUSPENDU</option>
+                    <!-- Ajoutez d'autres options de statut selon vos besoins -->
+                </select>
+            </div>
+        </div>
 
         {% if abonnements is not empty %}
             <div class="table-responsive">
-                <table class="table table-striped table-hover">
+                <table class="table table-striped table-hover" id="abonnementsTable">
                     <thead class="thead-dark">
                         <tr>
                             <th>ID</th>
@@ -23,7 +44,7 @@
                     </thead>
                     <tbody>
                         {% for abonnement in abonnements %}
-                            <tr>
+                            <tr class="abonnement-row" data-status="{{ abonnement.status.value ?? 'NON DEFINI' }}">
                                 <td>{{ abonnement.id_Ab }}</td>
                                 <td>{{ abonnement.type_Ab }}</td>
                                 <td>{{ abonnement.date_debut|date('Y-m-d') }}</td>
@@ -44,6 +65,10 @@
                         {% endfor %}
                     </tbody>
                 </table>
+            </div>
+            <!-- Compteur d'affichage -->
+            <div class="mt-2 mb-3">
+                <span id="displayCount">Affichage de {{ abonnements|length }} abonnement(s)</span>
             </div>
         {% else %}
             <div class="alert alert-info">Aucun abonnement disponible.</div>
@@ -132,6 +157,64 @@
                         .catch(error => console.error('Erreur:', error));
                 });
             });
+
+            // Fonctionnalités de recherche et filtre
+            const searchInput = document.getElementById('searchInput');
+            const statusFilter = document.getElementById('statusFilter');
+            const clearSearchBtn = document.getElementById('clearSearch');
+            const displayCount = document.getElementById('displayCount');
+            
+            // Sélection des lignes du tableau avec la classe abonnement-row
+            const rows = document.querySelectorAll('tr.abonnement-row');
+            const totalRows = rows.length;
+            
+            // Fonction pour appliquer les filtres
+            function applyFilters() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const selectedStatus = statusFilter.value;
+                let visibleCount = 0;
+
+                rows.forEach(row => {
+                    const rowText = row.textContent.toLowerCase();
+                    const rowStatus = row.getAttribute('data-status');
+                    
+                    // Vérifie si le texte de recherche est présent dans la ligne
+                    const matchesSearch = searchTerm === '' || rowText.includes(searchTerm);
+                    
+                    // Vérifie si le statut correspond (insensible à la casse)
+                    const matchesStatus = selectedStatus === '' || 
+                                          rowStatus.toUpperCase() === selectedStatus.toUpperCase();
+
+                    if (matchesSearch && matchesStatus) {
+                        row.style.display = '';
+                        visibleCount++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+
+                // Mise à jour du compteur d'affichage
+                if (displayCount) {
+                    displayCount.textContent = `Affichage de ${visibleCount} sur ${totalRows} abonnement(s)`;
+                }
+            }
+
+            // Écouteurs d'événements pour la recherche et le filtrage
+            if (searchInput) {
+                searchInput.addEventListener('input', applyFilters);
+            }
+            
+            if (statusFilter) {
+                statusFilter.addEventListener('change', applyFilters);
+            }
+            
+            // Bouton pour effacer la recherche
+            if (clearSearchBtn) {
+                clearSearchBtn.addEventListener('click', function() {
+                    searchInput.value = '';
+                    applyFilters();
+                });
+            }
         });
     </script>
 {% endblock %}
