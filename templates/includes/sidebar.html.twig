@@ -146,6 +146,7 @@
 							</ul>
 						</div>
 					</li>
+					{% if app.user is defined and app.user and app.user.role is defined and (app.user.role == 'RESPONSABLE_RH' ) %}
 					<li class="nav-item">
 						<a data-bs-toggle="collapse" href="#forms">
 							<i class="fas fa-pen-square"></i>
@@ -163,7 +164,7 @@
 						</div>
 					</li>	
 				{% endif %}
-			
+				{% endif %}
 				
 				
 
