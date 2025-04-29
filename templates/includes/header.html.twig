@@ -191,14 +191,15 @@
 						<div class="avatar-sm">
 							{% if app.user is defined and app.user %}
 								{% if app.user.profilePhoto %}
-									<img src="{{ app.user.profilePhoto }}" alt="..." class="avatar-img rounded-circle"/>
+									<img src="{{ asset(app.user.profilePhoto) }}" alt="..." class="avatar-img rounded-circle"/>
 								{% else %}
-									<img src="{{ asset('assets/img/profile.jpg') }}" alt="..." class="avatar-img rounded-circle"/>
+									<img src="{{ asset('assets/img/profile.png') }}" alt="..." class="avatar-img rounded-circle"/>
 								{% endif %}
 							{% else %}
-								<img src="{{ asset('assets/img/profile.jpg') }}" alt="..." class="avatar-img rounded-circle"/>
+								<img src="{{ asset('assets/img/profile.png') }}" alt="..." class="avatar-img rounded-circle"/>
 							{% endif %}
 						</div>
+
 						<!-- Replace line 200 or surrounding area with this: -->
 						<span class="profile-username">
 							<span class="op-7">Hi,</span>
@@ -218,12 +219,12 @@
 									<div class="avatar-lg">
 										{% if app.user is defined and app.user %}
 											{% if app.user.profilePhoto %}
-												<img src="{{ app.user.profilePhoto }}" alt="image profile" class="avatar-img rounded"/>
+												<img src="{{ asset(app.user.profilePhoto) }}" alt="..." class="avatar-img rounded"/>
 											{% else %}
-												<img src="{{ asset('assets/img/profile.jpg') }}" alt="image profile" class="avatar-img rounded"/>
+												<img src="{{ asset('assets/img/profile.png') }}" alt="image profile" class="avatar-img rounded"/>
 											{% endif %}
 										{% else %}
-											<img src="{{ asset('assets/img/profile.jpg') }}" alt="image profile" class="avatar-img rounded"/>
+											<img src="{{ asset('assets/img/profile.png') }}" alt="image profile" class="avatar-img rounded"/>
 										{% endif %}
 									</div>
 									<div class="u-text">

@@ -26,4 +26,88 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $this->_em->persist($user);
         $this->_em->flush();
     }
+
+    /**
+     * Count users by role
+     * 
+     * @return array
+     */
+    public function countUsersByRole(): array
+    {
+        $users = $this->findAll();
+        $usersByRole = [];
+        
+        foreach ($users as $user) {
+            foreach ($user->getRoles() as $role) {
+                // Skip default role if you want
+                if ($role === 'ROLE_USER') continue;
+                
+                if (!isset($usersByRole[$role])) {
+                    $usersByRole[$role] = ['role' => $role, 'count' => 0];
+                }
+                $usersByRole[$role]['count']++;
+            }
+        }
+        
+        return array_values($usersByRole);
+    }
+    
+    /**
+     * Count total users
+     * 
+     * @return int
+     */
+    public function countTotal(): int
+    {
+        return $this->createQueryBuilder('u')
+            ->select('COUNT(u.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+    
+    /**
+     * Count users by gender
+     * 
+     * @param string $gender
+     * @return int
+     */
+    public function countByGender(string $gender): int
+    {
+        return $this->createQueryBuilder('u')
+            ->select('COUNT(u.id)')
+            ->where('u.gender = :gender')
+            ->setParameter('gender', $gender)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+    
+    /**
+     * Get users with leave balance
+     * 
+     * @return array
+     */
+    public function getUsersWithLeaveBalance(): array
+    {
+        return $this->createQueryBuilder('u')
+            ->select('u.firstname, u.lastname, u.conge_restant')
+            ->orderBy('u.conge_restant', 'DESC')
+            ->setMaxResults(5)
+            ->getQuery()
+            ->getResult();
+    }
+    
+    /**
+     * Get leave balances
+     * 
+     * @return array
+     */
+    public function getLeaveBalances(): array
+    {
+        return $this->createQueryBuilder('u')
+            ->select('u.firstname, u.lastname, u.conge_restant')
+            ->orderBy('u.conge_restant', 'DESC')
+            ->setMaxResults(5)
+            ->getQuery()
+            ->getResult();
+    }
 }

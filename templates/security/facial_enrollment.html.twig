@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token('facial_enrollment') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuration de la reconnaissance faciale</title>
+    <link rel="icon" href="{{ asset('assets/img/logo1.png') }}" type="image/x-icon">
+    <link rel="stylesheet" type="text/css" href="{{ asset('login/vendor/bootstrap/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ asset('login/fonts/font-awesome-4.7.0/css/font-awesome.min.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ asset('login/fonts/iconic/css/material-design-iconic-font.min.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ asset('login/vendor/animate/animate.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ asset('login/vendor/css-hamburgers/hamburgers.min.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ asset('login/vendor/animsition/css/animsition.min.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ asset('login/vendor/select2/select2.min.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ asset('login/vendor/daterangepicker/daterangepicker.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ asset('login/css/util.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ asset('login/css/main.css') }}">
+    <style>
+        .face-container {
+            width: 400px;
+            height: 300px;
+            position: relative;
+            margin: 0 auto;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .face-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .video-feed {
+            width: 100%;
+            height: 100%;
+        }
+        .face-status {
+            margin-top: 15px;
+            text-align: center;
+        }
+        .btn-face {
+            margin-top: 15px;
+            margin-right: 10px;
+        }
+        .progress {
+            margin-top: 10px;
+            height: 10px;
+        }
+        .instruction-box {
+            background-color: #f8f9fa;
+            border-left: 5px solid #007bff;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .instruction-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #007bff;
+        }
+        .instruction-item {
+            margin-bottom: 5px;
+        }
+        .loader-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0s, opacity 0.3s;
+        }
+        .loader-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .capture-indicator {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background-color: rgba(255,255,255,0.3);
+            display: none;
+            animation: flash 0.5s;
+        }
+        @keyframes flash {
+            0% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+        .skip-link {
+            margin-top: 10px;
+            display: block;
+            text-align: center;
+            color: #6c757d;
+        }
+        .skip-link:hover {
+            color: #343a40;
+            text-decoration: underline;
+        }
+        .email-field {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="limiter">
+        <div class="container-login100" style="background-image: url('{{ asset('login/images/bg-01.jpg') }}');">
+            <div class="wrap-login100 p-l-55 p-r-55 p-t-65 p-b-54">
+                <span class="login100-form-title p-b-30">
+                    Configuration de la reconnaissance faciale
+                </span>
+                
+                <div class="text-center p-b-20">
+                    <p>
+                        Activez la connexion par reconnaissance faciale pour un accès plus rapide et sécurisé.
+                    </p>
+                </div>
+                
+                <!-- Ajout du champ email si l'utilisateur vient de la réinitialisation -->
+                {% if resetToken is defined %}
+                <input type="hidden" id="resetToken" value="{{ resetToken }}">
+                <div class="wrap-input100 validate-input email-field">
+                    <span class="label-input100">Email</span>
+                    <input class="input100" type="email" id="email" placeholder="Entrez votre adresse email" required>
+                    <span class="focus-input100" data-symbol="&#xf206;"></span>
+                </div>
+                {% endif %}
+                
+                <div class="instruction-box">
+                    <div class="instruction-title">Instructions :</div>
+                    <div class="instruction-item">1. Assurez-vous d'être dans un endroit bien éclairé</div>
+                    <div class="instruction-item">2. Regardez droit vers la caméra</div>
+                    <div class="instruction-item">3. Tournez légèrement votre tête dans différentes positions</div>
+                    <div class="instruction-item">4. Capturez 5 images pour terminer l'enrôlement</div>
+                </div>
+                
+                <div class="face-container">
+                    <video id="video-feed" class="video-feed" autoplay muted></video>
+                    <canvas id="face-overlay" class="face-overlay"></canvas>
+                    <div id="capture-flash" class="capture-indicator"></div>
+                </div>
+                
+                <div class="face-status">
+                    <p id="status-text">Préparation de la caméra...</p>
+                    <div class="progress">
+                        <div id="enrollment-progress" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+                    </div>
+                </div>
+                
+                <div class="container-login100-form-btn mt-4">
+                    <div class="wrap-login100-form-btn">
+                        <div class="login100-form-bgbtn"></div>
+                        <button id="capture-btn" class="login100-form-btn" disabled>
+                            Capturer
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="container-login100-form-btn mt-3">
+                    <div class="wrap-login100-form-btn">
+                        <div class="login100-form-bgbtn"></div>
+                        <button id="complete-btn" class="login100-form-btn" disabled>
+                            Terminer
+                        </button>
+                    </div>
+                </div>
+                
+                <a href="{{ path('app_login') }}" class="skip-link">
+                    Ignorer cette étape pour l'instant
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div id="loader-overlay" class="loader-overlay">
+        <div class="loader-content">
+            <div class="spinner-border text-primary mb-3" role="status">
+                <span class="visually-hidden">Chargement...</span>
+            </div>
+            <h5 id="loader-text">Enregistrement des données biométriques...</h5>
+        </div>
+    </div>
+
+    <script src="{{ asset('login/vendor/jquery/jquery-3.2.1.min.js') }}"></script>
+    <script src="{{ asset('login/vendor/animsition/js/animsition.min.js') }}"></script>
+    <script src="{{ asset('login/vendor/bootstrap/js/popper.js') }}"></script>
+    <script src="{{ asset('login/vendor/bootstrap/js/bootstrap.min.js') }}"></script>
+    <script src="{{ asset('login/vendor/select2/select2.min.js') }}"></script>
+    <script src="{{ asset('login/vendor/daterangepicker/moment.min.js') }}"></script>
+    <script src="{{ asset('login/vendor/daterangepicker/daterangepicker.js') }}"></script>
+    <script src="{{ asset('login/vendor/countdowntime/countdowntime.js') }}"></script>
+    <script src="{{ asset('login/js/main.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
+
+    <script>
+document.addEventListener('DOMContentLoaded', async () => {
+    // Attendre que face-api.js soit complètement chargé
+    if (typeof faceapi === 'undefined') {
+        console.error('Face-API is not loaded. Please check your script tag.');
+        statusText.textContent = "Erreur de chargement de Face-API.js. Veuillez réessayer.";
+        return;
+    }
+    
+    // Utilisez un chemin absolu depuis la racine publique
+    const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
+
+    
+    const video = document.getElementById('video-feed');
+    const canvas = document.getElementById('face-overlay');
+    const progressBar = document.getElementById('enrollment-progress');
+    const statusText = document.getElementById('status-text');
+    const captureBtn = document.getElementById('capture-btn');
+    const completeBtn = document.getElementById('complete-btn');
+    const captureFlash = document.getElementById('capture-flash');
+    const loaderOverlay = document.getElementById('loader-overlay');
+    const loaderText = document.getElementById('loader-text');
+    
+    // Obtenir les éléments de réinitialisation s'ils existent
+    const resetTokenElement = document.getElementById('resetToken');
+    const resetToken = resetTokenElement ? resetTokenElement.value : null;
+    const emailElement = document.getElementById('email');
+    
+    let capturedFaces = [];
+    
+    // Vérifier si les modèles sont disponibles
+    async function checkModelsAvailability() {
+        try {
+            const response = await fetch(`${MODEL_URL}/tiny_face_detector_model-weights_manifest.json`);
+            if (!response.ok) {
+                throw new Error(`Impossible d'accéder aux modèles (${response.status})`);
+            }
+            return true;
+        } catch (error) {
+            console.error('Error checking models availability:', error);
+            return false;
+        }
+    }
+    
+    // Chargement des modèles
+    async function loadModels() {
+        statusText.textContent = "Chargement des modèles...";
+        
+        try {
+            await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+            await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+            await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+            
+            statusText.textContent = "Modèles chargés. Prêt à capturer votre visage.";
+            captureBtn.disabled = false;
+            return true;
+        } catch (error) {
+            statusText.textContent = "Erreur de chargement des modèles: " + error.message;
+            console.error('Error loading models:', error);
+            return false;
+        }
+    }
+    
+    // Démarrage de la vidéo
+    async function startVideo() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    width: { ideal: 640 },
+                    height: { ideal: 480 },
+                    facingMode: "user"
+                } 
+            });
+            video.srcObject = stream;
+            return true;
+        } catch (error) {
+            statusText.textContent = "Erreur d'accès à la caméra: " + error.message;
+            console.error('Error accessing camera:', error);
+            return false;
+        }
+    }
+    
+    // Fonction pour démarrer la détection de visage en continu
+    async function startFaceDetection() {
+        if (!canvas || !video) return;
+        
+        // Ajuster la taille du canvas à celle de la vidéo
+        canvas.width = video.clientWidth;
+        canvas.height = video.clientHeight;
+        const ctx = canvas.getContext('2d');
+        
+        // Configuration du détecteur
+        const options = new faceapi.TinyFaceDetectorOptions({ 
+            inputSize: 224, 
+            scoreThreshold: 0.5 
+        });
+        
+        // Fonction de détection récursive
+        async function detectFace() {
+            if (video.paused || video.ended) return;
+            
+            try {
+                // Détecter le visage et les points de repère
+                const detections = await faceapi.detectSingleFace(
+                    video, 
+                    options
+                ).withFaceLandmarks();
+                
+                // Effacer le canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Si un visage est détecté, dessiner le cadre
+                if (detections) {
+                    // Redimensionner les détections pour correspondre à la taille du canvas
+                    const resizedDetections = faceapi.resizeResults(detections, {
+                        width: canvas.width,
+                        height: canvas.height
+                    });
+                    
+                    // Dessiner le cadre autour du visage et les points de repère
+                    ctx.strokeStyle = '#43A047';
+                    ctx.lineWidth = 2;
+                    
+                    const { box } = resizedDetections.detection;
+                    ctx.strokeRect(box.x, box.y, box.width, box.height);
+                    
+                    // Activer le bouton de capture uniquement si un visage est correctement détecté
+                    captureBtn.disabled = false;
+                    statusText.textContent = "Visage détecté. Prêt à capturer.";
+                } else {
+                    captureBtn.disabled = true;
+                    statusText.textContent = "Aucun visage détecté. Veuillez vous placer face à la caméra.";
+                }
+            } catch (error) {
+                console.error('Error during face detection:', error);
+                statusText.textContent = "Erreur de détection: " + error.message;
+            }
+            
+            // Continuer la détection
+            requestAnimationFrame(detectFace);
+        }
+        
+        // Lancer la détection
+        detectFace();
+    }
+
+    // Fonction pour capturer l'image actuelle
+    async function captureCurrentFace() {
+        try {
+            // Désactiver le bouton pendant la capture
+            captureBtn.disabled = true;
+            
+            // Afficher l'effet de flash
+            captureFlash.style.display = 'block';
+            setTimeout(() => {
+                captureFlash.style.display = 'none';
+            }, 500);
+            
+            // Créer un canvas temporaire pour la capture
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = video.videoWidth;
+            tempCanvas.height = video.videoHeight;
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            // Dessiner l'image de la vidéo sur le canvas
+            tempCtx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
+            
+            // Détecter le visage dans l'image capturée
+            const options = new faceapi.TinyFaceDetectorOptions({ 
+                inputSize: 224, 
+                scoreThreshold: 0.5 
+            });
+            
+            const detection = await faceapi.detectSingleFace(
+                tempCanvas, 
+                options
+            ).withFaceLandmarks().withFaceDescriptor();
+            
+            if (!detection) {
+                statusText.textContent = "Aucun visage détecté dans l'image capturée. Veuillez réessayer.";
+                captureBtn.disabled = false;
+                return;
+            }
+            
+            // Extraire les données du visage
+            const faceData = {
+                descriptor: Array.from(detection.descriptor),
+                timestamp: new Date().toISOString()
+            };
+            
+            // Ajouter aux visages capturés
+            capturedFaces.push(faceData);
+            
+            // Mettre à jour la barre de progression
+            const progress = (capturedFaces.length / 5) * 100;
+            progressBar.style.width = `${progress}%`;
+            
+            // Mettre à jour le texte de statut
+            statusText.textContent = `${capturedFaces.length}/5 images capturées.`;
+            
+            // Activer le bouton de finalisation si assez d'images sont capturées
+            if (capturedFaces.length >= 5) {
+                completeBtn.disabled = false;
+                statusText.textContent = "Enrôlement terminé ! Vous pouvez maintenant finaliser.";
+            } else {
+                captureBtn.disabled = false;
+            }
+        } catch (error) {
+            console.error('Error during face capture:', error);
+            statusText.textContent = "Erreur lors de la capture: " + error.message;
+            captureBtn.disabled = false;
+        }
+    }
+async function completeEnrollment() {
+    document.getElementById('loader-overlay').style.visibility = 'visible';
+    document.getElementById('loader-overlay').style.opacity = '1';
+    
+    try {
+        const data = {
+            faceData: capturedFaces,
+            resetToken: document.getElementById('resetToken')?.value || 'save',
+            email: document.getElementById('email')?.value || ''
+        };
+        
+        // Récupérer le token CSRF depuis la balise meta
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+        
+        const response = await fetch('/facial-enrollment/save', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify(data)
+        });
+        
+        // Vérifier si la réponse est OK
+        if (response.ok) {
+            statusText.textContent = 'Configuration réussie! Redirection...';
+            setTimeout(() => {
+                window.location.href = '/dashboard';
+            }, 1500);
+        } else {
+            throw new Error('Le serveur a retourné une erreur: ' + response.status);
+        }
+    } catch (error) {
+        console.error('Erreur:', error);
+        statusText.textContent = 'Erreur: ' + error.message;
+    } finally {
+        document.getElementById('loader-overlay').style.visibility = 'hidden';
+        document.getElementById('loader-overlay').style.opacity = '0';
+    }
+}
+// Show status message helper function
+function showStatusMessage(message, type) {
+    const statusElement = document.getElementById('faceStatus');
+    statusElement.textContent = message;
+    statusElement.className = `face-status alert alert-${type}`;
+}
+    // Fonction de nettoyage
+    function cleanup() {
+        // Arrêter la vidéo si elle est en cours
+        if (video && video.srcObject) {
+            const tracks = video.srcObject.getTracks();
+            tracks.forEach(track => track.stop());
+        }
+    }
+    
+    // Initialisation sécurisée
+    async function initialize() {
+        try {
+            // Charger les modèles d'abord
+            const modelsLoaded = await loadModels();
+            if (!modelsLoaded) {
+                return;
+            }
+            
+            // Puis démarrer la vidéo
+            const videoStarted = await startVideo();
+            if (!videoStarted) {
+                return;
+            }
+            
+            // Enfin commencer la détection
+            startFaceDetection();
+        } catch (error) {
+            console.error('Error during initialization:', error);
+            statusText.textContent = "Erreur d'initialisation: " + error.message;
+        }
+    }
+    
+    // Mise à jour de l'initialisation
+    captureBtn.addEventListener('click', captureCurrentFace);
+    completeBtn.addEventListener('click', completeEnrollment);
+    
+    // Prévention de la navigation arrière
+    window.history.pushState(null, null, window.location.href);
+    window.onpopstate = function() {
+        window.history.pushState(null, null, window.location.href);
+        alert('Pour des raisons de sécurité, veuillez utiliser les boutons fournis.');
+    };
+    
+    // Démarrer l'initialisation
+    initialize();
+    
+    // Nettoyage lorsque l'utilisateur quitte la page
+    window.addEventListener('beforeunload', cleanup);
+});
+    </script>
+</body>
+</html>

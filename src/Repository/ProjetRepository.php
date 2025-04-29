@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Projet;
 use App\Entity\StatutProjet;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\ORM\QueryBuilder;
@@ -19,12 +20,21 @@ class ProjetRepository extends ServiceEntityRepository
      * Récupère la liste de tous les projets
      * @return Projet[]
      */
-    public function getProjetListQB()
-    {
-        return $this->createQueryBuilder('p')
-            ->getQuery()
-            ->getResult();
+    // Dans App\Repository\ProjetRepository.php
+public function getProjetListQB(?User $user = null)
+{
+    $qb = $this->createQueryBuilder('p')
+        ->leftJoin('p.assignedUsers', 'u')
+        ->addSelect('u');
+
+    // Si un utilisateur est fourni et n'est pas un chef de projet, filtrer par projets assignés
+    if ($user !== null && !in_array('ROLE_CHEF_PROJET', $user->getRoles())) {
+        $qb->andWhere(':user MEMBER OF p.assignedUsers')
+           ->setParameter('user', $user);
     }
+
+    return $qb->getQuery()->getResult();
+}
 
     /**
      * Recherche des projets par statut

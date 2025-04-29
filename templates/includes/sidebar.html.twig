@@ -2,7 +2,8 @@
 	<div class="sidebar-logo">
 		<div class="logo-header" data-background-color="dark">
 			<a href="{{ path('app_home') }}" class="logo">
-				<img src="{{ asset('assets/img/logo1.png') }}" alt="navbar brand" class="navbar-brand" height="50"/>
+				{# <img src="{{ asset('assets/img/logo1.png') }}" alt="navbar brand" class="navbar-brand" height="50"/> #}
+				<img src="{{ asset('assets/img/evolve.png') }}" alt="navbar brand" class="navbar-brand" height="140"/>
 			</a>
 			<div class="nav-toggle">
 				<button class="btn btn-toggle toggle-sidebar">
@@ -84,7 +85,7 @@
 					</li>
 				{% endif %}
 				{% if app.user is defined and app.user and app.user.role is defined %}
-                 <li class="nav-item">
+              <li class="nav-item">
     <a data-bs-toggle="collapse" href="#transports">
         <i class="fa fa-car"></i>
         <p>Gestion de transport</p>
@@ -121,7 +122,7 @@
 					<li class="nav-item">
 						<a data-bs-toggle="collapse" href="#projects">
 							<i class="fas fa-project-diagram"></i>
-							<p>Project Management</p>
+							<p>Gestion de projet</p>
 							<span class="caret"></span>
 						</a>
 						<div class="collapse" id="projects">
@@ -129,7 +130,7 @@
 								{% if app.user.role == 'RESPONSABLE_RH' %}
 									<li>
 										<a href="{{ path('projets_list') }}">
-											<span class="sub-item">Projects List</span>
+											<span class="sub-item">Liste des projets</span>
 										</a>
 									</li>
 									<li class="nav-item">
@@ -138,7 +139,7 @@
 								{% if app.user.role == 'CHEF_PROJET' or app.user.role == 'EMPLOYEE' %}
 									<li>
 										<a href="{{ path('projets_cards') }}">
-											<span class="sub-item">Projects Cards</span>
+											<span class="sub-item">Carte des projets</span>
 										</a>
 									</li>
 								{% endif %}
@@ -177,3 +178,177 @@
 		</div>
 	</div>
 </div>
+
+
+{# <li class="nav-item">
+																														<a data-bs-toggle="collapse" href="#sidebarLayouts">
+																															<i class="fas fa-th-list"></i>
+																															<p>Sidebar Layouts</p>
+																															<span class="caret"></span>
+																														</a>
+																														<div class="collapse" id="sidebarLayouts">
+																															<ul class="nav nav-collapse">
+																																<li>
+																																	<a href="{{ path('app_sidebar_style2') }}">
+																																		<span class="sub-item">Sidebar Style 2</span>
+																																	</a>
+																																</li>
+																																<li>
+																																	<a href="{{ path('app_icon_menu') }}">
+																																		<span class="sub-item">Icon Menu</span>
+																																	</a>
+																																</li>
+																															</ul>
+																														</div>
+																													</li> #}
+
+{# <li class="nav-item">
+																									<a data-bs-toggle="collapse" href="#forms">
+																										<i class="fas fa-pen-square"></i>
+																										<p>Forms</p>
+																										<span class="caret"></span>
+																									</a>
+																									<div class="collapse" id="forms">
+																										<ul class="nav nav-collapse">
+																											<li>
+																												<a href="{{ path('app_basicform') }}">
+																													<span class="sub-item">Basic Form</span>
+																												</a>
+																											</li>
+																										</ul>
+																									</div>
+																								</li> #}
+
+{# <li class="nav-item">
+																														<a data-bs-toggle="collapse" href="#tables">
+																															<i class="fas fa-table"></i>
+																															<p>Tables</p>
+																															<span class="caret"></span>
+																														</a>
+																														<div class="collapse" id="tables">
+																															<ul class="nav nav-collapse">
+																																<li>
+																																	<a href="{{ path('app_basictable') }}">
+																																		<span class="sub-item">Basic Table</span>
+																																	</a>
+																																</li>
+																																<li>
+																																	<a href="{{ path('app_datatables') }}">
+																																		<span class="sub-item">Datatables</span>
+																																	</a>
+																																</li>
+																															</ul>
+																														</div>
+																													</li> #}
+
+{# <li class="nav-item">
+																														<a data-bs-toggle="collapse" href="#maps">
+																															<i class="fas fa-map-marker-alt"></i>
+																															<p>Maps</p>
+																															<span class="caret"></span>
+																														</a>
+																														<div class="collapse" id="maps">
+																															<ul class="nav nav-collapse">
+																																<li>
+																																	<a href="{{ path('app_googlemaps') }}">
+																																		<span class="sub-item">Google Maps</span>
+																																	</a>
+																																</li>
+																																<li>
+																																	<a href="{{ path('app_jsvectormap') }}">
+																																		<span class="sub-item">Jsvectormap</span>
+																																	</a>
+																																</li>
+																															</ul>
+																														</div>
+																													</li> #}
+
+{# <li class="nav-item active submenu">
+																														<a data-bs-toggle="collapse" href="#charts">
+																															<i class="far fa-chart-bar"></i>
+																															<p>Charts</p>
+																															<span class="caret"></span>
+																														</a>
+																														<div class="collapse show" id="charts">
+																															<ul class="nav nav-collapse">
+																																<li class="active">
+																																	<a href="{{ path('app_chartjs') }}">
+																																		<span class="sub-item">Chart Js</span>
+																																	</a>
+																																</li>
+																																<li>
+																																	<a href="{{ path('app_sparkline') }}">
+																																		<span class="sub-item">Sparkline</span>
+																																	</a>
+																																</li>
+																															</ul>
+																														</div>
+																													</li> #}
+
+{# <li class="nav-item">
+																														<a href="{{ path('app_widgets') }}">
+																															<i class="fas fa-desktop"></i>
+																															<p>Widgets</p>
+																															<span class="badge badge-success">4</span>
+																														</a>
+																													</li> #}
+
+{# <li class="nav-item">
+																														<a href="{{ path('app_documentation') }}">
+																															<i class="fas fa-file"></i>
+																															<p>Documentation</p>
+																															<span class="badge badge-secondary">1</span>
+																														</a>
+																													</li> #}
+
+{# <li class="nav-item">
+																														<a data-bs-toggle="collapse" href="#submenu">
+																															<i class="fas fa-bars"></i>
+																															<p>Menu Levels</p>
+																															<span class="caret"></span>
+																														</a>
+																														<div class="collapse" id="submenu">
+																															<ul class="nav nav-collapse">
+																																<li>
+																																	<a data-bs-toggle="collapse" href="#subnav1">
+																																		<span class="sub-item">Level 1</span>
+																																		<span class="caret"></span>
+																																	</a>
+																																	<div class="collapse" id="subnav1">
+																																		<ul class="nav nav-collapse subnav">
+																																			<li>
+																																				<a href="#">
+																																					<span class="sub-item">Level 2</span>
+																																				</a>
+																																			</li>
+																																			<li>
+																																				<a href="#">
+																																					<span class="sub-item">Level 2</span>
+																																				</a>
+																																			</li>
+																																		</ul>
+																																	</div>
+																																</li>
+																																<li>
+																																	<a data-bs-toggle="collapse" href="#subnav2">
+																																		<span class="sub-item">Level 1</span>
+																																		<span class="caret"></span>
+																																	</a>
+																																	<div class="collapse" id="subnav2">
+																																		<ul class="nav nav-collapse subnav">
+																																			<li>
+																																				<a href="#">
+																																					<span class="sub-item">Level 2</span>
+																																				</a>
+																																			</li>
+																																		</ul>
+																																	</div>
+																																</li>
+																																<li>
+																																	<a href="#">
+																																		<span class="sub-item">Level 1</span>
+																																	</a>
+																																</li>
+																															</ul>
+																														</div>
+																													</li> #}
