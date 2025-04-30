@@ -6,6 +6,7 @@ use App\Entity\Absence;
 use App\Entity\AbsenceStatus;
 use App\Repository\AbsenceRepository;
 use App\Repository\UserRepository;
+use App\Service\PdfService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,15 +20,18 @@ class AbsenceController extends AbstractController
     private EntityManagerInterface $entityManager;
     private AbsenceRepository $absenceRepository;
     private UserRepository $userRepository;
+    private PdfService $pdfService;
 
     public function __construct(
         EntityManagerInterface $entityManager,
         AbsenceRepository $absenceRepository,
-        UserRepository $userRepository
+        UserRepository $userRepository,
+        PdfService $pdfService
     ) {
         $this->entityManager = $entityManager;
         $this->absenceRepository = $absenceRepository;
         $this->userRepository = $userRepository;
+        $this->pdfService = $pdfService;
     }
 
     #[Route('/admin', name: 'app_employee_attendance_admin')]
@@ -175,6 +179,125 @@ class AbsenceController extends AbstractController
         $response = new Response($csvContent);
         $response->headers->set('Content-Type', 'text/csv');
         $response->headers->set('Content-Disposition', 'attachment; filename="attendance_report_' . $month . '_' . $year . '.csv"');
+        
+        return $response;
+    }
+
+    #[Route('/export-pdf', name: 'app_employee_attendance_export_pdf')]
+    public function exportPdf(Request $request): Response
+    {
+        $month = $request->query->get('month', date('F'));
+        $year = $request->query->get('year', date('Y'));
+        
+        // Same logic as in index method to prepare attendance data
+        $monthNumber = date('m', strtotime($month));
+        $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $monthNumber, $year);
+        $days = range(1, $daysInMonth);
+        $employees = $this->userRepository->findAll();
+        
+        // Prepare attendance data structure
+        $attendanceData = [];
+        
+        foreach ($employees as $employee) {
+            $attendanceData[$employee->getId()] = [
+                'employee' => $employee,
+                'days' => [],
+            ];
+            
+            // Initialize all days
+            foreach ($days as $day) {
+                $attendanceData[$employee->getId()]['days'][$day] = null;
+            }
+        }
+        
+        // Get all absences for the month
+        $startDate = new \DateTime("$year-$monthNumber-01");
+        $endDate = new \DateTime("$year-$monthNumber-$daysInMonth");
+        
+        $absences = $this->absenceRepository->createQueryBuilder('a')
+            ->where('a.date BETWEEN :startDate AND :endDate')
+            ->setParameter('startDate', $startDate)
+            ->setParameter('endDate', $endDate)
+            ->getQuery()
+            ->getResult();
+        
+        // Populate attendance data with actual statuses
+        foreach ($absences as $absence) {
+            $employeeId = $absence->getIdEmploye();
+            $day = (int)$absence->getDate()->format('j'); // Day without leading zeros
+            
+            if (isset($attendanceData[$employeeId])) {
+                $attendanceData[$employeeId]['days'][$day] = $absence;
+            }
+        }
+        
+        // Get statistics for the PDF report
+        $statistics = [
+            'total' => count($absences),
+            'present' => 0,
+            'absent' => 0,
+            'leave' => 0,
+            'other' => 0,
+        ];
+        
+        foreach ($absences as $absence) {
+            switch ($absence->getStatus()) {
+                case AbsenceStatus::PRESENT:
+                    $statistics['present']++;
+                    break;
+                case AbsenceStatus::ABSENT:
+                    $statistics['absent']++;
+                    break;
+                case AbsenceStatus::EN_CONGE:
+                    $statistics['leave']++;
+                    break;
+                default:
+                    $statistics['other']++;
+            }
+        }
+        
+        // Calculate working days in the month (excluding weekends)
+        $workingDays = 0;
+        $currentDate = clone $startDate;
+        while ($currentDate <= $endDate) {
+            $dayOfWeek = $currentDate->format('N');
+            if ($dayOfWeek < 6) { // Not Saturday or Sunday
+                $workingDays++;
+            }
+            $currentDate->modify('+1 day');
+        }
+        
+        // Calculate total number of employees
+        $employeesCount = $this->userRepository->count([]);
+        
+        // Calculate employees with perfect attendance
+        $perfectAttendance = $employeesCount - count($this->absenceRepository->findAbsentEmployeesInPeriod($startDate, $endDate));
+        
+        // Generate PDF using the template
+        $pdfContent = $this->pdfService->generatePdfFromTemplate(
+            'absence/attendanceReportPDF.html.twig',
+            [
+                'month' => $month,
+                'year' => $year,
+                'days' => $days,
+                'attendanceData' => $attendanceData,
+                'statistics' => $statistics,
+                'workingDays' => $workingDays,
+                'perfectAttendance' => $perfectAttendance,
+                'employeesCount' => $employeesCount,
+            ],
+            'attendance_report_' . $month . '_' . $year . '.pdf',
+            [
+                'paperSize' => 'A4',
+                'paperOrientation' => 'portrait',
+                'isRemoteEnabled' => true
+            ]
+        );
+        
+        // Return the PDF as a response
+        $response = new Response($pdfContent);
+        $response->headers->set('Content-Type', 'application/pdf');
+        $response->headers->set('Content-Disposition', 'attachment; filename="attendance_report_' . $month . '_' . $year . '.pdf"');
         
         return $response;
     }

@@ -15,6 +15,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Twilio\Rest\Client;
 
 #[Route('/conge')]
 class CongeController extends AbstractController
@@ -229,9 +230,15 @@ class CongeController extends AbstractController
     public function updateStatus(Request $request, Conge $conge): Response
     {
         $status = CongeStatus::from($request->request->get('status'));
+        $oldStatus = $conge->getStatus();
         $conge->setStatus($status);
         
         $this->entityManager->flush();
+        
+        // Send SMS notification if status changed to APPROUVE or REFUSE
+        if (($status === CongeStatus::ACCEPTE || $status === CongeStatus::REFUSE) && $status !== $oldStatus) {
+            $this->sendStatusNotification($conge);
+        }
         
         $this->addFlash('success', 'Statut de congé mis à jour avec succès!');
         
@@ -277,6 +284,105 @@ class CongeController extends AbstractController
         }
         
         return new JsonResponse($data);
+    }
+    
+   /**
+     * Send SMS notification to HR about leave request status change
+     */
+    private function sendStatusNotification(Conge $conge): void
+    {
+        try {
+            // Check if Twilio credentials are configured
+            if (!isset($_ENV['MTWILIO_ACCOUNT_SID']) || !isset($_ENV['MTWILIO_AUTH_TOKEN']) || !isset($_ENV['MTWILIO_PHONE_NUMBER'])) {
+                $this->addFlash('warning', 'Configuration Twilio manquante. SMS non envoyé.');
+                error_log('Missing Twilio configuration. SMS not sent.');
+                return;
+            }
+
+            // Get HR phone number - check if it's set
+            $hrPhoneNumber = $_ENV['MHR_PHONE_NUMBER'] ?? null;
+            if (!$hrPhoneNumber) {
+                error_log('HR phone number not configured. SMS notification skipped.');
+                $this->addFlash('warning', 'Numéro de téléphone RH non configuré. Notification SMS ignorée.');
+                return;
+            }
+            
+            $employe = $conge->getEmploye();
+            if (!$employe) {
+                error_log('Employee data missing. SMS not sent.');
+                $this->addFlash('warning', 'Données employé manquantes. SMS non envoyé.');
+                return;
+            }
+            
+            // Prepare message data
+            $status = $conge->getStatus();
+            $employeName = $employe->getFirstname() . ' ' . $employe->getLastname();
+            $startDate = $conge->getLeaveStart()->format('d/m/Y');
+            $endDate = $conge->getLeaveEnd()->format('d/m/Y');
+            
+            // Twilio credentials
+            $twilioSid = $_ENV['MTWILIO_ACCOUNT_SID'];
+            $twilioToken = $_ENV['MTWILIO_AUTH_TOKEN'];
+            $twilioNumber = $_ENV['MTWILIO_PHONE_NUMBER'];
+            
+            // Create Twilio client
+            $twilio = new Client($twilioSid, $twilioToken);
+            
+            // Only send notification to HR
+            try {
+                // Prepare HR message
+                $hrMessage = "Notification: La demande de congé de $employeName du $startDate au $endDate a été marquée comme " . 
+                         ($status === CongeStatus::ACCEPTE ? "APPROUVÉE" : "REFUSÉE");
+                
+                // Add debug output - remove in production
+                error_log("SMS Details - SID: {$twilioSid}, Number: {$twilioNumber}, To: {$hrPhoneNumber}");
+                error_log("Message content: {$hrMessage}");
+                
+                // Log attempt             
+                error_log("Sending SMS to HR at $hrPhoneNumber");
+                
+                // Send SMS to HR and get response for logging
+                $hrMsgResponse = $twilio->messages->create(
+                    $hrPhoneNumber,
+                    [
+                        'from' => $twilioNumber,
+                        'body' => $hrMessage
+                    ]
+                );
+                
+                // Log success with message SID
+                error_log("SMS sent to HR successfully. SID: " . $hrMsgResponse->sid);
+                $this->addFlash('success', 'SMS de notification envoyé à l employé .');
+                
+            } catch (\Exception $e) {
+                error_log('Error sending SMS to HR: ' . $e->getMessage());
+                $this->addFlash('danger', 'Erreur lors de l\'envoi du SMS à l employé: ' . $e->getMessage());
+            }
+            
+        } catch (\Exception $e) {
+            // Log the overall error
+            error_log('Error in SMS notification process: ' . $e->getMessage() . ' - ' . $e->getTraceAsString());
+            $this->addFlash('danger', 'Erreur lors du processus de notification SMS: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Format phone number to ensure it has international format
+     */
+    private function formatPhoneNumber(int $phoneNumber): string
+    {
+        $phoneStr = (string) $phoneNumber;
+        
+        // If it doesn't start with '+', add Tunisian country code
+        if (substr($phoneStr, 0, 1) !== '+') {
+            // For Tunisian numbers
+            if (strlen($phoneStr) === 8) {
+                return '+216' . $phoneStr;
+            }
+        }
+        
+        // Return as is if it already has country code
+        return $phoneStr;
     }
     
     /**

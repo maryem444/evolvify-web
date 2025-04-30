@@ -23,6 +23,9 @@ class CongeEmpController extends AbstractController
     private EntityManagerInterface $entityManager;
     private CongeRepository $congeRepository;
     private ValidatorInterface $validator;
+    
+    // Constante pour définir le nombre total de jours de congé disponibles par an
+    private const TOTAL_CONGE_DAYS = 26;
 
     public function __construct(
         EntityManagerInterface $entityManager, 
@@ -48,12 +51,52 @@ class CongeEmpController extends AbstractController
         return $user;
     }
 
+    /**
+     * Recalcule le nombre de jours de congé restants pour un utilisateur
+     */
+    private function recalculateRemainingDays(User $user): int
+    {
+        // Utiliser la constante pour le nombre total de jours de congé (26 jours)
+        $totalDays = self::TOTAL_CONGE_DAYS;
+        
+        // Récupérer tous les congés acceptés de type CONGE
+        $acceptedLeaves = $this->congeRepository->findBy([
+            'employe' => $user,
+            'statusString' => CongeStatus::ACCEPTE->value,
+            'typeString' => CongeType::CONGE->value
+        ]);
+        
+        // Somme des jours de congé pris
+        $usedDays = array_reduce($acceptedLeaves, function($carry, $conge) {
+            return $carry + ($conge->getNumberOfDays() ?? 0);
+        }, 0);
+        
+        // Calculer les jours restants
+        $remainingDays = $totalDays - $usedDays;
+        
+        // S'assurer que la valeur n'est pas négative
+        return max(0, $remainingDays);
+    }
+
     #[Route('/', name: 'app_employe_conge_index', methods: ['GET'])]
     public function index(): Response
     {
         $user = $this->getCurrentUser();
         
-        // Récupérer uniquement les congés de l'employé connecté
+        // S'assurer que congeRestant est initialisé et à jour
+        if ($user->getCongeRestant() === null) {
+            // Initialiser avec le nombre total de jours de congé
+            $user->setCongeRestant(self::TOTAL_CONGE_DAYS);
+        } else {
+            // Recalculer les jours restants pour être sûr que c'est à jour
+            $remainingDays = $this->recalculateRemainingDays($user);
+            $user->setCongeRestant($remainingDays);
+        }
+        
+        $this->entityManager->persist($user);
+        $this->entityManager->flush();
+        
+        // Récupérer les congés de l'employé connecté
         $conges = $this->congeRepository->findByEmployee($user);
         
         // Calculer les statistiques
@@ -65,8 +108,8 @@ class CongeEmpController extends AbstractController
             return $conge->getStatus() === CongeStatus::EN_COURS;
         }));
         
-        // Get remaining days from user entity
-        $joursRestants = $user->getCongeRestant() ?? 0;
+        // Obtenir les jours restants de l'entité utilisateur
+        $joursRestants = $user->getCongeRestant();
         
         return $this->render('conges/indexEmp.html.twig', [
             'conges' => $conges,
@@ -81,6 +124,12 @@ class CongeEmpController extends AbstractController
     {
         $user = $this->getCurrentUser();
         
+        // Recalculer les jours restants pour s'assurer qu'ils sont à jour
+        $joursRestants = $this->recalculateRemainingDays($user);
+        $user->setCongeRestant($joursRestants);
+        $this->entityManager->persist($user);
+        $this->entityManager->flush();
+        
         if ($request->isMethod('POST')) {
             $conge = new Conge();
             
@@ -92,6 +141,21 @@ class CongeEmpController extends AbstractController
                 // Calculate days
                 $interval = $leaveStart->diff($leaveEnd);
                 $numberOfDays = $interval->days + 1; // Include both start and end days
+                
+                // Vérifier si l'utilisateur a assez de jours de congé
+                if ($user->getCongeRestant() < $numberOfDays && $request->request->get('type') === CongeType::CONGE->value) {
+                    $this->addFlash('error', 'Vous n\'avez pas assez de jours de congé restants.');
+                    
+                    // Get all enum values for dropdowns
+                    $types = $this->getEnumValues(CongeType::class);
+                    $reasons = $this->getEnumValues(CongeReason::class);
+                    
+                    return $this->render('conges/newEmp.html.twig', [
+                        'types' => $types,
+                        'reasons' => $reasons,
+                        'formData' => $request->request->all(),
+                    ]);
+                }
                 
                 $conge->setLeaveStart($leaveStart);
                 $conge->setLeaveEnd($leaveEnd);
@@ -177,6 +241,12 @@ class CongeEmpController extends AbstractController
     {
         $user = $this->getCurrentUser();
         
+        // Recalculer les jours restants pour s'assurer qu'ils sont à jour
+        $joursRestants = $this->recalculateRemainingDays($user);
+        $user->setCongeRestant($joursRestants);
+        $this->entityManager->persist($user);
+        $this->entityManager->flush();
+        
         // Vérifier que l'employé de la demande correspond à l'utilisateur connecté
         if ($conge->getEmploye() !== $user) {
             throw $this->createAccessDeniedException('Vous n\'êtes pas autorisé à modifier cette demande de congé.');
@@ -197,6 +267,27 @@ class CongeEmpController extends AbstractController
                 // Calculate days
                 $interval = $leaveStart->diff($leaveEnd);
                 $numberOfDays = $interval->days + 1; // Include both start and end days
+                
+                // Vérifier si l'utilisateur a assez de jours de congé (pour les congés payés seulement)
+                if ($request->request->get('type') === CongeType::CONGE->value) {
+                    $oldDays = $conge->getNumberOfDays();
+                    $joursRestants = $user->getCongeRestant();
+                    
+                    // Si le nombre de jours augmente, vérifier si suffisamment de jours sont disponibles
+                    if ($numberOfDays > $oldDays && $joursRestants < ($numberOfDays - $oldDays)) {
+                        $this->addFlash('error', 'Vous n\'avez pas assez de jours de congé restants.');
+                        
+                        // Get all enum values for dropdowns
+                        $types = $this->getEnumValues(CongeType::class);
+                        $reasons = $this->getEnumValues(CongeReason::class);
+                        
+                        return $this->render('conges/editEmp.html.twig', [
+                            'conge' => $conge,
+                            'types' => $types,
+                            'reasons' => $reasons,
+                        ]);
+                    }
+                }
                 
                 $conge->setLeaveStart($leaveStart);
                 $conge->setLeaveEnd($leaveEnd);
@@ -266,24 +357,27 @@ class CongeEmpController extends AbstractController
         if ($conge->getEmploye() !== $user) {
             throw $this->createAccessDeniedException('Vous n\'êtes pas autorisé à modifier cette demande de congé.');
         }
-
+        
         $newStatus = CongeStatus::from($request->request->get('status'));
-
-        // Si le statut passe à ACCEPTÉ et que ce n'était pas déjà le cas
-        if ($newStatus === CongeStatus::ACCEPTE && $conge->getStatus() !== CongeStatus::ACCEPTE) {
-            // Déduire les jours demandés, sans passer en négatif
-            $joursRestants = $user->getCongeRestant() ?? 0;
-            $joursDemandes = $conge->getNumberOfDays();
-            $user->setCongeRestant(max(0, $joursRestants - $joursDemandes));
-            $this->entityManager->persist($user);
-        }
-
+        $oldStatus = $conge->getStatus();
+        
         // Mettre à jour le statut du congé
         $conge->setStatus($newStatus);
+        $this->entityManager->persist($conge);
+        
+        // Ne déduire des jours que pour les congés payés
+        if ($conge->getType() === CongeType::CONGE) {
+            // Recalculer les jours de congé directement
+            $remainingDays = $this->recalculateRemainingDays($user);
+            $user->setCongeRestant($remainingDays);
+            $this->entityManager->persist($user);
+        }
+        
+        // Important: flush APRÈS avoir fait toutes les modifications
         $this->entityManager->flush();
-
+        
         $this->addFlash('success', 'Statut de congé mis à jour avec succès!');
-
+        
         return $this->redirectToRoute('app_employe_conge_index');
     }
 
@@ -305,6 +399,12 @@ class CongeEmpController extends AbstractController
         
         if ($this->isCsrfTokenValid('delete'.$conge->getId(), $request->request->get('_token'))) {
             $this->entityManager->remove($conge);
+            $this->entityManager->flush();
+            
+            // Recalculer les jours restants après suppression
+            $remainingDays = $this->recalculateRemainingDays($user);
+            $user->setCongeRestant($remainingDays);
+            $this->entityManager->persist($user);
             $this->entityManager->flush();
             
             $this->addFlash('success', 'Demande de congé supprimée avec succès!');
