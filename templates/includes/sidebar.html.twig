@@ -93,7 +93,7 @@
           <li class="nav-item {{ app.request.get('_route') in congeRoutes ? 'active' : '' }}">
             <a data-bs-toggle="collapse" href="#conges">
               <i class="fa fa-calendar"></i>
-              <p>Conge Management</p>
+              <p>Gestion de congés</p>
               <span class="caret"></span>
             </a>
             <div class="collapse {{ app.request.get('_route') in congeRoutes ? 'show' : '' }}" id="conges">
@@ -101,7 +101,7 @@
                 {% if app.user.role == 'RESPONSABLE_RH' %}
                   <li class="{{ app.request.get('_route') == 'app_conge_index' ? 'active' : '' }}">
                     <a class="{{ app.request.get('_route') == 'app_conge_index' ? 'active' : '' }}" href="{{ path('app_conge_index') }}">
-                      <span class="sub-item">Leave Requests</span>
+                      <span class="sub-item">Demandes de congés</span>
                     </a>
                   </li>
                   <li class="{{ app.request.get('_route') == 'app_employee_attendance_admin' ? 'active' : '' }}">
@@ -113,12 +113,12 @@
                 {% if app.user.role == 'EMPLOYEE' %}
                   <li class="{{ app.request.get('_route') == 'app_employe_conge_index' ? 'active' : '' }}">
                     <a class="{{ app.request.get('_route') == 'app_employe_conge_index' ? 'active' : '' }}" href="{{ path('app_employe_conge_index') }}">
-                      <span class="sub-item">My Leave Requests</span>
+                      <span class="sub-item">Mes demandes de congés</span>
                     </a>
                   </li>
                   <li class="{{ app.request.get('_route') == 'app_employee_my_attendance' ? 'active' : '' }}">
                     <a class="{{ app.request.get('_route') == 'app_employee_my_attendance' ? 'active' : '' }}" href="{{ path('app_employee_my_attendance') }}">
-                      <span class="sub-item">My Absences</span>
+                      <span class="sub-item">Mes absences</span>
                     </a>
                   </li>
                 {% endif %}
@@ -198,7 +198,8 @@
                 </ul>
               </div>
             </li>
-            
+
+            {% if app.user is defined and app.user and app.user.role is defined and app.user.role == 'RESPONSABLE_RH' %}
             {% set recruitmentRoutes = ['app_Candidates', 'app_Offre', 'app_Entretiens'] %}
             <li class="nav-item {{ app.request.get('_route') in recruitmentRoutes ? 'active' : '' }}">
               <a data-bs-toggle="collapse" href="#forms">
@@ -229,6 +230,8 @@
               </div>
             </li>
           {% endif %}
+        {% endif %}
+
         {% endif %}
       </ul>
     </div>

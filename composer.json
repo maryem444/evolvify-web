@@ -32,13 +32,9 @@
         "symfony/runtime": "7.2.*",
         "symfony/security-bundle": "6.4.*",
         "symfony/security-core": "6.4.*",
-<<<<<<< HEAD
-        "symfony/twig-bundle": "6.4.*",
-=======
         "symfony/stimulus-bundle": "*",
         "symfony/twig-bundle": "6.4",
         "symfony/ux-chartjs": "^2.24",
->>>>>>> GestionUtilisateur
         "symfony/validator": "6.4.*",
         "symfony/webpack-encore-bundle": "^2.2",
         "symfony/yaml": "7.2.*",
