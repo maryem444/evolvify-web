@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Attendance Report {{ month }} {{ year }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            color: #333;
+            line-height: 1.4;
+            margin: 0;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #1572E8;
+            padding-bottom: 10px;
+        }
+        .logo {
+            max-width: 150px;
+            margin-bottom: 10px;
+        }
+        h1 {
+            color: #1572E8;
+            font-size: 24px;
+            margin: 0;
+        }
+        .report-meta {
+            font-size: 14px;
+            margin-top: 5px;
+            color: #666;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 12px;
+        }
+        th, td {
+            padding: 8px 12px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            color: #495057;
+        }
+        .status-PRESENT {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        .status-ABSENT {
+            color: #F25961;
+            font-weight: bold;
+        }
+        .status-EN_CONGE {
+            color: #1572E8;
+            font-weight: bold;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 10px;
+            text-align: center;
+            color: #777;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+        }
+        .page-break {
+            page-break-after: always;
+        }
+        .summary {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+        .summary h2 {
+            color: #1572E8;
+            font-size: 18px;
+            margin-top: 0;
+        }
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            border-bottom: 1px dotted #ddd;
+            padding-bottom: 5px;
+        }
+        .summary-label {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJYAAAAyCAYAAAC+jCIaAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAF+0lEQVR4nO2cf0xVZRzAP/deLgLKIBAIV0FgP1zTuZm0LDMpNVtuZq5pbQ3XtLXKZWvNrTkzy621WrPVXK2xzCBzwVqstbQ5sggh+aXcogS5/BUKAnIvvHv74wUaaHWR97zn8n17/7vn+z3f5z3n+z7ned7zHEUyUPMegECQBJKEgAhQBISCFCLAHkjGIHrhSrIZxQXYjTxfhyFVIeHdTyJJKEu7qPTwLQoaDBQPiRQ4gzQFxMMWrEEXIwYgbTmMEg1JMoGgAHJcKCKtlsqJUUwK17jkryTGmKEUNRg40uJEU0HxCXjwWNSi9bCdRGSYxfFwhVNfCl/z87gUUVECDmTcCGPL/Lhu52CZAJzxVxgeQmKMRFeLkc3q7HuTWTKUQnOtWOKLX2GKuTptTVZnRWVJbEYHbw+wkxRtvO7D/PZnEiSy0F9heNTxCzOxpQlN5UUoUIyUdvMJNaMeL3/3U5hkxGu9pKswQ0CxDKEGtYoqFbTFScYhUjvPXzOvz6Ww5bfHbKFYN+JCTwskhRLxAFQrExMpk8+WpvRZxQ3jKYXmWt35yIm4Z3iLlJZP4YjbVkQpNFNR+VyIKBKBakrN1OHtw0Tg9YWO/1ExMkAFtXaclWKj+KKgXmV2dLxs0jvFG5kbY6X0W73KY7MN8yrOyQaRLZ1mV4uRs32a3jX/WM22RlCbCMpFUtNHDjW9z7Zt6x1+K25INbYM48YS4QaSYKYpxTLWuM8QKm3LyAu9MYx7LF4CQNUGvG8NJbOSfPVpHEwEgBMtTj6uNOLH3f6JJXSXQi9OWnWiXMKOYoG/PQfUMlJ6nC4N76BuMcpD9oejGECIJYD7Yf8lQ9xNsrKk6BF+P2VH9z5LCdOJGzrVk88Qa6VjAjmM2UkKoRYqiRBfZ6BhWgWMGgz9bqLFSUYDUJOp73DH9V3ULUYW/mCFHr4pHVqJyVqEcEsRD0Ubn5hKRb1K3uTfzH1m3YyXzOtpIK+uMIGWN6+uA6+EtC5lOkUODPYjK5+JXDfBkspQokkUaavI3ywZOUTk5qdP+9xA66NGsOlE1JKvwIvMxoRhNS9e2kN4D1cNSJKShCkE6d69Wn7eYQFVz/nBFYbeuBRWfQF7ZIKUbW9e4Ug7QUpTqUSGmbl3FdaXR929FQTsVJR26hRmKWR/yoAeD53TgdIEk7VSLdaX/BTJQ9DU2eIQoliDuBF3hYOH3xICNQnZEV7lQ0g/JVVUUmIYhQT2hODDSPZ7KRkH+twHyEsomNjVYqR07DUeGuRjZIjVe5yYSXf3fgNNUmE+Vl6rZpxMJBXGJDwUT67SZxPnBLKx0UXFKDfTTVZe9UkNnsBIZ3OdKRa9UmkEKZNXg3iLZN3EnBm+9AEDTNHJKWvWqI2TwDaZm0xGPJpJ2elQOsFFpfnnH4OdtZ66VqYMrJoL4Q0PQaUhmYL5/cMdWmV0FwI1d2MuWHKlhMIUFVe85AeGY6XVLR8EiIRzDnrZLJI2Dfa3ZxOPYoI0wZOQQ5idLLIkV8wt1XXVewJDi5F1TsQhGKnYDL3WtWw/FZvESJLV0fNnCIPIuunYYUskPadjkJV7JLAZ+kIxorX9vWgA2QyhuhQoRJkYoEk85LQwewCmEJK9Hg1Qf6bj+4TfDTm8JJP/kRy/0xGvKtfJuKl1GX/2NxNTKdEYpE4YNuJKUi2qTCY4oJl7uRFlMYDYdRxHOOjXVCYwNpKYdtlOZZNFLmvHsaSZF1Qs0F5eXXwVyDRTSkSzmeKf7VD6PDQBcIxG2fzY5AhI3wZTVPDuFxhaTCE4U+3YLDaKZsVQaoV8zOtWbXmvIX8/wVRisNWirswiJ+dW9gE66ZM3mBCQEJGiWIIbQIglCCKEWIIgQogluC3+Bd+qYCOD6+cOAAAAAElFTkSuQmCC" alt="Company Logo" class="logo">
+        <h1>Attendance Report</h1>
+        <div class="report-meta">
+            <div>{{ month }} {{ year }}</div>
+            <div>Generated on: {{ "now"|date("F d, Y H:i:s") }}</div>
+        </div>
+    </div>
+
+    <div class="summary">
+        <h2>Monthly Summary</h2>
+        <div class="summary-row">
+            <span class="summary-label">Total Employees:</span>
+            <span>{{ employeesCount }}</span>
+        </div>
+        <div class="summary-row">
+            <span class="summary-label">Present Days:</span>
+            <span>{{ statistics.present }}</span>
+        </div>
+        <div class="summary-row">
+            <span class="summary-label">Absent Days:</span>
+            <span>{{ statistics.absent }}</span>
+        </div>
+        <div class="summary-row">
+            <span class="summary-label">Leave Days:</span>
+            <span>{{ statistics.leave }}</span>
+        </div>
+        <div class="summary-row">
+            <span class="summary-label">Working Days in Month:</span>
+            <span>{{ workingDays }}</span>
+        </div>
+        <div class="summary-row">
+            <span class="summary-label">Perfect Attendance:</span>
+            <span>{{ perfectAttendance }} employees</span>
+        </div>
+    </div>
+
+    <h2>Attendance Details</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Employee</th>
+                <th>Role</th>
+                <th>Present</th>
+                <th>Absent</th>
+                <th>Leave</th>
+                <th>Not Marked</th>
+                <th>Attendance Rate</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for id, data in attendanceData %}
+                {% set present = 0 %}
+                {% set absent = 0 %}
+                {% set leave = 0 %}
+                {% set notMarked = 0 %}
+                
+                {% for day, absence in data.days %}
+                    {% if absence %}
+                        {% if absence.status.value == 'PRESENT' %}
+                            {% set present = present + 1 %}
+                        {% elseif absence.status.value == 'ABSENT' %}
+                            {% set absent = absent + 1 %}
+                        {% elseif absence.status.value == 'EN_CONGE' %}
+                            {% set leave = leave + 1 %}
+                        {% endif %}
+                    {% else %}
+                        {% set notMarked = notMarked + 1 %}
+                    {% endif %}
+                {% endfor %}
+                
+                {% set totalWorkingDays = present + absent + leave %}
+                {% set attendanceRate = totalWorkingDays > 0 ? (present / totalWorkingDays * 100)|round(1) : 0 %}
+                
+                <tr>
+                    <td>{{ data.employee.firstName }} {{ data.employee.lastName }}</td>
+                    <td>
+                        {% if data.employee.roles is defined and 'ROLE_ADMIN' in data.employee.roles %}
+                            Admin
+                        {% elseif data.employee.roles is defined and 'ROLE_MANAGER' in data.employee.roles %}
+                            Manager
+                        {% elseif data.employee.roles is defined and 'ROLE_USER' in data.employee.roles %}
+                            User
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td class="status-PRESENT">{{ present }}</td>
+                    <td class="status-ABSENT">{{ absent }}</td>
+                    <td class="status-EN_CONGE">{{ leave }}</td>
+                    <td>{{ notMarked }}</td>
+                    <td>{{ attendanceRate }}%</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="page-break"></div>
+
+    <h2>Daily Attendance Details</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Present</th>
+                <th>Absent</th>
+                <th>Leave</th>
+                <th>Not Marked</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for day in days %}
+                {% set present = 0 %}
+                {% set absent = 0 %}
+                {% set leave = 0 %}
+                {% set notMarked = 0 %}
+                
+                {% for id, data in attendanceData %}
+                    {% if data.days[day] %}
+                        {% if data.days[day].status.value == 'PRESENT' %}
+                            {% set present = present + 1 %}
+                        {% elseif data.days[day].status.value == 'ABSENT' %}
+                            {% set absent = absent + 1 %}
+                        {% elseif data.days[day].status.value == 'EN_CONGE' %}
+                            {% set leave = leave + 1 %}
+                        {% endif %}
+                    {% else %}
+                        {% set notMarked = notMarked + 1 %}
+                    {% endif %}
+                {% endfor %}
+                
+                <tr>
+                    <td>{{ day }} {{ month }} {{ year }}</td>
+                    <td class="status-PRESENT">{{ present }}</td>
+                    <td class="status-ABSENT">{{ absent }}</td>
+                    <td class="status-EN_CONGE">{{ leave }}</td>
+                    <td>{{ notMarked }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <p>This report was automatically generated and is confidential.</p>
+        <p>&copy; {{ "now"|date("Y") }} Your Company Name. All rights reserved.</p>
+    </div>
+</body>
+</html>

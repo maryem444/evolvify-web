@@ -1,226 +1,575 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Historique de présence{% endblock %}
+{% block title %}Historique de présence
+{% endblock %}
 
 {% block stylesheets %}
-    {{ parent() }}
-    <style>
-        .history-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-        
-        .history-table th, .history-table td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: center;
-        }
-        
-        .history-table th {
-            background-color: #f2f2f2;
-        }
-        
-        .stats-card {
-            margin-bottom: 20px;
-            transition: transform 0.3s;
-        }
-        
-        .stats-card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .chart-container {
-            height: 400px;
-            margin-top: 30px;
-        }
-    </style>
-{% endblock %}
+	{{ parent() }}
+	<style>:root
+	{
+		--primary-color: #4361ee;
+		--success-color: #4cc9f0;
+		--danger-color: #f72585;
+		--warning-color: #ffbe0b;
+		--info-color: #3a0ca3;
+		--light-bg: #f8f9fa;
+		--card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+		--transition: all 0.3s ease;
+	}
 
-{% block content %}
-   <div class="container-fluid" style="margin-top: 6rem;">
-        <h1>Mon historique de présence</h1>
-        
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>Année {{ year }}</h2>
-            <form action="{{ path('app_employee_attendance_history') }}" method="GET" class="d-inline">
-                <div class="input-group">
-                    <select name="year" class="form-select">
-                        {% for y in range(year-5, year+1) %}
-                            <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
-                        {% endfor %}
-                    </select>
-                    <button type="submit" class="btn btn-primary">Afficher</button>
-                </div>
-            </form>
-        </div>
-        
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="card bg-success text-white stats-card">
-                    <div class="card-body">
-                        <h5 class="card-title">Jours présent</h5>
-                        <h3 class="card-text">
-                            {% set totalPresent = 0 %}
-                            {% for month, stats in absencesByMonth %}
-                                {% set totalPresent = totalPresent + stats.present %}
-                            {% endfor %}
-                            {{ totalPresent }}
-                        </h3>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card bg-danger text-white stats-card">
-                    <div class="card-body">
-                        <h5 class="card-title">Jours absent</h5>
-                        <h3 class="card-text">
-                            {% set totalAbsent = 0 %}
-                            {% for month, stats in absencesByMonth %}
-                                {% set totalAbsent = totalAbsent + stats.absent %}
-                            {% endfor %}
-                            {{ totalAbsent }}
-                        </h3>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card bg-warning text-dark stats-card">
-                    <div class="card-body">
-                        <h5 class="card-title">Jours en congé</h5>
-                        <h3 class="card-text">
-                            {% set totalLeave = 0 %}
-                            {% for month, stats in absencesByMonth %}
-                                {% set totalLeave = totalLeave + stats.leave %}
-                            {% endfor %}
-                            {{ totalLeave }}
-                        </h3>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card bg-info text-white stats-card">
-                    <div class="card-body">
-                        <h5 class="card-title">Jours enregistrés</h5>
-                        <h3 class="card-text">
-                            {% set totalDays = 0 %}
-                            {% for month, stats in absencesByMonth %}
-                                {% set totalDays = totalDays + stats.total %}
-                            {% endfor %}
-                            {{ totalDays }}
-                        </h3>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="card">
-            <div class="card-body">
-                <h3>Détails par mois</h3>
-                
-                <div class="table-responsive">
-                    <table class="history-table">
-                        <thead>
-                            <tr>
-                                <th>Mois</th>
-                                <th>Jours présent</th>
-                                <th>Jours absent</th>
-                                <th>Jours en congé</th>
-                                <th>Total jours enregistrés</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for month, stats in absencesByMonth %}
-                                <tr>
-                                    <td>{{ month }}</td>
-                                    <td>{{ stats.present }}</td>
-                                    <td>{{ stats.absent }}</td>
-                                    <td>{{ stats.leave }}</td>
-                                    <td>{{ stats.total }}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        
-        <div class="card mt-4">
-            <div class="card-body">
-                <h3>Graphique annuel</h3>
-                <div class="chart-container">
-                    <canvas id="attendanceChart"></canvas>
-                </div>
-            </div>
-        </div>
-        
-        <div class="mt-4">
-            <a href="{{ path('app_employee_my_attendance') }}" class="btn btn-primary">Retour à ma feuille de présence</a>
-        </div>
-    </div>
-{% endblock %}
+	body {
+		background-color: var(--light-bg);
+		font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+	}
 
-{% block javascripts %}
-    {{ parent() }}
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const ctx = document.getElementById('attendanceChart').getContext('2d');
-            
-            // Prepare data for chart
-            const months = [];
-            const presentData = [];
-            const absentData = [];
-            const leaveData = [];
-            
-            {% for month, stats in absencesByMonth %}
-                months.push('{{ month }}');
-                presentData.push({{ stats.present }});
-                absentData.push({{ stats.absent }});
-                leaveData.push({{ stats.leave }});
+	.page-header {
+		background: linear-gradient(135deg, var(--primary-color), var(--info-color));
+		color: white;
+		padding: 2rem 0;
+		border-radius: 0 0 1rem 1rem;
+		margin-bottom: 2rem;
+		box-shadow: var(--card-shadow);
+	}
+
+	.dashboard-container {
+		max-width: 1400px;
+		margin: 0 auto;
+		padding: 0 1rem;
+	}
+
+	.stats-card {
+		border-radius: 1rem;
+		overflow: hidden;
+		box-shadow: var(--card-shadow);
+		margin-bottom: 1.5rem;
+		border: none;
+		transition: var(--transition);
+	}
+
+	.stats-card:hover {
+		transform: translateY(-5px);
+		box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+	}
+
+	.stats-card .card-body {
+		padding: 1.5rem;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.stats-card .card-title {
+		font-size: 1rem;
+		font-weight: 600;
+		margin-bottom: 0.5rem;
+		text-transform: uppercase;
+	}
+
+	.stats-card .card-text {
+		font-size: 2.5rem;
+		font-weight: 700;
+		margin: 0;
+	}
+
+	.stats-icon {
+		font-size: 2rem;
+		margin-bottom: 0.5rem;
+	}
+
+	.data-card {
+		border-radius: 1rem;
+		overflow: hidden;
+		box-shadow: var(--card-shadow);
+		margin-bottom: 2rem;
+		border: none;
+	}
+
+	.data-card .card-header {
+		background-color: white;
+		border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+		padding: 1.25rem 1.5rem;
+		font-weight: 600;
+		font-size: 1.25rem;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+
+	   
+    .year-filter {
+      display: flex;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      padding: 0.3rem;
+    }
+    
+    .year-filter select {
+      background: transparent;
+      color: white;
+      border: none;
+      padding: 0.375rem 1.75rem 0.375rem 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.75rem center;
+      background-size: 16px 12px;
+    }
+    
+    .year-filter select:focus {
+      outline: none;
+      box-shadow: none;
+    }
+    
+    .year-filter select option {
+      background-color: #4e54c8;
+      color: white;
+    }
+    
+    .year-filter button {
+      background-color: white;
+      color: #4e54c8;
+      border: none;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+    
+    .year-filter button:hover {
+      background-color: #f0f0f0;
+      color: #3a3fad;
+    }
+
+	.table-container {
+		overflow-x: auto;
+		padding: 1rem;
+	}
+
+	.history-table {
+		width: 100%;
+		border-collapse: separate;
+		border-spacing: 0;
+		border-radius: 0.5rem;
+		overflow: hidden;
+	}
+
+	.history-table th {
+		background-color: #f5f7fa;
+		padding: 1rem;
+		font-weight: 600;
+		text-align: left;
+		color: #495057;
+		border-bottom: 2px solid #e9ecef;
+	}
+
+	.history-table td {
+		padding: 1rem;
+		border-bottom: 1px solid #e9ecef;
+		color: #495057;
+	}
+
+	.history-table tr:last-child td {
+		border-bottom: none;
+	}
+
+	.history-table tr:hover td {
+		background-color: #f8f9fa;
+	}
+
+	.chart-container {
+		height: 400px;
+		padding: 1rem;
+		position: relative;
+	}
+
+	.action-btn {
+		border-radius: 0.5rem;
+		padding: 0.75rem 1.5rem;
+		font-weight: 500;
+		transition: var(--transition);
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.action-btn:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+	}
+
+	.action-btn i {
+		font-size: 1.25rem;
+	}
+
+	/* Month name styling */
+	.month-name {
+		font-weight: 600;
+	}
+
+	/* Value styling based on status */
+	.value-present {
+		color: var(--success-color);
+		font-weight: 600;
+	}
+
+	.value-absent {
+		color: var(--danger-color);
+		font-weight: 600;
+	}
+
+	.value-leave {
+		color: var(--warning-color);
+		font-weight: 600;
+	}
+
+	.value-total {
+		font-weight: 600;
+	}
+</style>
+<!-- Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">{% endblock %}{% block content %}
+<!-- New simplified header with purple background -->
+<div style="background-color: #5140b0; padding: 2rem 0; margin-bottom: 2rem; color: white; text-align: center;margin-top: 7rem;" >
+	<div class="dashboard-container">
+		<div class="d-flex justify-content-center align-items-center">
+			<svg style="width: 32px; height: 32px; margin-right: 12px; fill: white;" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24">
+				<path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V9h14v10zM5 7V5h14v2H5zm5.56 10.46l5.94-5.93-1.41-1.42-4.53 4.53-2.47-2.47-1.41 1.41z"/>
+			</svg>
+			 <h1 class="m-0" style="font-size: 2rem;">Mon historique de présence</h1>
+        <form action="{{ path('app_employee_attendance_history') }}" method="GET" class="year-filter">
+          <select name="year" class="form-select" style="width: 100px; font-size: 0.9rem; height: 35px;">
+            {% for y in range(year-5, year+1) %}
+              <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
             {% endfor %}
-            
-            const attendanceChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: months,
-                    datasets: [
-                        {
-                            label: 'Jours présent',
-                            data: presentData,
-                            backgroundColor: 'rgba(76, 175, 80, 0.6)',
-                            borderColor: 'rgba(76, 175, 80, 1)',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Jours absent',
-                            data: absentData,
-                            backgroundColor: 'rgba(244, 67, 54, 0.6)',
-                            borderColor: 'rgba(244, 67, 54, 1)',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Jours en congé',
-                            data: leaveData,
-                            backgroundColor: 'rgba(255, 235, 59, 0.6)',
-                            borderColor: 'rgba(255, 235, 59, 1)',
-                            borderWidth: 1
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                precision: 0
-                            }
-                        }
-                    }
-                }
-            });
-        });
-    </script>
-{% endblock %}
+          </select>
+          <button type="submit" class="btn ms-2" style="font-size: 0.9rem; height: 35px; padding: 0 15px;">
+            <i class="fas fa-filter me-1"></i>Afficher
+          </button>
+        </form>
+		</div>
+	</div>
+</div>
+
+<div
+	class="dashboard-container">
+	<!-- Stats Summary Cards -->
+	<div class="row g-3 mb-4">
+		<div class="col-md-3">
+			<div class="card stats-card bg-white">
+				<div class="card-body">
+					<i class="fas fa-user-check stats-icon text-success"></i>
+					<h5 class="card-title text-muted">Jours présent</h5>
+					<h3 class="card-text text-success">
+						{% set totalPresent = 0 %}
+						{% set totalDays = 0 %}
+						{% for month, stats in absencesByMonth %}
+							{% set totalPresent = totalPresent + stats.present %}
+							{% set totalDays = totalDays + stats.total %}
+						{% endfor %}
+						{{ totalPresent }}
+					</h3>
+				</div>
+				<div class="progress" style="height: 4px;">
+					<div class="progress-bar bg-success" role="progressbar" style="width: {% if totalDays > 0 %}{{ (totalPresent / totalDays) * 100 }}{% else %}0{% endif %}%"></div>
+				</div>
+			</div>
+		</div>
+		<div class="col-md-3">
+			<div class="card stats-card bg-white">
+				<div class="card-body">
+					<i class="fas fa-user-times stats-icon text-danger"></i>
+					<h5 class="card-title text-muted">Jours absent</h5>
+					<h3 class="card-text text-danger">
+						{% set totalAbsent = 0 %}
+						{% for month, stats in absencesByMonth %}
+							{% set totalAbsent = totalAbsent + stats.absent %}
+						{% endfor %}
+						{{ totalAbsent }}
+					</h3>
+				</div>
+				<div class="progress" style="height: 4px;">
+					<div class="progress-bar bg-danger" role="progressbar" style="width: {% if totalDays > 0 %}{{ (totalAbsent / totalDays) * 100 }}{% else %}0{% endif %}%"></div>
+				</div>
+			</div>
+		</div>
+		<div class="col-md-3">
+			<div class="card stats-card bg-white">
+				<div class="card-body">
+					<i class="fas fa-umbrella-beach stats-icon text-warning"></i>
+					<h5 class="card-title text-muted">Jours en congé</h5>
+					<h3 class="card-text text-warning">
+						{% set totalLeave = 0 %}
+						{% for month, stats in absencesByMonth %}
+							{% set totalLeave = totalLeave + stats.leave %}
+						{% endfor %}
+						{{ totalLeave }}
+					</h3>
+				</div>
+				<div class="progress" style="height: 4px;">
+					<div class="progress-bar bg-warning" role="progressbar" style="width: {% if totalDays > 0 %}{{ (totalLeave / totalDays) * 100 }}{% else %}0{% endif %}%"></div>
+				</div>
+			</div>
+		</div>
+		<div class="col-md-3">
+			<div class="card stats-card bg-white">
+				<div class="card-body">
+					<i class="fas fa-calendar-alt stats-icon text-primary"></i>
+					<h5 class="card-title text-muted">Total jours</h5>
+					<h3 class="card-text text-primary">
+						{{ totalDays }}
+					</h3>
+				</div>
+				<div class="progress" style="height: 4px;">
+					<div class="progress-bar bg-primary" role="progressbar" style="width: 100%"></div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Monthly Data Table -->
+	<div class="data-card">
+		<div class="card-header">
+			<span>
+				<i class="fas fa-table me-2"></i>Détails par mois</span>
+			<span class="badge bg-primary">{{ year }}</span>
+		</div>
+		<div class="table-container">
+			<table class="history-table">
+				<thead>
+					<tr>
+						<th>
+							<i class="fas fa-calendar-month me-1"></i>
+							Mois</th>
+						<th>
+							<i class="fas fa-user-check me-1"></i>
+							Jours présent</th>
+						<th>
+							<i class="fas fa-user-times me-1"></i>
+							Jours absent</th>
+						<th>
+							<i class="fas fa-umbrella-beach me-1"></i>
+							Jours en congé</th>
+						<th>
+							<i class="fas fa-calculator me-1"></i>
+							Total jours</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for month, stats in absencesByMonth %}
+						<tr>
+							<td class="month-name">{{ month }}</td>
+							<td class="value-present">{{ stats.present }}</td>
+							<td class="value-absent">{{ stats.absent }}</td>
+							<td class="value-leave">{{ stats.leave }}</td>
+							<td class="value-total">{{ stats.total }}</td>
+						</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	</div>
+
+	<!-- Annual Chart -->
+	<div class="data-card">
+		<div class="card-header">
+			<span>
+				<i class="fas fa-chart-bar me-2"></i>Graphique annuel</span>
+			<div class="btn-group" role="group">
+				<button type="button" class="btn btn-sm btn-outline-primary" id="viewBarChart">
+					<i class="fas fa-chart-bar me-1"></i>Barres
+				</button>
+				<button type="button" class="btn btn-sm btn-outline-primary" id="viewLineChart">
+					<i class="fas fa-chart-line me-1"></i>Lignes
+				</button>
+			</div>
+		</div>
+		<div class="chart-container">
+			<canvas id="attendanceChart"></canvas>
+		</div>
+	</div>
+
+	<!-- Action Buttons -->
+	<div class="d-flex gap-3 justify-content-between mb-4">
+		<a href="{{ path('app_employee_my_attendance') }}" class="btn btn-primary action-btn">
+			<i class="fas fa-arrow-left"></i>
+			Retour à ma feuille de présence
+		</a>
+		
+	</div>
+</div>{% endblock %}{% block javascripts %}
+{{ parent() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+	document.addEventListener('DOMContentLoaded', function () {
+const ctx = document.getElementById('attendanceChart').getContext('2d');
+
+// Prepare data for chart
+const months = [];
+const presentData = [];
+const absentData = [];
+const leaveData = [];{% for month, stats in absencesByMonth %}months.push('{{ month }}');
+presentData.push({{ stats.present }});
+absentData.push({{ stats.absent }});
+leaveData.push({{ stats.leave }});{% endfor %}
+
+// Chart configuration
+const chartConfig = {
+type: 'bar',
+data: {
+labels: months,
+datasets: [
+{
+label: 'Jours présent',
+data: presentData,
+backgroundColor: 'rgba(76, 201, 240, 0.6)',
+borderColor: 'rgba(76, 201, 240, 1)',
+borderWidth: 1,
+borderRadius: 6
+}, {
+label: 'Jours absent',
+data: absentData,
+backgroundColor: 'rgba(247, 37, 133, 0.6)',
+borderColor: 'rgba(247, 37, 133, 1)',
+borderWidth: 1,
+borderRadius: 6
+}, {
+label: 'Jours en congé',
+data: leaveData,
+backgroundColor: 'rgba(255, 190, 11, 0.6)',
+borderColor: 'rgba(255, 190, 11, 1)',
+borderWidth: 1,
+borderRadius: 6
+}
+]
+},
+options: {
+responsive: true,
+maintainAspectRatio: false,
+plugins: {
+legend: {
+position: 'top',
+labels: {
+boxWidth: 15,
+usePointStyle: true,
+pointStyle: 'circle'
+}
+},
+tooltip: {
+mode: 'index',
+intersect: false,
+backgroundColor: 'rgba(255, 255, 255, 0.9)',
+titleColor: '#333',
+bodyColor: '#333',
+borderColor: '#ddd',
+borderWidth: 1,
+cornerRadius: 8,
+caretSize: 5,
+padding: 10,
+titleFont: {
+size: 14,
+weight: 'bold'
+},
+bodyFont: {
+size: 13
+},
+displayColors: true,
+boxWidth: 10,
+boxHeight: 10,
+usePointStyle: true,
+callbacks: {
+title: function (tooltipItems) {
+return tooltipItems[0].label;
+}
+}
+}
+},
+interaction: {
+mode: 'nearest',
+axis: 'x',
+intersect: false
+},
+scales: {
+y: {
+beginAtZero: true,
+ticks: {
+precision: 0,
+font: {
+size: 12
+}
+},
+grid: {
+drawBorder: false,
+color: 'rgba(0, 0, 0, 0.05)'
+}
+},
+x: {
+grid: {
+display: false
+},
+ticks: {
+font: {
+size: 12
+}
+}
+}
+},
+animation: {
+duration: 1000,
+easing: 'easeOutQuart'
+}
+}
+};
+
+// Create initial chart
+const attendanceChart = new Chart(ctx, chartConfig);
+
+// Toggle between chart types
+document.getElementById('viewBarChart').addEventListener('click', function () {
+attendanceChart.destroy();
+chartConfig.type = 'bar';
+// Add border radius only for bar charts
+chartConfig.data.datasets.forEach(dataset => {
+dataset.borderRadius = 6;
+});
+new Chart(ctx, chartConfig);
+
+// Update active button state
+this.classList.remove('btn-outline-primary');
+this.classList.add('btn-primary');
+document.getElementById('viewLineChart').classList.remove('btn-primary');
+document.getElementById('viewLineChart').classList.add('btn-outline-primary');
+});
+
+document.getElementById('viewLineChart').addEventListener('click', function () {
+attendanceChart.destroy();
+chartConfig.type = 'line';
+// Remove border radius for line charts and add tension
+chartConfig.data.datasets.forEach(dataset => {
+dataset.borderRadius = 0;
+dataset.tension = 0.3;
+dataset.fill = true;
+dataset.pointBackgroundColor = dataset.borderColor;
+dataset.pointBorderColor = '#fff';
+dataset.pointRadius = 4;
+dataset.pointHoverRadius = 6;
+});
+new Chart(ctx, chartConfig);
+
+// Update active button state
+this.classList.remove('btn-outline-primary');
+this.classList.add('btn-primary');
+document.getElementById('viewBarChart').classList.remove('btn-primary');
+document.getElementById('viewBarChart').classList.add('btn-outline-primary');
+});
+
+// Download report functionality (placeholder - would require server-side implementation)
+document.getElementById('downloadReportBtn').addEventListener('click', function (e) {
+e.preventDefault();
+alert('Fonctionnalité de téléchargement en cours de développement');
+});
+});
+</script>{% endblock %}

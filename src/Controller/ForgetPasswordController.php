@@ -57,7 +57,7 @@ class ForgetPasswordController extends AbstractController
             if (!$this->validateReCaptcha($recaptchaResponse)) {
                 $this->addFlash('error', 'La vérification reCAPTCHA a échoué. Veuillez réessayer.');
                 return $this->render('security/forgot_password.html.twig', [
-                    'recaptcha_site_key' => '6LfF2RorAAAAAPKWpmQGwHdQpKiuwjFgxmZisXVh'
+                    'recaptcha_site_key' => '6LdcsSYrAAAAAKsqF0nscSHvY_Ky_BaUf39GLx7N'
                 ]);
             }
 
@@ -67,7 +67,7 @@ class ForgetPasswordController extends AbstractController
             if (!$user) {
                 $this->addFlash('error', 'Aucun compte trouvé avec ce numéro de téléphone.');
                 return $this->render('security/forgot_password.html.twig', [
-                    'recaptcha_site_key' => '6LfF2RorAAAAAPKWpmQGwHdQpKiuwjFgxmZisXVh'
+                    'recaptcha_site_key' => '6LdcsSYrAAAAAKsqF0nscSHvY_Ky_BaUf39GLx7N'
                 ]);
             }
 
@@ -87,7 +87,7 @@ class ForgetPasswordController extends AbstractController
             if (!$smsResult) {
                 $this->addFlash('error', 'Erreur lors de l\'envoi du SMS. Veuillez réessayer plus tard.');
                 return $this->render('security/forgot_password.html.twig', [
-                    'recaptcha_site_key' => '6LfF2RorAAAAAPKWpmQGwHdQpKiuwjFgxmZisXVh'
+                    'recaptcha_site_key' => '6LdcsSYrAAAAAKsqF0nscSHvY_Ky_BaUf39GLx7N'
                 ]);
             }
 
@@ -103,7 +103,7 @@ class ForgetPasswordController extends AbstractController
         // Set cache control headers
         $response = $this->render('security/forgot_password.html.twig', [
             'user' => null,
-            'recaptcha_site_key' => '6LfF2RorAAAAAPKWpmQGwHdQpKiuwjFgxmZisXVh'
+            'recaptcha_site_key' => '6LdcsSYrAAAAAKsqF0nscSHvY_Ky_BaUf39GLx7N'
         ]);
 
         $response->setPrivate();
@@ -320,77 +320,60 @@ class ForgetPasswordController extends AbstractController
     private function validateReCaptcha($recaptchaResponse): bool
     {
         try {
-            // Log the validation attempt
-            error_log('Validating reCAPTCHA response');
+            $secretKey = $_ENV['RECAPTCHA_SECRET_KEY'];
 
-            // Skip validation if recaptcha is not configured
-            if (empty($this->recaptchaSecretKey)) {
-                error_log('reCAPTCHA secret key is not set, skipping validation');
-                return true;
-            }
-
-            // Skip validation in dev environment if configured to do so
-            if (isset($_ENV['APP_ENV']) && $_ENV['APP_ENV'] === 'dev' && 
-                isset($_ENV['SKIP_RECAPTCHA_IN_DEV']) && $_ENV['SKIP_RECAPTCHA_IN_DEV'] === 'true') {
-                error_log('Skipping reCAPTCHA validation in dev environment as configured');
-                return true;
-            }
-
-            // No response provided
+            // Vérifier si la réponse est fournie
             if (empty($recaptchaResponse)) {
                 error_log('reCAPTCHA validation failed: No response provided');
                 return false;
             }
-
+            
+            // Faire la requête de vérification
             $url = 'https://www.google.com/recaptcha/api/siteverify';
             $data = [
-                'secret' => $this->recaptchaSecretKey,
+                'secret' => $secretKey,
                 'response' => $recaptchaResponse,
                 'remoteip' => $_SERVER['REMOTE_ADDR'] ?? null
             ];
-
-            // Use cURL for better error handling
+            
+            error_log('Sending verification request to Google with data: ' . json_encode($data));
+            
+            // Utiliser cURL pour la requête
             $ch = curl_init($url);
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true); // Verify SSL certificates
-            curl_setopt($ch, CURLOPT_TIMEOUT, 10); // Set timeout to 10 seconds
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+            
             $response = curl_exec($ch);
-
+            error_log('Raw response from Google: ' . $response);
+            
+            // Gérer les erreurs cURL
             if (curl_errno($ch)) {
-                error_log('reCAPTCHA verification cURL error: ' . curl_error($ch));
+                error_log('cURL error: ' . curl_error($ch));
                 curl_close($ch);
                 return false;
             }
-
-            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            if ($httpCode !== 200) {
-                error_log('reCAPTCHA verification failed with HTTP code: ' . $httpCode);
-                curl_close($ch);
-                return false;
-            }
-
+            
             curl_close($ch);
-
+            
+            // Analyser la réponse JSON
             $result = json_decode($response, true);
+            
             if ($result === null) {
-                error_log('reCAPTCHA verification failed: Invalid JSON response');
+                error_log('Invalid JSON response');
                 return false;
             }
-
-            // Log any error codes from Google
-            if (isset($result['error-codes']) && !empty($result['error-codes'])) {
-                error_log('reCAPTCHA error codes: ' . implode(', ', $result['error-codes']));
-                return false;
-            }
-
-            // Log success or failure
+            
+            error_log('Parsed reCAPTCHA response: ' . print_r($result, true));
+            
+            // Vérifier le succès
             if (isset($result['success']) && $result['success'] === true) {
                 error_log('reCAPTCHA verification successful');
                 return true;
             } else {
-                error_log('reCAPTCHA verification failed: ' . ($response ?? 'unknown reason'));
+                error_log('reCAPTCHA verification failed: ' . json_encode($result['error-codes'] ?? []));
                 return false;
             }
         } catch (\Exception $e) {

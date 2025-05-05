@@ -34,7 +34,7 @@ class FacialLoginController extends AbstractController
         Request $request, 
         EntityManagerInterface $entityManager, 
         LoggerInterface $logger
-    ): JsonResponse {
+    ): Response {
         // Validate CSRF token
         if (!$this->isCsrfTokenValid('facial_authenticate', $request->headers->get('X-CSRF-TOKEN'))) {
             return $this->json(['success' => false, 'message' => 'Token CSRF invalide'], 403);
@@ -134,13 +134,19 @@ class FacialLoginController extends AbstractController
             $logger->info('Authentication successful for user: ' . $user->getEmail());
             
             // Return success response with redirect path
-            return $this->json([
-                'success' => true, 
-                'message' => 'Authentification réussie', 
-                'email' => $user->getEmail(),
-                'redirectTo' => $redirectPath
-            ]);
-            
+// Remplacez-la par ceci :
+if ($request->isXmlHttpRequest()) {
+    // Si c'est une requête AJAX, retourner JSON avec statut
+    return $this->json([
+        'success' => true, 
+        'message' => 'Authentification réussie', 
+        'email' => $user->getEmail(),
+        'redirectTo' => $redirectPath
+    ]);
+} else {
+    // Si c'est une requête normale, rediriger directement
+    return $this->redirect($redirectPath);
+}
         } catch (\Exception $e) {
             $logger->error('Erreur lors de l\'authentification faciale: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),

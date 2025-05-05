@@ -24,7 +24,7 @@
 		.table-responsive {
 			margin-top: 0;
 			position: relative !important;
-            overflow-x: auto !important;
+			overflow-x: auto !important;
 		}
 
 		.pagination {
@@ -484,6 +484,58 @@
 		.profile-photo:hover {
 			transform: scale(1.1);
 		}
+
+		/* Role badge styling */
+		.badge.rounded-pill {
+			display: inline-block;
+			padding: 0.4rem 0.85rem;
+			font-size: 0.75rem;
+			font-weight: 500;
+			border-radius: 30px;
+		}
+
+		/* Background and text colors for each role */
+		.bg-pink-100 {
+			background-color: #fce7f3;
+		}
+		.text-pink-700 {
+			color: #be185d;
+		}
+
+		.bg-cyan-100 {
+			background-color: #cffafe;
+		}
+		.text-cyan-700 {
+			color: #0e7490;
+		}
+
+		.bg-indigo-100 {
+			background-color: #e0e7ff;
+		}
+		.text-indigo-700 {
+			color: #4338ca;
+		}
+
+		.bg-yellow-100 {
+			background-color: #fef9c3;
+		}
+		.text-yellow-700 {
+			color: #a16207;
+		}
+
+		.bg-emerald-100 {
+			background-color: #d1fae5;
+		}
+		.text-emerald-700 {
+			color: #047857;
+		}
+
+		.bg-gray-100 {
+			background-color: #f3f4f6;
+		}
+		.text-gray-700 {
+			color: #374151;
+		}
 	</style>
 {% endblock %}
 
@@ -538,7 +590,8 @@ return year === selectedYear;
 $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
 const selectedRole = $('#roleFilter').val();
 // La colonne 7 est le rôle (index 0-based)
-const role = data[7];
+const roleDisplayed = data[7].trim();
+// Le texte affiché dans la colonne
 
 // Aucun filtre de rôle sélectionné
 if (! selectedRole) 
@@ -546,7 +599,19 @@ return true;
 
 
 
-return role === selectedRole;
+// Mapping inverse entre ce qui est affiché et les valeurs du filtre
+const roleMapping = {
+'Responsable RH': 'RESPONSABLE_RH',
+'Chef de projet': 'CHEF_PROJET',
+'Employé': 'EMPLOYEE',
+'Candidat': 'CONDIDAT',
+'Manager': 'MANAGER'
+};
+
+// Convertir la valeur affichée en valeur de filtre
+const actualRole = roleMapping[roleDisplayed] || roleDisplayed;
+
+return actualRole === selectedRole;
 });
 
 // Appliquer les filtres quand les sélecteurs changent
@@ -608,22 +673,21 @@ $('#roleFilter').val('');
 table.search('').columns().search('').draw();
 updateActiveBadges();
 });
-});
 
 // Gestion du clic sur une ligne du tableau
-    $('#add-row').on('click', 'tr.clickable-row', function(event) {
-        // Ignorer si le clic est sur un bouton d'action
-        if (!$(event.target).closest('.form-button-action').length) {
-            window.location = $(this).data('href');
-        }
-    });
-    
-    // Gestion du clic sur une photo de profil (prioritaire sur le clic de ligne)
-    $('#add-row').on('click', '.profile-photo', function(event) {
-        event.stopPropagation(); // Empêche la propagation du clic à la ligne
-        const row = $(this).closest('tr.clickable-row');
-        window.location = row.data('href');
-    });
+$('#add-row').on('click', 'tr.clickable-row', function (event) { // Ignorer si le clic est sur un bouton d'action
+if (!$(event.target).closest('.form-button-action').length) {
+window.location = $(this).data('href');
+}
+});
+
+// Gestion du clic sur une photo de profil (prioritaire sur le clic de ligne)
+$('#add-row').on('click', '.profile-photo', function (event) {
+event.stopPropagation(); // Empêche la propagation du clic à la ligne
+const row = $(this).closest('tr.clickable-row');
+window.location = row.data('href');
+});
+});
 
 // Dynamiser les interactions utilisateur
 document.addEventListener('DOMContentLoaded', function () { // Animations pour les filtres
@@ -650,7 +714,8 @@ bsAlert.close();
 });
 });
 
-document.addEventListener('DOMContentLoaded', function () { // Auto-hide alerts after 5 seconds
+// Auto-hide alerts after 5 seconds
+document.addEventListener('DOMContentLoaded', function () {
 const alerts = document.querySelectorAll('.alert');
 alerts.forEach(alert => {
 setTimeout(() => {
@@ -665,8 +730,6 @@ if (window.location.search.includes('added=true')) {
 history.replaceState({}, document.title, window.location.pathname);
 }
 });
-
-
 	</script>
 {% endblock %}
 
@@ -676,12 +739,14 @@ history.replaceState({}, document.title, window.location.pathname);
 		<div class="card">
 			<div class="card-header">
 				<div class="d-flex align-items-center">
-					<h4 class="card-title">Gestion des Employés</h4>
+					<img src="{{ asset('assets/img/gestion-de-linformation.png') }}" alt="Gestion" width="38" height="38" class="me-2">
+					<h4 class="card-title mb-0">Gestion des Employés</h4>
 					<button class="btn btn-primary btn-round ms-auto" data-bs-toggle="modal" data-bs-target="#addRowModal">
 						<i class="fa fa-plus me-2"></i>
 						Ajouter un employé
 					</button>
 				</div>
+
 			</div>
 			<div class="card-body">
 				{% include 'user/addUser.html.twig' %}
@@ -752,69 +817,75 @@ history.replaceState({}, document.title, window.location.pathname);
 					<table id="add-row" class="display table table-striped table-hover w-100">
 						<thead>
 							<tr>
-								<th>Profile</th>
-								<th>First Name</th>
-								<th>Last Name</th>
-								<th>Email</th>
-								<th>Gender</th>
-								<th>Birthday Date</th>
-								<th>Joining Date</th>
-								<th>Role</th>
-								<th>Remaining Time Off</th>
-								<th>Remaining Leave</th>
-								<th>Phone Number</th>
+								<th>Photo</th>
+								<th>Prénom</th>
+								<th>Nom</th>
+								<th>Adresse e-mail</th>
+								<th>Genre</th>
+								<th>Date de naissance</th>
+								<th>Date d'embauche</th>
+								<th>Rôle</th>
+								<th>TT restants</th>
+								<th>Congés restants</th>
+								<th>Téléphone</th>
 								<th>Actions</th>
 							</tr>
 						</thead>
 						<tbody>
 							{% for user in users %}
-							<tr class="clickable-row" data-href="{{ path('app_user_profile', {'id': user.id}) }}">
+								<tr class="clickable-row" data-href="{{ path('app_user_profile', {'id': user.id}) }}">
 									<td class="text-center">
 										{% if user.profilePhoto %}
-											<img src="{{ user.profilePhoto }}" alt="{{ user.firstname }}'s profile" 
-												class="rounded-circle profile-photo" 
-												style="width: 40px; height: 40px; object-fit: cover;">
+											<img src="{{ user.profilePhoto }}" alt="{{ user.firstname }}'s profile" class="rounded-circle profile-photo" style="width: 40px; height: 40px; object-fit: cover;">
 										{% else %}
-											<img src="{{ asset('assets/img/profile.png') }}" alt="Default profile" 
-												class="rounded-circle profile-photo" 
-												style="width: 40px; height: 40px; object-fit: cover;">
+											<img src="{{ asset('assets/img/profile.png') }}" alt="Default profile" class="rounded-circle profile-photo" style="width: 40px; height: 40px; object-fit: cover;">
 										{% endif %}
 									</td>
 									<td>{{ user.firstname }}</td>
 									<td>{{ user.lastname }}</td>
 									<td>{{ user.email }}</td>
 									<td>{{ user.gender }}</td>
-									<td>{{ user.birthdayDate ? user.birthdayDate|date('Y/m/d') : 'N/A' }}</td>
-									<td>{{ user.joiningDate ? user.joiningDate|date('Y/m/d') : 'N/A' }}</td>
+									<td>{{ user.birthdayDate ? user.birthdayDate|date('Y/m/d') : 'Non défini' }}</td>
+									<td>{{ user.joiningDate ? user.joiningDate|date('Y/m/d') : 'Non défini' }}</td>
 									<td>
 										{% set roleDisplay = {
-                                            'RESPONSABLE_RH': 'Responsable RH',
-                                            'CHEF_PROJET': 'Chef de projet',
-                                            'EMPLOYEE': 'Employé',
-                                            'CONDIDAT': 'Candidat'
-                                        } %}
-										{{ roleDisplay[user.role] ?? user.role }}
+											'RESPONSABLE_RH': 'Responsable RH',
+											'CHEF_PROJET': 'Chef de projet',
+											'EMPLOYEE': 'Employé',
+											'CONDIDAT': 'Candidat',
+											'MANAGER': 'Manager'
+										} %}
+										
+										{% set roleBadgeColors = {
+											'RESPONSABLE_RH': 'bg-indigo-100 text-indigo-700',
+											'CHEF_PROJET': 'bg-cyan-100 text-cyan-700',
+											'EMPLOYEE': 'bg-pink-100 text-pink-700',
+											'CONDIDAT': 'bg-yellow-100 text-yellow-700',
+											'MANAGER': 'bg-emerald-100 text-emerald-700'
+										} %}
+										
+										<span class="badge rounded-pill {{ roleBadgeColors[user.role] ?? 'bg-gray-100 text-gray-700' }}">
+											{{ roleDisplay[user.role] ?? user.role }}
+										</span>
 									</td>
-									<td>{{ user.ttRestants is not null ? user.ttRestants : 'N/A' }}</td>
-									<td>{{ user.congeRestant is not null ? user.congeRestant : 'N/A' }}</td>
-									<td>{{ user.numTel ? user.numTel : 'N/A' }}</td>
+									<td>{{ user.ttRestants is not null ? user.ttRestants : 'Non défini' }}</td>
+									<td>{{ user.congeRestant is not null ? user.congeRestant : 'Non défini' }}</td>
+									<td>{{ user.numTel ? user.numTel : 'Non défini' }}</td>
 									<td>
 										<div class="form-button-action">
 											<button type="button" class="btn btn-link btn-primary btn-lg edit-user-btn" data-bs-toggle="modal" data-bs-target="#editUserModal" data-id="{{ user.id }}">
-												<i class="fa-solid fa-user-pen fa-2x"></i>
-												<!-- Slightly bigger size fa-lg -->
+												<img src="{{ asset('assets/img/crayon.png') }}" alt="Modifier" style="width: 24px; height: 24px;">
 											</button>
 
 											<button type="button" class="btn btn-link btn-danger delete-user-btn" data-bs-toggle="modal" data-bs-target="#deleteUserModal" data-user-id="{{ user.id }}" data-user-name="{{ user.firstname }} {{ user.lastname }}">
-												<i class="fa-solid fa-trash fa-2x"></i>
-												<!-- Slightly bigger size -->
+												<img src="{{ asset('assets/img/supprimer.png') }}" alt="Supprimer" style="width: 24px; height: 24px;">
 											</button>
 										</div>
 									</td>
 								</tr>
 							{% else %}
 								<tr>
-									<td colspan="12" class="text-center">No users found</td>
+									<td colspan="12" class="text-center">Aucun utilisateur trouvé.</td>
 								</tr>
 							{% endfor %}
 						</tbody>
