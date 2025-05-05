@@ -190,7 +190,7 @@ class ProfileController extends AbstractController
             throw new AccessDeniedException('You do not have permission to access this page.');
         }
 
-        return $this->render('dashboard.html.twig');
+        return $this->render('dashboard/index.html.twig');
     }
 
     #[Route('/users', name: 'app_users')]

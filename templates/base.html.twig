@@ -51,6 +51,7 @@
 
 
     {% block stylesheets %}
+            {{ encore_entry_link_tags('app') }}
     <style>
         .breadcrumb {
             padding: 0.5rem 1rem;
@@ -196,6 +197,7 @@
 
 		
 			{% block javascripts %}{% endblock %}
+            {{ encore_entry_script_tags('app') }}
 
 			<script>
 				$(document).ready(function () {

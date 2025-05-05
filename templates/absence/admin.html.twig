@@ -178,11 +178,134 @@
             display: flex;
             gap: 10px;
         }
+        
+        /* New style additions for filters */
+        .filter-dashboard {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .filter-item {
+            position: relative;
+        }
+        .filter-item.is-focused {
+            box-shadow: 0 0 0 2px rgba(21, 114, 232, 0.2);
+        }
+        .active-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .filter-badge {
+            display: inline-flex;
+            align-items: center;
+            background-color: #e9f0ff;
+            border-radius: 20px;
+            padding: 5px 12px;
+            font-size: 0.85rem;
+            color: #1572E8;
+        }
+        .badge-label {
+            font-weight: 600;
+            margin-right: 5px;
+        }
+        .badge-remove {
+            margin-left: 8px;
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: rgba(21, 114, 232, 0.2);
+            transition: all 0.2s;
+        }
+        .badge-remove:hover {
+            background-color: rgba(21, 114, 232, 0.4);
+        }
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .page-link {
+            color: #1572E8;
+            border-radius: 5px;
+            margin: 0 3px;
+        }
+        .page-item.active .page-link {
+            background-color: #1572E8;
+            border-color: #1572E8;
+        }
     </style>
 {% endblock %}
 
 {% block content %}
     <div class="container-fluid" style="margin-top: 10rem;">
+        <!-- Nouvelle section des filtres améliorée -->
+        <div class="filter-dashboard mb-4">
+            <div class="row align-items-center g-3">
+                <div class="col-lg-6">
+                    <div class="search-bar">
+                        <label for="employee-search" class="form-label mb-1 small text-muted"></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white">
+                                <i class="fa fa-search text-primary"></i>
+                            </span>
+                            <input type="text" id="employee-search" class="form-control border-start-0" placeholder="Rechercher un employé...">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3">
+                    <div class="filter-item">
+                        <label for="statusFilter" class="form-label mb-1 small text-muted">Statut</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white">
+                                <i class="fa fa-clipboard-check text-primary"></i>
+                            </span>
+                            <select id="statusFilter" class="form-select border-start-0">
+                                <option value="">Tous les statuts</option>
+                                <option value="PRESENT">Présent</option>
+                                <option value="ABSENT">Absent</option>
+                                <option value="EN_CONGE">En congé</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3">
+                    <div class="filter-item">
+                        <label for="dateFilter" class="form-label mb-1 small text-muted">Filtre par date</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white">
+                                <i class="fa fa-calendar text-primary"></i>
+                            </span>
+                            <select id="dateFilter" class="form-select border-start-0">
+                                <option value="">Toutes les dates</option>
+                                <option value="today">Aujourd'hui</option>
+                                <option value="week">Cette semaine</option>
+                                <option value="weekend">Weekend</option>
+                                <option value="workday">Jours ouvrables</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Indicateurs des filtres actifs -->
+            <div class="active-filters mt-3" id="active-filter-badges">
+                <!-- Les badges des filtres actifs seront ajoutés ici via JS -->
+            </div>
+            
+            <!-- Button to reset filters -->
+            <div class="mt-2">
+                <button id="reset-filters" class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-undo-alt"></i> Réinitialiser les filtres
+                </button>
+            </div>
+        </div>
+
         <div class="attendance-card">
             <div class="calendar-header">
                 <div class="month-selector">
@@ -196,7 +319,10 @@
                 </div>
                 <div class="action-buttons">
                     <a href="{{ path('app_employee_attendance_export', {'month': month, 'year': year}) }}" class="btn btn-success">
-                        <i class="fas fa-file-export"></i> Export
+                        <i class="fas fa-file-csv"></i> Export CSV
+                    </a>
+                    <a href="{{ path('app_employee_attendance_export_pdf', {'month': month, 'year': year}) }}" class="btn btn-danger">
+                        <i class="fas fa-file-pdf"></i> Export PDF
                     </a>
                     <a href="{{ path('app_employee_attendance_statistics', {'month': month, 'year': year}) }}" class="btn btn-info">
                         <i class="fas fa-chart-bar"></i> Statistics
@@ -205,14 +331,15 @@
             </div>
 
             <div class="table-responsive">
-                <table class="calendar-table">
+                <table class="calendar-table" id="attendance-table">
                     <thead>
                         <tr>
                             <th class="employee-col">Employee</th>
                             {% for day in days %}
                                 {% set currentDate = year ~ '-' ~ month|date('m') ~ '-' ~ "%02d"|format(day) %}
                                 {% set dayOfWeek = date(currentDate)|date('N') %}
-                                <th class="{{ dayOfWeek in [6, 7] ? 'weekend' : '' }} {{ currentDate == "now"|date('Y-m-d') ? 'today' : '' }}">
+                                <th class="{{ dayOfWeek in [6, 7] ? 'weekend' : '' }} {{ currentDate == "now"|date('Y-m-d') ? 'today' : '' }}"
+                                    data-date="{{ currentDate }}" data-day-type="{{ dayOfWeek in [6, 7] ? 'weekend' : 'workday' }}">
                                     {{ day }}
                                     <div class="day-name">{{ date(currentDate)|date('D')|capitalize }}</div>
                                 </th>
@@ -221,14 +348,24 @@
                     </thead>
                     <tbody>
                         {% for id, data in attendanceData %}
-                            <tr>
+                            <tr data-employee-name="{{ data.employee.firstName }} {{ data.employee.lastName }}">
                                 <td class="employee-col">
                                     <div class="employee-info">
                                         <img src="https://ui-avatars.com/api/?name={{ data.employee.firstName }}+{{ data.employee.lastName }}&background=1572E8&color=ffffff" 
                                              alt="Avatar" class="employee-avatar">
                                         <div class="employee-details">
                                             <div class="employee-name">{{ data.employee.firstName }} {{ data.employee.lastName }}</div>
-                                            <div class="employee-service">{{ data.employee.department ?? 'N/A' }}</div>
+                                            <div class="employee-service">
+                                                {% if data.employee.roles is defined and 'ROLE_ADMIN' in data.employee.roles %}
+                                                    Admin
+                                                {% elseif data.employee.roles is defined and 'ROLE_MANAGER' in data.employee.roles %}
+                                                    Manager
+                                                {% elseif data.employee.roles is defined and 'ROLE_USER' in data.employee.roles %}
+                                                    User
+                                                {% else %}
+                                                    N/A
+                                                {% endif %}
+                                            </div>
                                         </div>
                                     </div>
                                 </td>
@@ -238,7 +375,9 @@
                                     {% set absence = data.days[day] %}
                                     <td class="status-cell {{ dayOfWeek in [6, 7] ? 'weekend' : '' }} {{ currentDate == "now"|date('Y-m-d') ? 'today' : '' }}"
                                         data-employee="{{ id }}" 
-                                        data-date="{{ currentDate }}">
+                                        data-date="{{ currentDate }}"
+                                        data-day-type="{{ dayOfWeek in [6, 7] ? 'weekend' : 'workday' }}"
+                                        data-status="{{ absence ? absence.status.value : 'unknown' }}">
                                         <div class="status-badge status-{{ absence ? absence.status.value : 'unknown' }}" onclick="toggleStatusMenu(this)">
                                             {% if absence and absence.status.value == 'PRESENT' %}
                                                 <i class="fas fa-check"></i> Present
@@ -270,12 +409,23 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- Pagination -->
+            <div class="pagination-container">
+                <nav aria-label="Page navigation">
+                    <ul class="pagination" id="attendance-pagination">
+                        <!-- Pagination will be generated by JavaScript -->
+                    </ul>
+                </nav>
+            </div>
         </div>
     </div>
 {% endblock %}
 
 {% block javascripts %}
     {{ parent() }}
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/datatables.net@1.10.25/js/jquery.dataTables.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Close all menus when clicking elsewhere
@@ -283,6 +433,243 @@
                 if (!e.target.closest('.status-cell')) {
                     document.querySelectorAll('.status-menu').forEach(menu => {
                         menu.classList.remove('show');
+                    });
+                }
+            });
+            
+            // Initialize DataTable for filtering and pagination
+            let table = $('#attendance-table').DataTable({
+                paging: true,
+                searching: true,
+                info: false,
+                lengthChange: false,
+                ordering: false,
+                pageLength: 10,
+                pagingType: "full_numbers",
+                language: {
+                    url: "//cdn.datatables.net/plug-ins/1.10.24/i18n/French.json"
+                },
+                // Move DataTables pagination to our custom container
+                drawCallback: function() {
+                    let api = this.api();
+                    $('#attendance-pagination').empty();
+                    
+                    // Previous button
+                    if (api.page.info().page > 0) {
+                        $('#attendance-pagination').append(
+                            '<li class="page-item"><a class="page-link" href="#" data-page="prev"><i class="fas fa-chevron-left"></i></a></li>'
+                        );
+                    } else {
+                        $('#attendance-pagination').append(
+                            '<li class="page-item disabled"><a class="page-link" href="#"><i class="fas fa-chevron-left"></i></a></li>'
+                        );
+                    }
+                    
+                    // Page numbers
+                    let pageCount = api.page.info().pages;
+                    let currentPage = api.page.info().page;
+                    
+                    let startPage = Math.max(0, currentPage - 2);
+                    let endPage = Math.min(pageCount - 1, currentPage + 2);
+                    
+                    if (startPage > 0) {
+                        $('#attendance-pagination').append(
+                            '<li class="page-item"><a class="page-link" href="#" data-page="0">1</a></li>'
+                        );
+                        if (startPage > 1) {
+                            $('#attendance-pagination').append(
+                                '<li class="page-item disabled"><a class="page-link" href="#">...</a></li>'
+                            );
+                        }
+                    }
+                    
+                    for (let i = startPage; i <= endPage; i++) {
+                        let activeClass = (i === currentPage) ? 'active' : '';
+                        $('#attendance-pagination').append(
+                            `<li class="page-item ${activeClass}"><a class="page-link" href="#" data-page="${i}">${i + 1}</a></li>`
+                        );
+                    }
+                    
+                    if (endPage < pageCount - 1) {
+                        if (endPage < pageCount - 2) {
+                            $('#attendance-pagination').append(
+                                '<li class="page-item disabled"><a class="page-link" href="#">...</a></li>'
+                            );
+                        }
+                        $('#attendance-pagination').append(
+                            `<li class="page-item"><a class="page-link" href="#" data-page="${pageCount - 1}">${pageCount}</a></li>`
+                        );
+                    }
+                    
+                    // Next button
+                    if (currentPage < pageCount - 1) {
+                        $('#attendance-pagination').append(
+                            '<li class="page-item"><a class="page-link" href="#" data-page="next"><i class="fas fa-chevron-right"></i></a></li>'
+                        );
+                    } else {
+                        $('#attendance-pagination').append(
+                            '<li class="page-item disabled"><a class="page-link" href="#"><i class="fas fa-chevron-right"></i></a></li>'
+                        );
+                    }
+                    
+                    // Handle pagination clicks
+                    $('#attendance-pagination .page-link').on('click', function(e) {
+                        e.preventDefault();
+                        let page = $(this).data('page');
+                        
+                        if (page === 'prev') {
+                            api.page('previous').draw('page');
+                        } else if (page === 'next') {
+                            api.page('next').draw('page');
+                        } else {
+                            api.page(parseInt(page)).draw('page');
+                        }
+                    });
+                }
+            });
+            
+            // Hide DataTables default controls
+            $('.dataTables_wrapper .dataTables_paginate').hide();
+            
+            // Connect search field to DataTable
+            $('#employee-search').on('keyup', function() {
+                table.search(this.value).draw();
+                updateActiveBadges();
+            });
+            
+            // Custom filtering for status
+            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                const row = table.row(dataIndex).node();
+                const selectedStatus = $('#statusFilter').val();
+                
+                if (!selectedStatus) return true;
+                
+                // Check if any cell in the row has the selected status
+                const hasStatus = $(row).find(`td[data-status="${selectedStatus}"]`).length > 0;
+                return hasStatus;
+            });
+            
+            // Custom filtering for date type (today, this week, weekend, workday)
+            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                const row = table.row(dataIndex).node();
+                const selectedDateFilter = $('#dateFilter').val();
+                
+                if (!selectedDateFilter) return true;
+                
+                const today = new Date().toISOString().split('T')[0];
+                
+                if (selectedDateFilter === 'today') {
+                    // Show rows that have today's date
+                    return $(row).find(`td[data-date="${today}"]`).length > 0;
+                } else if (selectedDateFilter === 'week') {
+                    // Current date
+                    const currentDate = new Date();
+                    // First day of week (Monday)
+                    const firstDay = new Date(currentDate);
+                    const day = currentDate.getDay();
+                    const diff = currentDate.getDate() - day + (day === 0 ? -6 : 1);
+                    firstDay.setDate(diff);
+                    // Last day of week (Sunday)
+                    const lastDay = new Date(firstDay);
+                    lastDay.setDate(lastDay.getDate() + 6);
+                    
+                    // Format dates to YYYY-MM-DD for comparison
+                    const firstDayStr = firstDay.toISOString().split('T')[0];
+                    const lastDayStr = lastDay.toISOString().split('T')[0];
+                    
+                    // Check if any cell in the row has a date within this week
+                    let inThisWeek = false;
+                    $(row).find('td[data-date]').each(function() {
+                        const cellDate = $(this).data('date');
+                        if (cellDate >= firstDayStr && cellDate <= lastDayStr) {
+                            inThisWeek = true;
+                            return false; // Break the loop
+                        }
+                    });
+                    
+                    return inThisWeek;
+                } else if (selectedDateFilter === 'weekend') {
+                    // Check if any cell in the row is a weekend day
+                    return $(row).find('td[data-day-type="weekend"]').length > 0;
+                } else if (selectedDateFilter === 'workday') {
+                    // Check if any cell in the row is a workday
+                    return $(row).find('td[data-day-type="workday"]').length > 0;
+                }
+                
+                return true;
+            });
+            
+            // Apply filters when selectors change
+            $('#statusFilter, #dateFilter').on('change', function() {
+                table.draw();
+                updateActiveBadges();
+            });
+            
+            // Function to update active filter badges
+            function updateActiveBadges() {
+                const badgesContainer = $('#active-filter-badges');
+                badgesContainer.empty();
+                
+                // Search
+                const searchValue = $('#employee-search').val();
+                if (searchValue) {
+                    addBadge('Recherche', searchValue, function() {
+                        $('#employee-search').val('').trigger('keyup');
+                    });
+                }
+                
+                // Status
+                const statusValue = $('#statusFilter').val();
+                if (statusValue) {
+                    const statusText = $('#statusFilter option:selected').text();
+                    addBadge('Statut', statusText, function() {
+                        $('#statusFilter').val('').trigger('change');
+                    });
+                }
+                
+                // Date filter
+                const dateValue = $('#dateFilter').val();
+                if (dateValue) {
+                    const dateText = $('#dateFilter option:selected').text();
+                    addBadge('Date', dateText, function() {
+                        $('#dateFilter').val('').trigger('change');
+                    });
+                }
+                
+                // Function to add a badge
+                function addBadge(label, value, removeCallback) {
+                    const badge = $(`
+                        <div class="filter-badge">
+                            <span class="badge-label">${label}:</span>
+                            <span class="badge-value">${value}</span>
+                            <span class="badge-remove"><i class="fa fa-times"></i></span>
+                        </div>
+                    `);
+                    
+                    badge.find('.badge-remove').on('click', removeCallback);
+                    badgesContainer.append(badge);
+                }
+            }
+            
+            // Reset all filters
+            $('#reset-filters').on('click', function() {
+                $('#employee-search').val('');
+                $('#statusFilter').val('');
+                $('#dateFilter').val('');
+                table.search('').columns().search('').draw();
+                updateActiveBadges();
+            });
+            
+            // Initialize filter animations
+            const filterItems = document.querySelectorAll('.filter-item');
+            filterItems.forEach(item => {
+                const select = item.querySelector('select');
+                if (select) {
+                    select.addEventListener('focus', () => {
+                        item.classList.add('is-focused');
+                    });
+                    select.addEventListener('blur', () => {
+                        item.classList.remove('is-focused');
                     });
                 }
             });
@@ -323,6 +710,14 @@
                 if (data.success) {
                     // Update the UI without reloading
                     updateStatusUI(cell, status);
+                    
+                    // Update data-status attribute for filtering
+                    cell.setAttribute('data-status', status);
+                    
+                    // Reapply filters if needed
+                    if ($('#statusFilter').val()) {
+                        $('#attendance-table').DataTable().draw();
+                    }
                 } else {
                     alert('Error updating status: ' + (data.message || 'Unknown error'));
                 }
