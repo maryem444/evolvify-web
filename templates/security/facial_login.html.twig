@@ -229,16 +229,19 @@ const descriptorArray = Array.from(detection.descriptor);
 console.log('Sending authentication request with descriptor length:', descriptorArray.length);
 
 try {
+// Dans facial_login.html.twig, modifiez la partie d'envoi de requête fetch:
 const response = await fetch('/facial-login/authenticate', {
-method: 'POST',
-headers: {
-'Content-Type': 'application/json',
-'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-'X-Requested-With': 'XMLHttpRequest' // Ajouter cet en-tête pour identifier les requêtes AJAX
-},
-body: JSON.stringify(
-{faceImage: imageData, faceDescriptor: descriptorArray}
-)
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+    'X-Requested-With': 'XMLHttpRequest'
+  },
+  credentials: 'same-origin',  // Ajoutez cette ligne pour s'assurer que les cookies sont envoyés
+  body: JSON.stringify({
+    faceImage: imageData, 
+    faceDescriptor: descriptorArray
+  })
 });
 
 // Vérifier si la réponse est une redirection
