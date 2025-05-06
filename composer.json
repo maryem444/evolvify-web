@@ -25,6 +25,7 @@
         "symfony/form": "6.4.*",
         "symfony/framework-bundle": "6.4",
         "symfony/google-mailer": "6.4.*",
+        "symfony/http-client": "6.4.*",
         "symfony/mailer": "6.4.*",
         "symfony/mime": "^6.4",
         "symfony/monolog-bundle": "^3.10",
@@ -39,6 +40,7 @@
         "symfony/webpack-encore-bundle": "^2.2",
         "symfony/yaml": "7.2.*",
         "twig/extra-bundle": "^3.20",
+        "twig/string-extra": "^3.20",
         "twilio/sdk": "^6.44"
     },
     "config": {
