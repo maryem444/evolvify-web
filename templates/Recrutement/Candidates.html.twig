@@ -55,9 +55,17 @@
                     <td class="text-end">{{ candidate.joiningDate|date('d/m/Y') }}</td>
                     <td class="text-end">{{ candidate.getNumTel() }}</td>
                     <td class="text-end">{{ candidate.gender }}</td>
+                   
+                
                     <td class="text-end">
-                      <a href="{{ candidate.getUploadedCv() }}" target="_blank">Voir le CV</a>
+                      <button class="btn btn-primary btn-view-cv" 
+                              data-candidate-id="{{ candidate.id }}"
+                              data-cv-path="{{ path('download_cv', {'id': candidate.id}) }}">
+                        Voir et Analyser CV
+                      </button>
                     </td>
+                    
+                    
                   </tr>
                 {% else %}
                   <tr>
@@ -66,6 +74,32 @@
                 {% endfor %}
               </tbody>
             </table>
+             <!-- Modal d'analyse -->
+             <div class="modal fade" id="cvModal" tabindex="-1" aria-labelledby="cvModalLabel" aria-hidden="true">
+              <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="cvModalLabel">Analyse du CV</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                  </div>
+                  <div class="modal-body" id="cvModalBody">
+                    <div class="text-center my-4">
+                      <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Chargement...</span>
+                      </div>
+                      <p>Analyse du CV en cours...</p>
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                    <a href="#" id="downloadCvLink" class="btn btn-primary">
+                      <i class="fas fa-download me-1"></i> Télécharger le CV
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
@@ -174,5 +208,69 @@ if (genderCell) {
       updateGenderChart();
     });
   });
+ 
+
+
+  
+
+  document.querySelectorAll('.btn-view-cv').forEach(button => {
+    button.addEventListener('click', function() {
+      const candidateId = this.dataset.candidateId;
+      const cvPath = this.dataset.cvPath;
+      
+      // Mettre à jour le lien de téléchargement
+      document.getElementById('downloadCvLink').href = cvPath;
+      
+      // Afficher le modal avec le spinner
+      const modal = new bootstrap.Modal(document.getElementById('cvModal'));
+      modal.show();
+      
+      // Lancer l'analyse
+      fetch(`/analyze-cv/${candidateId}`)
+        .then(response => {
+          if (!response.ok) throw new Error('Erreur réseau');
+          return response.json();
+        })
+        .then(data => {
+          // Créer le HTML des résultats
+          let html = `
+            <h5>Compétences :</h5>
+            <ul class="list-group mb-4">
+              ${data.affinda?.data?.skills?.length ? 
+                data.affinda.data.skills.map(skill => 
+                  `<li class="list-group-item">${skill.name}</li>`
+                ).join('') : 
+                '<li class="list-group-item">Aucune compétence trouvée</li>'}
+            </ul>
+            <h5>Expériences professionnelles :</h5>
+            <ul class="list-group">
+              ${data.affinda?.data?.professional_experiences?.length ? 
+                data.affinda.data.professional_experiences.map(exp => 
+                  `<li class="list-group-item">
+                    ${exp.title} chez ${exp.company} 
+                    ${exp.start_date ? `(${exp.start_date} - ${exp.end_date || 'Présent'})` : ''}
+                  </li>`
+                ).join('') : 
+                '<li class="list-group-item">Aucune expérience trouvée</li>'}
+            </ul>
+          `;
+          
+          document.getElementById('cvModalBody').innerHTML = html;
+        })
+        .catch(error => {
+          document.getElementById('cvModalBody').innerHTML = `
+            <div class="alert alert-danger">
+              Erreur lors de l'analyse du CV: ${error.message}
+            </div>
+          `;
+        });
+    });
+  });
+
+
+
+
+
+
 </script>
 {% endblock %}

@@ -6,6 +6,14 @@
 <div class="container">
   <div class="page-inner">
 
+        <!-- Affichage du message de succès -->
+        {% for message in app.flashes('success') %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+
     <div class="d-flex align-items-left align-items-md-center flex-column flex-md-row pt-2 pb-4">
       <nav class="navbar navbar-header-left navbar-expand-lg navbar-form nav-search p-0 d-none d-lg-flex">
         <div class="input-group">
@@ -54,8 +62,12 @@
                     <td>{{ e.status.value }}</td>
                     <td class="text-end">
                       <div class="d-flex justify-content-end gap-2">
-                        <a><img src="{{ asset('assets/img/Accepte.png') }}" alt="Accepte" width="30" height="30"></a>
-                        <a><img src="{{ asset('assets/img/annuler.png') }}" alt="annuler" width="30" height="30"></a>
+                        <a href="{{ path('accepter_entretien', {'id': e.idListOffre}) }}">
+                          <img src="{{ asset('assets/img/Accepte.png') }}" alt="Accepte" width="30" height="30">
+                      </a>
+                      <a href="{{ path('refuser_entretien', {'id': e.idListOffre}) }}">
+                          <img src="{{ asset('assets/img/annuler.png') }}" alt="annuler" width="30" height="30">
+                        </a>
                       </div>
                     </td>
                   </tr>

@@ -190,7 +190,7 @@ class ProfileController extends AbstractController
             throw new AccessDeniedException('You do not have permission to access this page.');
         }
 
-        return $this->render('dashboard.html.twig');
+        return $this->render('dashboard/index.html.twig');
     }
 
     #[Route('/users', name: 'app_users')]
@@ -295,4 +295,55 @@ class ProfileController extends AbstractController
     {
         throw new \LogicException('This method can be blank - it will be intercepted by the logout key on your firewall.');
     }
+
+    // // Add this method to your ProfileController class
+
+    // #[Route('/save-facial-data', name: 'app_save_facial_data', methods: ['POST'])]
+    // public function saveFacialData(Request $request, EntityManagerInterface $entityManager): Response
+    // {
+    //     // Check if user is authenticated
+    //     $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+    
+    //     /** @var User $user */
+    //     $user = $this->getUser();
+        
+    //     if (!$user) {
+    //         return $this->json(['success' => false, 'message' => 'User not authenticated'], Response::HTTP_UNAUTHORIZED);
+    //     }
+        
+    //     try {
+    //         // Get the facial data from the request
+    //         $data = json_decode($request->getContent(), true);
+            
+    //         // Check if we have valid data
+    //         if (!$data || !isset($data['facialData'])) {
+    //             return $this->json(
+    //                 ['success' => false, 'message' => 'No facial data provided or invalid format'],
+    //                 Response::HTTP_BAD_REQUEST
+    //             );
+    //         }
+            
+    //         // Store the facial data in your user entity
+    //         $user->setFacialData($data['facialData']);
+            
+    //         // Save to database and ensure changes are committed
+    //         $entityManager->persist($user);
+    //         $entityManager->flush();
+            
+    //         // Debug statement - remove in production
+    //         if ($user->getFacialData() === null) {
+    //             return $this->json(
+    //                 ['success' => false, 'message' => 'Data was set but is still null after flush'],
+    //                 Response::HTTP_INTERNAL_SERVER_ERROR
+    //             );
+    //         }
+            
+    //         return $this->json(['success' => true, 'message' => 'Facial data saved successfully']);
+    //     } catch (\Exception $e) {
+    //         return $this->json(
+    //             ['success' => false, 'message' => 'Error saving facial data: ' . $e->getMessage()], 
+    //             Response::HTTP_INTERNAL_SERVER_ERROR
+    //         );
+    //     }
+    // }
 }

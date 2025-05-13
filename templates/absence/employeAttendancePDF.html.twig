@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Rapport de présence - {{ employee.firstname }} {{ employee.lastname }}</title>
+    <style>
+        /* Reset and base styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'DejaVu Sans', Arial, sans-serif;
+            color: #333;
+            line-height: 1.4;
+            font-size: 12px;
+            margin: 10mm;
+            background-color: #fff;
+        }
+        
+        /* Header styling */
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #1572E8;
+            padding-bottom: 10px;
+        }
+        
+        .logo {
+            max-width: 150px;
+            margin-bottom: 10px;
+        }
+        
+        h1 {
+            color: #1572E8;
+            font-size: 18px;
+            margin: 0;
+            margin-bottom: 5px;
+        }
+        
+        h2 {
+            color: #1572E8;
+            font-size: 16px;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        
+        .report-meta {
+            font-size: 10px;
+            color: #666;
+        }
+        
+        /* Employee info section */
+        .employee-info {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-left: 4px solid #1572E8;
+            margin-bottom: 15px;
+        }
+        
+        .employee-name {
+            font-size: 14px;
+            font-weight: bold;
+            color: #1572E8;
+            margin-bottom: 5px;
+        }
+        
+        .employee-details {
+            width: 100%;
+            clear: both;
+            overflow: hidden;
+        }
+        
+        .employee-detail {
+            float: left;
+            margin-right: 15px;
+            margin-bottom: 5px;
+        }
+        
+        .label {
+            font-weight: bold;
+            color: #555;
+        }
+        
+        /* Month comparison cards */
+        .monthly-comparison {
+            width: 100%;
+            clear: both;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+        
+        .month-card {
+            width: 48%;
+            float: left;
+            margin-right: 4%;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+        }
+        
+        .month-card:nth-child(2n) {
+            margin-right: 0;
+        }
+        
+        .month-card-title {
+            font-size: 14px;
+            color: #1572E8;
+            margin-bottom: 8px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .month-card-stats {
+            width: 100%;
+        }
+        
+        .stats-row {
+            clear: both;
+            overflow: hidden;
+            border-bottom: 1px dashed #eee;
+            padding: 3px 0;
+        }
+        
+        .stats-label {
+            float: left;
+            width: 60%;
+            color: #666;
+        }
+        
+        .stats-value {
+            float: right;
+            width: 35%;
+            text-align: right;
+            font-weight: bold;
+        }
+        
+        /* Calendar styling */
+        .attendance-card {
+            background: white;
+            border: 1px solid #eee;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .calendar {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        
+        .calendar th {
+            background-color: #f0f0f0;
+            padding: 5px;
+            text-align: center;
+            border: 1px solid #ddd;
+            font-size: 10px;
+        }
+        
+        .calendar td {
+            height: 50px;
+            vertical-align: top;
+            border: 1px solid #ddd;
+            padding: 3px;
+            width: 14.28%;
+            font-size: 10px;
+        }
+        
+        .day-number {
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+        
+        .status {
+            padding: 2px 4px;
+            border-radius: 3px;
+            display: inline-block;
+            font-size: 8px;
+        }
+        
+        .status-PRESENT {
+            background-color: #e8f5e9;
+            color: #4CAF50;
+        }
+        
+        .status-ABSENT {
+            background-color: #ffebee;
+            color: #F25961;
+        }
+        
+        .status-EN_CONGE {
+            background-color: #e3f2fd;
+            color: #1572E8;
+        }
+        
+        .status-unknown {
+            background-color: #f5f5f5;
+            color: #9e9e9e;
+        }
+        
+        .weekend {
+            background-color: #fafafa;
+        }
+        
+        .today {
+            background-color: #fff8e1;
+        }
+        
+        /* Notes section */
+        .notes-section {
+            margin-top: 15px;
+            background-color: white;
+            border: 1px solid #eee;
+            padding: 10px;
+        }
+        
+        .note-item {
+            padding: 8px;
+            border-left: 3px solid #1572E8;
+            margin-bottom: 8px;
+            background-color: #f8f9fa;
+        }
+        
+        .note-date {
+            font-size: 9px;
+            color: #888;
+        }
+        
+        .note-comment {
+            margin: 3px 0;
+        }
+        
+        .note-author {
+            font-style: italic;
+            font-size: 9px;
+            color: #666;
+            text-align: right;
+        }
+        
+        /* Footer */
+        .footer {
+            margin-top: 15px;
+            font-size: 9px;
+            text-align: center;
+            color: #777;
+            border-top: 1px solid #ddd;
+            padding-top: 8px;
+        }
+        
+        /* Color-coding for status values */
+        .present-color {
+            color: #4CAF50;
+        }
+        
+        .absent-color {
+            color: #F25961;
+        }
+        
+        .leave-color {
+            color: #1572E8;
+        }
+        
+        .rate-color {
+            color: #FF9800;
+        }
+        
+        /* Page break control */
+        .page-break {
+            page-break-after: always;
+        }
+        
+        /* Helper class to avoid breaking content */
+        .keep-together {
+            page-break-inside: avoid;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header keep-together">
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJYAAAAyCAYAAAC+jCIaAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAF+0lEQVR4nO2cf0xVZRzAP/deLgLKIBAIV0FgP1zTuZm0LDMpNVtuZq5pbQ3XtLXKZWvNrTkzy621WrPVXK2xzCBzwVqstbQ5sggh+aXcogS5/BUKAnIvvHv74wUaaHWR97zn8n17/7vn+z3f5z3n+z7ned7zHEUyUPMegECQBJKEgAhQBISCFCLAHkjGIHrhSrIZxQXYjTxfhyFVIeHdTyJJKEu7qPTwLQoaDBQPiRQ4gzQFxMMWrEEXIwYgbTmMEg1JMoGgAHJcKCKtlsqJUUwK17jkryTGmKEUNRg40uJEU0HxCXjwWNSi9bCdRGSYxfFwhVNfCl/z87gUUVECDmTcCGPL/Lhu52CZAJzxVxgeQmKMRFeLkc3q7HuTWTKUQnOtWOKLX2GKuTptTVZnRWVJbEYHbw+wkxRtvO7D/PZnEiSy0F9heNTxCzOxpQlN5UUoUIyUdvMJNaMeL3/3U5hkxGu9pKswQ0CxDKEGtYoqFbTFScYhUjvPXzOvz6Ww5bfHbKFYN+JCTwskhRLxAFQrExMpk8+WpvRZxQ3jKYXmWt35yIm4Z3iLlJZP4YjbVkQpNFNR+VyIKBKBakrN1OHtw0Tg9YWO/1ExMkAFtXaclWKj+KKgXmV2dLxs0jvFG5kbY6X0W73KY7MN8yrOyQaRLZ1mV4uRs32a3jX/WM22RlCbCMpFUtNHDjW9z7Zt6x1+K25INbYM48YS4QaSYKYpxTLWuM8QKm3LyAu9MYx7LF4CQNUGvG8NJbOSfPVpHEwEgBMtTj6uNOLH3f6JJXSXQi9OWnWiXMKOYoG/PQfUMlJ6nC4N76BuMcpD9oejGECIJYD7Yf8lQ9xNsrKk6BF+P2VH9z5LCdOJGzrVk88Qa6VjAjmM2UkKoRYqiRBfZ6BhWgWMGgz9bqLFSUYDUJOp73DH9V3ULUYW/mCFHr4pHVqJyVqEcEsRD0Ubn5hKRb1K3uTfzH1m3YyXzOtpIK+uMIGWN6+uA6+EtC5lOkUODPYjK5+JXDfBkspQokkUaavI3ywZOUTk5qdP+9xA66NGsOlE1JKvwIvMxoRhNS9e2kN4D1cNSJKShCkE6d69Wn7eYQFVz/nBFYbeuBRWfQF7ZIKUbW9e4Ug7QUpTqUSGmbl3FdaXR929FQTsVJR26hRmKWR/yoAeD53TgdIEk7VSLdaX/BTJQ9DU2eIQoliDuBF3hYOH3xICNQnZEV7lQ0g/JVVUUmIYhQT2hODDSPZ7KRkH+twHyEsomNjVYqR07DUeGuRjZIjVe5yYSXf3fgNNUmE+Vl6rZpxMJBXGJDwUT67SZxPnBLKx0UXFKDfTTVZe9UkNnsBIZ3OdKRa9UmkEKZNXg3iLZN3EnBm+9AEDTNHJKWvWqI2TwDaZm0xGPJpJ2elQOsFFpfnnH4OdtZ66VqYMrJoL4Q0PQaUhmYL5/cMdWmV0FwI1d2MuWHKlhMIUFVe85AeGY6XVLR8EiIRzDnrZLJI2Dfa3ZxOPYoI0wZOQQ5idLLIkV8wt1XXVewJDi5F1TsQhGKnYDL3WtWw/FZvESJLV0fNnCIPIuunYYUskPadjkJV7JLAZ+kIxorX9vWgA2QyhuhQoRJkYoEk85LQwewCmEJK9Hg1Qf6bj+4TfDTm8JJP/kRy/0xGvKtfJuKl1GX/2NxNTKdEYpE4YNuJKUi2qTCY4oJl7uRFlMYDYdRxHOOjXVCYwNpKYdtlOZZNFLmvHsaSZF1Qs0F5eXXwVyDRTSkSzmeKf7VD6PDQBcIxG2fzY5AhI3wZTVPDuFxhaTCE4U+3YLDaKZsVQaoV8zOtWbXmvIX8/wVRisNWirswiJ+dW9gE66ZM3mBCQEJGiWIIbQIglCCKEWIIgQogluC3+Bd+qYCOD6+cOAAAAAElFTkSuQmCC" alt="Company Logo" class="logo">
+            <h1>Rapport de présence individuel</h1>
+            <div class="report-meta">
+                <div>{{ month }} {{ year }}</div>
+                <div>Généré le: {{ "now"|date("d/m/Y H:i") }}</div>
+            </div>
+        </div>
+        
+        <div class="employee-info keep-together">
+            <div class="employee-name">{{ employee.firstname }} {{ employee.lastname }}</div>
+            <div class="employee-details">
+                <div class="employee-detail">
+                    <span class="label">ID:</span> {{ employee.id }}
+                </div>
+                <div class="employee-detail">
+                    <span class="label">Email:</span> {{ employee.email }}
+                </div>
+                <div class="employee-detail">
+                    <span class="label">Position:</span> {{ employee.position|default('Non défini') }}
+                </div>
+                <div class="employee-detail">
+                    <span class="label">Département:</span> {{ employee.department|default('Non défini') }}
+                </div>
+            </div>
+        </div>
+        
+        <div class="monthly-comparison keep-together">
+            <div class="month-card">
+                <div class="month-card-title">{{ month }} {{ year }}</div>
+                <div class="month-card-stats">
+                    <div class="stats-row">
+                        <span class="stats-label">Présent</span>
+                        <span class="stats-value present-color">{{ stats.present }}</span>
+                    </div>
+                    <div class="stats-row">
+                        <span class="stats-label">Absent</span>
+                        <span class="stats-value absent-color">{{ stats.absent }}</span>
+                    </div>
+                    <div class="stats-row">
+                        <span class="stats-label">En congé</span>
+                        <span class="stats-value leave-color">{{ stats.leave }}</span>
+                    </div>
+                    <div class="stats-row">
+                        <span class="stats-label">Jours ouvrables</span>
+                        <span class="stats-value">{{ stats.workDays }}</span>
+                    </div>
+                    <div class="stats-row">
+                        <span class="stats-label">Taux de présence</span>
+                        <span class="stats-value rate-color">{{ stats.attendanceRate }}%</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="month-card">
+                <div class="month-card-title">{{ prevMonth }} {{ prevMonthYear }}</div>
+                <div class="month-card-stats">
+                    <div class="stats-row">
+                        <span class="stats-label">Présent</span>
+                        <span class="stats-value present-color">{{ prevStats.present }}</span>
+                    </div>
+                    <div class="stats-row">
+                        <span class="stats-label">Absent</span>
+                        <span class="stats-value absent-color">{{ prevStats.absent }}</span>
+                    </div>
+                    <div class="stats-row">
+                        <span class="stats-label">En congé</span>
+                        <span class="stats-value leave-color">{{ prevStats.leave }}</span>
+                    </div>
+                    <div class="stats-row">
+                        <span class="stats-label">Jours ouvrables</span>
+                        <span class="stats-value">{{ prevStats.workDays }}</span>
+                    </div>
+                    <div class="stats-row">
+                        <span class="stats-label">Taux de présence</span>
+                        <span class="stats-value rate-color">{{ prevStats.attendanceRate }}%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="attendance-card keep-together">
+            <h2>Calendrier de présence - {{ month }} {{ year }}</h2>
+            <table class="calendar">
+                <thead>
+                    <tr>
+                        <th>Lun</th>
+                        <th>Mar</th>
+                        <th>Mer</th>
+                        <th>Jeu</th>
+                        <th>Ven</th>
+                        <th>Sam</th>
+                        <th>Dim</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for week in calendar %}
+                    <tr>
+                        {% for day in week %}
+                            {% if day.day is null %}
+                                <td></td>
+                            {% else %}
+                                {% set todayClass = (day.day == "now"|date("j") and month == "now"|date("F") and year == "now"|date("Y")) ? 'today' : '' %}
+                                {% set weekendClass = (day.weekday > 5) ? 'weekend' : '' %}
+                                <td class="{{ weekendClass }} {{ todayClass }}">
+                                    <div class="day-number">{{ day.day }}</div>
+                                    {% if day.status is not null %}
+                                        <div class="status status-{{ day.status }}">
+                                            {% if day.status == 'PRESENT' %}Présent{% endif %}
+                                            {% if day.status == 'ABSENT' %}Absent{% endif %}
+                                            {% if day.status == 'EN_CONGE' %}En congé{% endif %}
+                                        </div>
+                                    {% endif %}
+                                </td>
+                            {% endif %}
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="notes-section keep-together">
+            <h2>Notes & Commentaires</h2>
+            {% if notes|length > 0 %}
+                {% for note in notes %}
+                <div class="note-item">
+                    <div class="note-date">{{ note.date|date("d/m/Y") }}</div>
+                    <div class="note-comment">{{ note.comment }}</div>
+                    <div class="note-author">- {{ note.author }}</div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p>Aucune note disponible pour ce mois.</p>
+            {% endif %}
+        </div>
+        
+        <div class="footer">
+            <p>Ce rapport est généré automatiquement et ne nécessite pas de signature.</p>
+            <p>Pour toute question concernant ce rapport, veuillez contacter le service RH.</p>
+            <p>© {{ "now"|date("Y") }} - Système de gestion des présences</p>
+        </div>
+    </div>
+</body>
+</html>

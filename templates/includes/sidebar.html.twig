@@ -1,354 +1,313 @@
+{% block stylesheets %}
+<style>
+  /* Add active state styling */
+  .nav-item.active > a {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff !important;
+  }
+  
+  /* Style for active submenu items */
+  .nav-collapse .active > a, 
+  .nav-collapse a.active {
+    color: #ffffff !important;
+    font-weight: bold;
+  }
+  
+  /* Show submenu when parent is active */
+  .nav-item.active .collapse {
+    display: block;
+  }
+  
+  /* Submenu item hover effect */
+  .nav-collapse a:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+  
+  /* Improve spacing and readability */
+  .nav-item {
+    margin-bottom: 2px;
+  }
+  
+  .caret {
+    float: right;
+    margin-top: 5px;
+    transition: transform 0.3s;
+  }
+  
+  .nav-item.active > a .caret {
+    transform: rotate(90deg);
+  }
+</style>
+{% endblock %}
+
 <div class="sidebar" data-background-color="dark">
-	<div class="sidebar-logo">
-		<div class="logo-header" data-background-color="dark">
-			<a href="{{ path('app_home') }}" class="logo">
-				{# <img src="{{ asset('assets/img/logo1.png') }}" alt="navbar brand" class="navbar-brand" height="50"/> #}
-				<img src="{{ asset('assets/img/evolve.png') }}" alt="navbar brand" class="navbar-brand" height="140"/>
-			</a>
-			<div class="nav-toggle">
-				<button class="btn btn-toggle toggle-sidebar">
-					<i class="gg-menu-right"></i>
-				</button>
-				<button class="btn btn-toggle sidenav-toggler">
-					<i class="gg-menu-left"></i>
-				</button>
-			</div>
-			<button class="topbar-toggler more">
-				<i class="gg-more-vertical-alt"></i>
-			</button>
-		</div>
-	</div>
-        
-	<div class="sidebar-wrapper scrollbar scrollbar-inner">
-		<div class="sidebar-content">
-			<ul class="nav nav-secondary">
-				{% if app.user is defined and app.user and app.user.role is defined and (app.user.role == 'CHEF_PROJET' or app.user.role == 'RESPONSABLE_RH') %}
-					<li class="nav-item active">
-						<a href="{{ path('app_dashboard') }}">
-							<i class="fas fa-home"></i>
-							<p>Dashboard</p>
-						</a>
-					</li>
-				{% endif %}
-
-				<li class="nav-section">
-					<span class="sidebar-mini-icon">
-						<i class="fa fa-ellipsis-h"></i>
-					</span>
-					<h4 class="text-section">Composants</h4>
-				</li>
-
-				{% if app.user is defined and app.user and app.user.role is defined and app.user.role == 'RESPONSABLE_RH' %}
-					<li class="nav-item">
-						<a href="{{ path('user_index') }}">
-							<i class="fa-solid fa-users"></i>
-							<p>Gestion des utilisateurs</p>
-						</a>
-					</li>
-				{% endif %}
-				
-				{% if app.user is defined and app.user and app.user.role is defined %}
-					<li class="nav-item">
-						<a data-bs-toggle="collapse" href="#conges">
-							<i class="fa fa-calendar"></i>
-							<p>Conge Management</p>
-							<span class="caret"></span>
-						</a>
-						<div class="collapse" id="conges">
-							<ul class="nav nav-collapse">
-								{% if app.user.role == 'RESPONSABLE_RH' %}
-									<li>
-										<a href="{{ path('app_conge_index') }}">
-											<span class="sub-item">Leave Requests</span>
-										</a>
-									</li>
-									<li>
-										<a href="{{ path('app_employee_attendance_admin') }}">
-											<span class="sub-item">Absence List</span>
-										</a>
-									</li>
-								{% endif %}
-								{% if app.user.role == 'EMPLOYEE' %}
-									<li>
-										<a href="{{ path('app_employe_conge_index') }}">
-											<span class="sub-item"> My Leave Requests</span>
-										</a>
-									</li>
-									<li>
-										<a href="{{ path('app_employee_my_attendance') }}">
-											<span class="sub-item">My Absences</span>
-										</a>
-									</li>
-								{% endif %}
-							</ul>
-						</div>
-					</li>
-				{% endif %}
-				{% if app.user is defined and app.user and app.user.role is defined %}
-              <li class="nav-item">
-    <a data-bs-toggle="collapse" href="#transports">
-        <i class="fa fa-car"></i>
-        <p>Gestion de transport</p>
-        <span class="caret"></span>
-    </a>
-    <div class="collapse" id="transports">
-        <ul class="nav nav-collapse">
-            {% if app.user.role == 'RESPONSABLE_RH' %}
-                <li>
-                    <a href="{{ path('moyentransport_list') }}">Moyens de Transport</a>
-                </li>
-                <li>
-                    <a href="{{ path('abonnement_list') }}">Liste des Abonnements</a>
-                </li>
-                <li>
-                    <a href="{{ path('trajet_list') }}">Liste des Trajets</a>
-                </li>
-            {% endif %}
-
-            {% if app.user.role == 'EMPLOYEE' %}
-                <li>
-                    <a href="{{ path('abonnement_list_front') }}">Mes Abonnements</a>
-                </li>
-                <li>
-                    <a href="{{ path('trajet_list_front') }}">Mes Trajets</a>
-                </li>
-            {% endif %}
-        </ul>
+  <div class="sidebar-logo">
+    <div class="logo-header" data-background-color="dark">
+      <a href="{{ path('app_home') }}" class="logo">
+        <img src="{{ asset('assets/img/evolve.png') }}" alt="navbar brand" class="navbar-brand" height="140"/>
+      </a>
+      <div class="nav-toggle">
+        <button class="btn btn-toggle toggle-sidebar">
+          <i class="gg-menu-right"></i>
+        </button>
+        <button class="btn btn-toggle sidenav-toggler">
+          <i class="gg-menu-left"></i>
+        </button>
+      </div>
+      <button class="topbar-toggler more">
+        <i class="gg-more-vertical-alt"></i>
+      </button>
     </div>
-</li>
-				
+  </div>
 
-				{% if app.user is defined and app.user and app.user.role is defined and (app.user.role == 'RESPONSABLE_RH' or app.user.role == 'CHEF_PROJET' or app.user.role == 'EMPLOYEE') %}
-					<li class="nav-item">
-						<a data-bs-toggle="collapse" href="#projects">
-							<i class="fas fa-project-diagram"></i>
-							<p>Gestion de projet</p>
-							<span class="caret"></span>
-						</a>
-						<div class="collapse" id="projects">
-							<ul class="nav nav-collapse">
-								{% if app.user.role == 'RESPONSABLE_RH' %}
-									<li>
-										<a href="{{ path('projets_list') }}">
-											<span class="sub-item">Liste des projets</span>
-										</a>
-									</li>
-									<li class="nav-item">
-   
-								{% endif %}
-								{% if app.user.role == 'CHEF_PROJET' or app.user.role == 'EMPLOYEE' %}
-									<li>
-										<a href="{{ path('projets_cards') }}">
-											<span class="sub-item">Carte des projets</span>
-										</a>
-									</li>
-								{% endif %}
-							</ul>
-						</div>
-					</li>
-					<li class="nav-item">
-						<a data-bs-toggle="collapse" href="#forms">
-							<i class="fas fa-pen-square"></i>
-							<p>Gestion Recrutements</p>
-							<span class="caret"></span>
-						</a>
-						<div class="collapse" id="forms">
-							<ul class="nav nav-collapse">
-								{% if app.user.role == 'RESPONSABLE_RH' %}
-								<li><a href="{{ path('app_Candidates') }}"><span class="sub-item">Candidates</span></a></li>
-								<li><a href="{{ path('app_Offre') }}"><span class="sub-item">Offre</span></a></li>
-								<li><a href="{{ path('app_Entretiens') }}"><span class="sub-item">Entretiens</span></a></li>
-								{% endif %}
-							</ul>
-						</div>
-					</li>	
-				{% endif %}
-			
-				
-				
+  <div class="sidebar-wrapper scrollbar scrollbar-inner">
+    <div class="sidebar-content">
+      <ul class="nav nav-secondary">
+        {% if app.user is defined and app.user and app.user.role is defined and (app.user.role == 'CHEF_PROJET' or app.user.role == 'RESPONSABLE_RH') %}
+          <li class="nav-item {{ app.request.get('_route') == 'app_dashboard' ? 'active' : '' }}">
+            <a href="{{ path('app_dashboard') }}">
+              <i class="fas fa-home"></i>
+              <p>Tableau de bord</p>
+            </a>
+          </li>
+        {% endif %}
 
-				
-				
+        <li class="nav-section">
+          <span class="sidebar-mini-icon">
+            <i class="fa fa-ellipsis-h"></i>
+          </span>
+          <h4 class="text-section">Composants</h4>
+        </li>
 
-			{% endif %}
-			
+        {% if app.user is defined and app.user and app.user.role is defined and app.user.role == 'RESPONSABLE_RH' %}
+          <li class="nav-item {{ app.request.get('_route') == 'user_index' ? 'active' : '' }}">
+            <a href="{{ path('user_index') }}">
+              <i class="fa-solid fa-users"></i>
+              <p>Gestion des utilisateurs</p>
+            </a>
+          </li>
+        {% endif %}
 
+        {% if app.user is defined and app.user and app.user.role is defined %}
+          {% set congeRoutes = ['app_conge_index', 'app_employee_attendance_admin', 'app_employe_conge_index', 'app_employee_my_attendance'] %}
+          <li class="nav-item {{ app.request.get('_route') in congeRoutes ? 'active' : '' }}">
+            <a data-bs-toggle="collapse" href="#conges">
+              <i class="fa fa-calendar"></i>
+              <p>Gestion de congés</p>
+              <span class="caret"></span>
+            </a>
+            <div class="collapse {{ app.request.get('_route') in congeRoutes ? 'show' : '' }}" id="conges">
+              <ul class="nav nav-collapse">
+                {% if app.user.role == 'RESPONSABLE_RH' %}
+                  <li class="{{ app.request.get('_route') == 'app_conge_index' ? 'active' : '' }}">
+                    <a class="{{ app.request.get('_route') == 'app_conge_index' ? 'active' : '' }}" href="{{ path('app_conge_index') }}">
+                      <span class="sub-item">Demandes de congés</span>
+                    </a>
+                  </li>
+                  <li class="{{ app.request.get('_route') == 'app_employee_attendance_admin' ? 'active' : '' }}">
+                    <a class="{{ app.request.get('_route') == 'app_employee_attendance_admin' ? 'active' : '' }}" href="{{ path('app_employee_attendance_admin') }}">
+                      <span class="sub-item">Absence List</span>
+                    </a>
+                  </li>
+                {% endif %}
+                {% if app.user.role == 'EMPLOYEE' %}
+                  <li class="{{ app.request.get('_route') == 'app_employe_conge_index' ? 'active' : '' }}">
+                    <a class="{{ app.request.get('_route') == 'app_employe_conge_index' ? 'active' : '' }}" href="{{ path('app_employe_conge_index') }}">
+                      <span class="sub-item">Mes demandes de congés</span>
+                    </a>
+                  </li>
+                  <li class="{{ app.request.get('_route') == 'app_employee_my_attendance' ? 'active' : '' }}">
+                    <a class="{{ app.request.get('_route') == 'app_employee_my_attendance' ? 'active' : '' }}" href="{{ path('app_employee_my_attendance') }}">
+                      <span class="sub-item">Mes absences</span>
+                    </a>
+                  </li>
+                {% endif %}
+              </ul>
+            </div>
+          </li>
+        {% endif %}
+        
+        {% if app.user is defined and app.user and app.user.role is defined %}
+          {% set transportRoutes = ['moyentransport_list', 'abonnement_list', 'trajet_list', 'abonnement_list_front', 'trajet_list_front'] %}
+          <li class="nav-item {{ app.request.get('_route') in transportRoutes ? 'active' : '' }}">
+            <a data-bs-toggle="collapse" href="#transports">
+              <i class="fa fa-car"></i>
+              <p>Gestion de transport</p>
+              <span class="caret"></span>
+            </a>
+            <div class="collapse {{ app.request.get('_route') in transportRoutes ? 'show' : '' }}" id="transports">
+              <ul class="nav nav-collapse">
+                {% if app.user.role == 'RESPONSABLE_RH' %}
+                  <li class="{{ app.request.get('_route') == 'moyentransport_list' ? 'active' : '' }}">
+                    <a class="{{ app.request.get('_route') == 'moyentransport_list' ? 'active' : '' }}" href="{{ path('moyentransport_list') }}">
+                      <span class="sub-item">Moyens de Transport</span>
+                    </a>
+                  </li>
+                  <li class="{{ app.request.get('_route') == 'abonnement_list' ? 'active' : '' }}">
+                    <a class="{{ app.request.get('_route') == 'abonnement_list' ? 'active' : '' }}" href="{{ path('abonnement_list') }}">
+                      <span class="sub-item">Liste des Abonnements</span>
+                    </a>
+                  </li>
+                  <li class="{{ app.request.get('_route') == 'trajet_list' ? 'active' : '' }}">
+                    <a class="{{ app.request.get('_route') == 'trajet_list' ? 'active' : '' }}" href="{{ path('trajet_list') }}">
+                      <span class="sub-item">Liste des Trajets</span>
+                    </a>
+                  </li>
+                {% endif %}
 
-			</ul>
-		</div>
-	</div>
+                {% if app.user.role == 'EMPLOYEE' %}
+                  <li class="{{ app.request.get('_route') == 'abonnement_list_front' ? 'active' : '' }}">
+                    <a class="{{ app.request.get('_route') == 'abonnement_list_front' ? 'active' : '' }}" href="{{ path('abonnement_list_front') }}">
+                      <span class="sub-item">Mes Abonnements</span>
+                    </a>
+                  </li>
+                  <li class="{{ app.request.get('_route') == 'trajet_list_front' ? 'active' : '' }}">
+                    <a class="{{ app.request.get('_route') == 'trajet_list_front' ? 'active' : '' }}" href="{{ path('trajet_list_front') }}">
+                      <span class="sub-item">Mes Trajets</span>
+                    </a>
+                  </li>
+                {% endif %}
+              </ul>
+            </div>
+          </li>
+
+          {% if app.user is defined and app.user and app.user.role is defined and (app.user.role == 'RESPONSABLE_RH' or app.user.role == 'CHEF_PROJET' or app.user.role == 'EMPLOYEE') %}
+            {% set projectRoutes = ['projets_list', 'projets_cards'] %}
+            <li class="nav-item {{ app.request.get('_route') in projectRoutes ? 'active' : '' }}">
+              <a data-bs-toggle="collapse" href="#projects">
+                <i class="fas fa-project-diagram"></i>
+                <p>Gestion de projet</p>
+                <span class="caret"></span>
+              </a>
+              <div class="collapse {{ app.request.get('_route') in projectRoutes ? 'show' : '' }}" id="projects">
+                <ul class="nav nav-collapse">
+                  {% if app.user.role == 'RESPONSABLE_RH' %}
+                    <li class="{{ app.request.get('_route') == 'projets_list' ? 'active' : '' }}">
+                      <a class="{{ app.request.get('_route') == 'projets_list' ? 'active' : '' }}" href="{{ path('projets_list') }}">
+                        <span class="sub-item">Liste des projets</span>
+                      </a>
+                    </li>
+                  {% endif %}
+                  {% if app.user.role == 'CHEF_PROJET' or app.user.role == 'EMPLOYEE' %}
+                    <li class="{{ app.request.get('_route') == 'projets_cards' ? 'active' : '' }}">
+                      <a class="{{ app.request.get('_route') == 'projets_cards' ? 'active' : '' }}" href="{{ path('projets_cards') }}">
+                        <span class="sub-item">Carte des projets</span>
+                      </a>
+                    </li>
+                  {% endif %}
+                </ul>
+              </div>
+            </li>
+
+            {% if app.user is defined and app.user and app.user.role is defined and app.user.role == 'RESPONSABLE_RH' %}
+            {% set recruitmentRoutes = ['app_Candidates', 'app_Offre', 'app_Entretiens'] %}
+            <li class="nav-item {{ app.request.get('_route') in recruitmentRoutes ? 'active' : '' }}">
+              <a data-bs-toggle="collapse" href="#forms">
+                <i class="fas fa-pen-square"></i>
+                <p>Gestion Recrutements</p>
+                <span class="caret"></span>
+              </a>
+              <div class="collapse {{ app.request.get('_route') in recruitmentRoutes ? 'show' : '' }}" id="forms">
+                <ul class="nav nav-collapse">
+                  {% if app.user.role == 'RESPONSABLE_RH' %}
+                    <li class="{{ app.request.get('_route') == 'app_Candidates' ? 'active' : '' }}">
+                      <a class="{{ app.request.get('_route') == 'app_Candidates' ? 'active' : '' }}" href="{{ path('app_Candidates') }}">
+                        <span class="sub-item">Candidates</span>
+                      </a>
+                    </li>
+                    <li class="{{ app.request.get('_route') == 'app_Offre' ? 'active' : '' }}">
+                      <a class="{{ app.request.get('_route') == 'app_Offre' ? 'active' : '' }}" href="{{ path('app_Offre') }}">
+                        <span class="sub-item">Offre</span>
+                      </a>
+                    </li>
+                    <li class="{{ app.request.get('_route') == 'app_Entretiens' ? 'active' : '' }}">
+                      <a class="{{ app.request.get('_route') == 'app_Entretiens' ? 'active' : '' }}" href="{{ path('app_Entretiens') }}">
+                        <span class="sub-item">Entretiens</span>
+                      </a>
+                    </li>
+                  {% endif %}
+                </ul>
+              </div>
+            </li>
+          {% endif %}
+        {% endif %}
+
+        {% endif %}
+      </ul>
+    </div>
+  </div>
 </div>
 
-
-{# <li class="nav-item">
-																														<a data-bs-toggle="collapse" href="#sidebarLayouts">
-																															<i class="fas fa-th-list"></i>
-																															<p>Sidebar Layouts</p>
-																															<span class="caret"></span>
-																														</a>
-																														<div class="collapse" id="sidebarLayouts">
-																															<ul class="nav nav-collapse">
-																																<li>
-																																	<a href="{{ path('app_sidebar_style2') }}">
-																																		<span class="sub-item">Sidebar Style 2</span>
-																																	</a>
-																																</li>
-																																<li>
-																																	<a href="{{ path('app_icon_menu') }}">
-																																		<span class="sub-item">Icon Menu</span>
-																																	</a>
-																																</li>
-																															</ul>
-																														</div>
-																													</li> #}
-
-{# <li class="nav-item">
-																									<a data-bs-toggle="collapse" href="#forms">
-																										<i class="fas fa-pen-square"></i>
-																										<p>Forms</p>
-																										<span class="caret"></span>
-																									</a>
-																									<div class="collapse" id="forms">
-																										<ul class="nav nav-collapse">
-																											<li>
-																												<a href="{{ path('app_basicform') }}">
-																													<span class="sub-item">Basic Form</span>
-																												</a>
-																											</li>
-																										</ul>
-																									</div>
-																								</li> #}
-
-{# <li class="nav-item">
-																														<a data-bs-toggle="collapse" href="#tables">
-																															<i class="fas fa-table"></i>
-																															<p>Tables</p>
-																															<span class="caret"></span>
-																														</a>
-																														<div class="collapse" id="tables">
-																															<ul class="nav nav-collapse">
-																																<li>
-																																	<a href="{{ path('app_basictable') }}">
-																																		<span class="sub-item">Basic Table</span>
-																																	</a>
-																																</li>
-																																<li>
-																																	<a href="{{ path('app_datatables') }}">
-																																		<span class="sub-item">Datatables</span>
-																																	</a>
-																																</li>
-																															</ul>
-																														</div>
-																													</li> #}
-
-{# <li class="nav-item">
-																														<a data-bs-toggle="collapse" href="#maps">
-																															<i class="fas fa-map-marker-alt"></i>
-																															<p>Maps</p>
-																															<span class="caret"></span>
-																														</a>
-																														<div class="collapse" id="maps">
-																															<ul class="nav nav-collapse">
-																																<li>
-																																	<a href="{{ path('app_googlemaps') }}">
-																																		<span class="sub-item">Google Maps</span>
-																																	</a>
-																																</li>
-																																<li>
-																																	<a href="{{ path('app_jsvectormap') }}">
-																																		<span class="sub-item">Jsvectormap</span>
-																																	</a>
-																																</li>
-																															</ul>
-																														</div>
-																													</li> #}
-
-{# <li class="nav-item active submenu">
-																														<a data-bs-toggle="collapse" href="#charts">
-																															<i class="far fa-chart-bar"></i>
-																															<p>Charts</p>
-																															<span class="caret"></span>
-																														</a>
-																														<div class="collapse show" id="charts">
-																															<ul class="nav nav-collapse">
-																																<li class="active">
-																																	<a href="{{ path('app_chartjs') }}">
-																																		<span class="sub-item">Chart Js</span>
-																																	</a>
-																																</li>
-																																<li>
-																																	<a href="{{ path('app_sparkline') }}">
-																																		<span class="sub-item">Sparkline</span>
-																																	</a>
-																																</li>
-																															</ul>
-																														</div>
-																													</li> #}
-
-{# <li class="nav-item">
-																														<a href="{{ path('app_widgets') }}">
-																															<i class="fas fa-desktop"></i>
-																															<p>Widgets</p>
-																															<span class="badge badge-success">4</span>
-																														</a>
-																													</li> #}
-
-{# <li class="nav-item">
-																														<a href="{{ path('app_documentation') }}">
-																															<i class="fas fa-file"></i>
-																															<p>Documentation</p>
-																															<span class="badge badge-secondary">1</span>
-																														</a>
-																													</li> #}
-
-{# <li class="nav-item">
-																														<a data-bs-toggle="collapse" href="#submenu">
-																															<i class="fas fa-bars"></i>
-																															<p>Menu Levels</p>
-																															<span class="caret"></span>
-																														</a>
-																														<div class="collapse" id="submenu">
-																															<ul class="nav nav-collapse">
-																																<li>
-																																	<a data-bs-toggle="collapse" href="#subnav1">
-																																		<span class="sub-item">Level 1</span>
-																																		<span class="caret"></span>
-																																	</a>
-																																	<div class="collapse" id="subnav1">
-																																		<ul class="nav nav-collapse subnav">
-																																			<li>
-																																				<a href="#">
-																																					<span class="sub-item">Level 2</span>
-																																				</a>
-																																			</li>
-																																			<li>
-																																				<a href="#">
-																																					<span class="sub-item">Level 2</span>
-																																				</a>
-																																			</li>
-																																		</ul>
-																																	</div>
-																																</li>
-																																<li>
-																																	<a data-bs-toggle="collapse" href="#subnav2">
-																																		<span class="sub-item">Level 1</span>
-																																		<span class="caret"></span>
-																																	</a>
-																																	<div class="collapse" id="subnav2">
-																																		<ul class="nav nav-collapse subnav">
-																																			<li>
-																																				<a href="#">
-																																					<span class="sub-item">Level 2</span>
-																																				</a>
-																																			</li>
-																																		</ul>
-																																	</div>
-																																</li>
-																																<li>
-																																	<a href="#">
-																																		<span class="sub-item">Level 1</span>
-																																	</a>
-																																</li>
-																															</ul>
-																														</div>
-																													</li> #}
+{% block javascripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Get current route
+    const currentPath = window.location.pathname;
+    
+    // Helper function to add active class to the correct menu items
+    function setActiveMenu() {
+      // Find which submenu the current page belongs to
+      const navItems = document.querySelectorAll('.nav-item');
+      
+      navItems.forEach(item => {
+        const submenuLinks = item.querySelectorAll('.nav-collapse a');
+        let isCurrentInSubmenu = false;
+        
+        // Check all submenu links
+        submenuLinks.forEach(link => {
+          if (link.getAttribute('href') === currentPath) {
+            isCurrentInSubmenu = true;
+            link.classList.add('active');
+            link.parentElement.classList.add('active');
+          }
+        });
+        
+        // If current page is in submenu, expand parent
+        if (isCurrentInSubmenu) {
+          item.classList.add('active');
+          const collapse = item.querySelector('.collapse');
+          if (collapse) {
+            collapse.classList.add('show');
+          }
+        }
+        
+        // Also check main menu links
+        const mainLink = item.querySelector('a:not([data-bs-toggle])');
+        if (mainLink && mainLink.getAttribute('href') === currentPath) {
+          item.classList.add('active');
+        }
+      });
+    }
+    
+    // Initialize active menu state
+    setActiveMenu();
+    
+    // Add click handlers for manual collapsing
+    const collapseTriggers = document.querySelectorAll('[data-bs-toggle="collapse"]');
+    collapseTriggers.forEach(trigger => {
+      trigger.addEventListener('click', function(e) {
+        const parent = this.closest('.nav-item');
+        
+        // If not using Bootstrap's collapse JS, handle toggling manually
+        if (!window.bootstrap) {
+          e.preventDefault();
+          const targetId = this.getAttribute('href').replace('#', '');
+          const targetCollapse = document.getElementById(targetId);
+          
+          if (targetCollapse) {
+            // Toggle the parent active state
+            parent.classList.toggle('active');
+            
+            // Toggle the collapse state
+            if (targetCollapse.classList.contains('show')) {
+              targetCollapse.classList.remove('show');
+            } else {
+              targetCollapse.classList.add('show');
+            }
+          }
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}

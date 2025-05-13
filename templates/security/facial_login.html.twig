@@ -1,291 +1,297 @@
 {# templates/security/facial_login.html.twig #}
 <!DOCTYPE html>
 <html lang="fr">
-<head>
-    <title>Connexion par reconnaissance faciale</title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token('facial_authenticate') }}">
+	<head>
+		<title>Connexion par reconnaissance faciale</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="csrf-token" content="{{ csrf_token('facial_authenticate') }}">
 
-    <link rel="icon" href="{{ asset('assets/img/logo1.png') }}" type="image/x-icon">
-    <link rel="stylesheet" type="text/css" href="{{ asset('login/vendor/bootstrap/css/bootstrap.min.css') }}">
-    <link rel="stylesheet" type="text/css" href="{{ asset('login/fonts/font-awesome-4.7.0/css/font-awesome.min.css') }}">
-    <link rel="stylesheet" type="text/css" href="{{ asset('login/fonts/iconic/css/material-design-iconic-font.min.css') }}">
-    <link rel="stylesheet" type="text/css" href="{{ asset('login/vendor/animate/animate.css') }}">
-    <link rel="stylesheet" type="text/css" href="{{ asset('login/vendor/css-hamburgers/hamburgers.min.css') }}">
-    <link rel="stylesheet" type="text/css" href="{{ asset('login/vendor/animsition/css/animsition.min.css') }}">
-    <link rel="stylesheet" type="text/css" href="{{ asset('login/vendor/select2/select2.min.css') }}">
-    <link rel="stylesheet" type="text/css" href="{{ asset('login/vendor/daterangepicker/daterangepicker.css') }}">
-    <link rel="stylesheet" type="text/css" href="{{ asset('login/css/util.css') }}">
-    <link rel="stylesheet" type="text/css" href="{{ asset('login/css/main.css') }}">
-    
-    <!-- Load face-api.js from CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
-    
-    <style>
-        .logo-container {
-            text-align: center;
-            margin-bottom: 15px;
-        }
-        .logo-img {
-            max-height: 60px;
-            max-width: 100%;
-        }
-        .video-container {
-            width: 100%;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        #video {
-            width: 100%;
-            max-width: 400px;
-            border-radius: 10px;
-            margin: 0 auto;
-            display: block;
-        }
-        #canvas {
-            display: none;
-        }
-        .face-scan-animation {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: 2px solid #00ff00;
-            border-radius: 10px;
-            animation: scanning 2s infinite;
-            pointer-events: none;
-        }
-        @keyframes scanning {
-            0% { opacity: 0.1; }
-            50% { opacity: 0.6; }
-            100% { opacity: 0.1; }
-        }
-        .status-container {
-            text-align: center;
-            margin-bottom: 20px;
-            min-height: 50px;
-        }
-        .back-btn {
-            margin-top: 10px;
-            text-align: center;
-        }
-        .relative {
-            position: relative;
-        }
-    </style>
-</head>
-<body>
-    <div class="limiter">
-        <div class="container-login100" style="background-image: url('{{ asset('login/images/bg-01.jpg') }}');">
-            <div class="wrap-login100 p-l-55 p-r-55 p-t-65 p-b-54">
-                <div class="logo-container">
-                    <img src="{{ asset('assets/img/logo.png') }}" alt="Logo" class="logo-img">
-                </div>
-                <span class="login100-form-title p-b-30">
-                    Connexion par reconnaissance faciale
-                </span>
+		<link rel="icon" href="{{ asset('assets/img/logo1.png') }}" type="image/x-icon">
+		<link rel="stylesheet" type="text/css" href="{{ asset('login/vendor/bootstrap/css/bootstrap.min.css') }}">
+		<link rel="stylesheet" type="text/css" href="{{ asset('login/fonts/font-awesome-4.7.0/css/font-awesome.min.css') }}">
+		<link rel="stylesheet" type="text/css" href="{{ asset('login/fonts/iconic/css/material-design-iconic-font.min.css') }}">
+		<link rel="stylesheet" type="text/css" href="{{ asset('login/vendor/animate/animate.css') }}">
+		<link rel="stylesheet" type="text/css" href="{{ asset('login/vendor/css-hamburgers/hamburgers.min.css') }}">
+		<link rel="stylesheet" type="text/css" href="{{ asset('login/vendor/animsition/css/animsition.min.css') }}">
+		<link rel="stylesheet" type="text/css" href="{{ asset('login/vendor/select2/select2.min.css') }}">
+		<link rel="stylesheet" type="text/css" href="{{ asset('login/vendor/daterangepicker/daterangepicker.css') }}">
+		<link rel="stylesheet" type="text/css" href="{{ asset('login/css/util.css') }}">
+		<link
+		rel="stylesheet" type="text/css" href="{{ asset('login/css/main.css') }}">
 
-                {% for message in app.flashes('error') %}
-                    <div class="alert alert-danger" role="alert">
-                        {{ message }}
-                    </div>
-                {% endfor %}
+		<!-- Load face-api.js from CDN -->
+		<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 
-                <div class="status-container">
-                    <div id="status" class="text-primary">
-                        <i class="fa fa-info-circle"></i> Veuillez autoriser l'accès à votre caméra
-                    </div>
-                </div>
+		<style>
+			.logo-container {
+				text-align: center;
+				margin-bottom: 15px;
+			}
+			.logo-img {
+				max-height: 60px;
+				max-width: 100%;
+			}
+			.video-container {
+				width: 100%;
+				text-align: center;
+				margin-bottom: 20px;
+			}
+			#video {
+				width: 100%;
+				max-width: 400px;
+				border-radius: 10px;
+				margin: 0 auto;
+				display: block;
+			}
+			#canvas {
+				display: none;
+			}
+			.face-scan-animation {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				border: 2px solid #00ff00;
+				border-radius: 10px;
+				animation: scanning 2s infinite;
+				pointer-events: none;
+			}
+			@keyframes scanning {
+				0% {
+					opacity: 0.1;
+				}
+				50% {
+					opacity: 0.6;
+				}
+				100% {
+					opacity: 0.1;
+				}
+			}
+			.status-container {
+				text-align: center;
+				margin-bottom: 20px;
+				min-height: 50px;
+			}
+			.back-btn {
+				margin-top: 10px;
+				text-align: center;
+			}
+			.relative {
+				position: relative;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="limiter">
+			<div class="container-login100" style="background-image: url('{{ asset('login/images/bg-01.jpg') }}');">
+				<div class="wrap-login100 p-l-55 p-r-55 p-t-65 p-b-54">
+					<div class="logo-container">
+						<img src="{{ asset('assets/img/logo.png') }}" alt="Logo" class="logo-img">
+					</div>
+					<span class="login100-form-title p-b-30">
+						Connexion par reconnaissance faciale
+					</span>
 
-                <div class="wrap-input100 relative">
-                    <div class="video-container">
-                        <video id="video" autoplay playsinline></video>
-                        <div id="scanner" class="face-scan-animation" style="display: none;"></div>
-                        <canvas id="canvas"></canvas>
-                    </div>
-                </div>
+					{% for message in app.flashes('error') %}
+						<div class="alert alert-danger" role="alert">
+							{{ message }}
+						</div>
+					{% endfor %}
 
-                <div class="container-login100-form-btn">
-                    <div class="wrap-login100-form-btn">
-                        <div class="login100-form-bgbtn"></div>
-                        <button class="login100-form-btn" id="authenticate-btn" disabled>
-                            <i class="fa fa-spinner fa-spin" id="spinner" style="display: none;"></i>
-                            <span id="btn-text">S'authentifier</span>
-                        </button>
-                    </div>
-                </div>
+					<div class="status-container">
+						<div id="status" class="text-primary">
+							<i class="fa fa-info-circle"></i>
+							Veuillez autoriser l'accès à votre caméra
+						</div>
+					</div>
 
-                <div class="text-center p-t-15">
-                    <p id="email-display" class="text-muted"></p>
-                </div>
+					<div class="wrap-input100 relative">
+						<div class="video-container">
+							<video id="video" autoplay playsinline></video>
+							<div id="scanner" class="face-scan-animation" style="display: none;"></div>
+							<canvas id="canvas"></canvas>
+						</div>
+					</div>
 
-                <div class="back-btn">
-                    <a href="{{ path('app_login') }}" class="btn btn-outline-secondary btn-sm">
-                        <i class="fa fa-arrow-left"></i> Retour à la connexion classique
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
+					<div class="container-login100-form-btn">
+						<div class="wrap-login100-form-btn">
+							<div class="login100-form-bgbtn"></div>
+							<button class="login100-form-btn" id="authenticate-btn" disabled>
+								<i class="fa fa-spinner fa-spin" id="spinner" style="display: none;"></i>
+								<span id="btn-text">S'authentifier</span>
+							</button>
+						</div>
+					</div>
 
-    <script src="{{ asset('login/vendor/jquery/jquery-3.2.1.min.js') }}"></script>
-    <script src="{{ asset('login/vendor/animsition/js/animsition.min.js') }}"></script>
-    <script src="{{ asset('login/vendor/bootstrap/js/popper.js') }}"></script>
-    <script src="{{ asset('login/vendor/bootstrap/js/bootstrap.min.js') }}"></script>
+					<div class="text-center p-t-15">
+						<p id="email-display" class="text-muted"></p>
+					</div>
 
-    <script>
-document.addEventListener('DOMContentLoaded', async function() {
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('canvas');
-    const status = document.getElementById('status');
-    const authenticateBtn = document.getElementById('authenticate-btn');
-    const scanner = document.getElementById('scanner');
-    const spinner = document.getElementById('spinner');
-    const btnText = document.getElementById('btn-text');
-    const emailDisplay = document.getElementById('email-display');
-    
-    try {
-        // Load face recognition models
-        status.innerHTML = '<span class="text-info"><i class="fa fa-circle-o-notch fa-spin"></i> Chargement des modèles de reconnaissance faciale...</span>';
-        
-        try {
-            await Promise.all([
-                faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
-                faceapi.nets.faceLandmark68Net.loadFromUri('/models'),
-                faceapi.nets.faceRecognitionNet.loadFromUri('/models')
-            ]);
-            console.log('Models loaded successfully');
-        } catch (modelError) {
-            console.error('Error loading face models:', modelError);
-            status.innerHTML = '<span class="text-danger"><i class="fa fa-exclamation-triangle"></i> Erreur de chargement des modèles: ' + modelError.message + '</span>';
-            throw modelError;
-        }
-        
-        status.innerHTML = '<span class="text-success"><i class="fa fa-check-circle"></i> Modèles chargés, activation de la caméra...</span>';
-        
-        // Request camera access
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: "user" }
-        });
-        
-        video.srcObject = stream;
-        status.innerHTML = '<span class="text-success"><i class="fa fa-check-circle"></i> Caméra activée, positionnez votre visage</span>';
-        scanner.style.display = 'block';
-        
-        // Setup face detection
-        video.addEventListener('play', () => {
-            setInterval(async () => {
-                const detections = await faceapi.detectSingleFace(video, 
-                    new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.5 }))
-                    .withFaceLandmarks()
-                    .withFaceDescriptor();
-                
-                if (detections) {
-                    status.innerHTML = '<span class="text-success"><i class="fa fa-check-circle"></i> Visage détecté, prêt pour l\'authentification</span>';
-                    authenticateBtn.disabled = false;
-                } else {
-                    status.innerHTML = '<span class="text-warning"><i class="fa fa-exclamation-circle"></i> Aucun visage détecté, veuillez vous positionner face à la caméra</span>';
-                    authenticateBtn.disabled = true;
-                }
-            }, 500);
-        });
-    } catch (err) {
-        status.innerHTML = '<span class="text-danger"><i class="fa fa-exclamation-triangle"></i> Erreur: ' + err.message + '</span>';
-        console.error('Error initializing face detection:', err);
-    }
+					<div class="back-btn">
+						<a href="{{ path('app_login') }}" class="btn btn-outline-secondary btn-sm">
+							<i class="fa fa-arrow-left"></i>
+							Retour à la connexion classique
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
 
-    // Handle authentication button click
-    authenticateBtn.addEventListener('click', async () => {
-        spinner.style.display = 'inline-block';
-        btnText.textContent = 'Authentification en cours...';
-        authenticateBtn.disabled = true;
-        
-        try {
-            // Capture current frame from video
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-            
-            const detection = await faceapi.detectSingleFace(canvas, 
-                new faceapi.TinyFaceDetectorOptions())
-                .withFaceLandmarks()
-                .withFaceDescriptor();
-            
-            if (!detection) {
-                status.innerHTML = '<span class="text-danger"><i class="fa fa-exclamation-triangle"></i> Aucun visage détecté, veuillez réessayer</span>';
-                spinner.style.display = 'none';
-                btnText.textContent = 'S\'authentifier';
-                authenticateBtn.disabled = false;
-                return;
-            }
-            
-            // Convert image to base64 for sending to server
-            const imageData = canvas.toDataURL('image/jpeg');
-            
-            // Ensure descriptor is a regular array, not a Float32Array
-            const descriptorArray = Array.from(detection.descriptor);
-            
-            console.log('Sending authentication request with descriptor length:', descriptorArray.length);
-            
+		<script src="{{ asset('login/vendor/jquery/jquery-3.2.1.min.js') }}"></script>
+		<script src="{{ asset('login/vendor/animsition/js/animsition.min.js') }}"></script>
+		<script src="{{ asset('login/vendor/bootstrap/js/popper.js') }}"></script>
+		<script src="{{ asset('login/vendor/bootstrap/js/bootstrap.min.js') }}"></script>
+
+		<script>
+			document.addEventListener('DOMContentLoaded', async function () {
+const video = document.getElementById('video');
+const canvas = document.getElementById('canvas');
+const status = document.getElementById('status');
+const authenticateBtn = document.getElementById('authenticate-btn');
+const scanner = document.getElementById('scanner');
+const spinner = document.getElementById('spinner');
+const btnText = document.getElementById('btn-text');
+const emailDisplay = document.getElementById('email-display');
+
+try { // Load face recognition models
+status.innerHTML = '<span class="text-info"><i class="fa fa-circle-o-notch fa-spin"></i> Chargement des modèles de reconnaissance faciale...</span>';
+
 try {
-    const response = await fetch('/facial-login/authenticate', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify({ 
-            faceImage: imageData,
-            faceDescriptor: descriptorArray
-        })
-    });
-    
-    // Process the response only once
-    if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Server error:', response.status, errorText.substring(0, 200));
-        throw new Error(`Server error: ${response.status}`);
-    }
-    
-    // Parse the JSON response
-    const result = await response.json();
-    
-    if (result.success) {
-        status.innerHTML = '<span class="text-success"><i class="fa fa-check-circle"></i> Authentification réussie! Redirection...</span>';
-        emailDisplay.textContent = 'Connecté en tant que: ' + result.email;
-        
-        // Use the redirect path from the server response
-        const redirectTo = result.redirectTo || '/profile';
-        console.log('Redirecting to:', redirectTo);
-        
-        // Redirect after successful authentication
-        setTimeout(() => {
-            window.location.href = redirectTo;
-        }, 1500);
-    } else {
-        status.innerHTML = '<span class="text-danger"><i class="fa fa-times-circle"></i> ' + result.message + '</span>';
-        spinner.style.display = 'none';
-        btnText.textContent = 'Réessayer';
-        authenticateBtn.disabled = false;
-    }
-} catch (fetchError) {
-    console.error('Fetch error:', fetchError);
-    status.innerHTML = '<span class="text-danger"><i class="fa fa-exclamation-triangle"></i> Erreur de connexion: ' + fetchError.message + '</span>';
-    spinner.style.display = 'none';
-    btnText.textContent = 'Réessayer';
-    authenticateBtn.disabled = false;
+await Promise.all([faceapi.nets.tinyFaceDetector.loadFromUri('/models'), faceapi.nets.faceLandmark68Net.loadFromUri('/models'), faceapi.nets.faceRecognitionNet.loadFromUri('/models')]);
+console.log('Models loaded successfully');
+} catch (modelError) {
+console.error('Error loading face models:', modelError);
+status.innerHTML = '<span class="text-danger"><i class="fa fa-exclamation-triangle"></i> Erreur de chargement des modèles: ' + modelError.message + '</span>';
+throw modelError;
 }
-        } catch (error) {
-            console.error('Authentication error:', error);
-            status.innerHTML = '<span class="text-danger"><i class="fa fa-exclamation-triangle"></i> Erreur: ' + error.message + '</span>';
-            spinner.style.display = 'none';
-            btnText.textContent = 'Réessayer';
-            authenticateBtn.disabled = false;
-        }
-    });
+
+status.innerHTML = '<span class="text-success"><i class="fa fa-check-circle"></i> Modèles chargés, activation de la caméra...</span>';
+
+// Request camera access
+const stream = await navigator.mediaDevices.getUserMedia({
+video: {
+facingMode: "user"
+}
 });
-    </script>
-</body>
+
+video.srcObject = stream;
+status.innerHTML = '<span class="text-success"><i class="fa fa-check-circle"></i> Caméra activée, positionnez votre visage</span>';
+scanner.style.display = 'block';
+
+// Setup face detection
+video.addEventListener('play', () => {
+setInterval(async () => {
+const detections = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({scoreThreshold: 0.5})).withFaceLandmarks().withFaceDescriptor();
+
+if (detections) {
+status.innerHTML = '<span class="text-success"><i class="fa fa-check-circle"></i> Visage détecté, prêt pour l\'authentification</span>';
+authenticateBtn.disabled = false;
+} else {
+status.innerHTML = '<span class="text-warning"><i class="fa fa-exclamation-circle"></i> Aucun visage détecté, veuillez vous positionner face à la caméra</span>';
+authenticateBtn.disabled = true;
+}
+}, 500);
+});
+} catch (err) {
+status.innerHTML = '<span class="text-danger"><i class="fa fa-exclamation-triangle"></i> Erreur: ' + err.message + '</span>';
+console.error('Error initializing face detection:', err);
+}
+
+// Handle authentication button click
+authenticateBtn.addEventListener('click', async () => {
+spinner.style.display = 'inline-block';
+btnText.textContent = 'Authentification en cours...';
+authenticateBtn.disabled = true;
+
+try { // Capture current frame from video
+canvas.width = video.videoWidth;
+canvas.height = video.videoHeight;
+canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+
+const detection = await faceapi.detectSingleFace(canvas, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
+
+if (! detection) {
+status.innerHTML = '<span class="text-danger"><i class="fa fa-exclamation-triangle"></i> Aucun visage détecté, veuillez réessayer</span>';
+spinner.style.display = 'none';
+btnText.textContent = 'S\'authentifier';
+authenticateBtn.disabled = false;
+return;
+}
+
+// Convert image to base64 for sending to server
+const imageData = canvas.toDataURL('image/jpeg');
+
+// Ensure descriptor is a regular array, not a Float32Array
+const descriptorArray = Array.from(detection.descriptor);
+
+console.log('Sending authentication request with descriptor length:', descriptorArray.length);
+
+try {
+// Dans facial_login.html.twig, modifiez la partie d'envoi de requête fetch:
+const response = await fetch('/facial-login/authenticate', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+    'X-Requested-With': 'XMLHttpRequest'
+  },
+  credentials: 'same-origin',  // Ajoutez cette ligne pour s'assurer que les cookies sont envoyés
+  body: JSON.stringify({
+    faceImage: imageData, 
+    faceDescriptor: descriptorArray
+  })
+});
+
+// Vérifier si la réponse est une redirection
+if (response.redirected) { // Si le serveur a redirigé, suivre cette redirection
+window.location.href = response.url;
+return;
+}
+
+// Si ce n'est pas une redirection, traiter comme avant
+if (! response.ok) {
+const errorText = await response.text();
+console.error('Server error:', response.status, errorText.substring(0, 200));
+throw new Error(`Server error: ${
+response.status
+}`);
+}
+
+// Parse the JSON response
+const result = await response.json();
+
+if (result.success) {
+status.innerHTML = '<span class="text-success"><i class="fa fa-check-circle"></i> Authentification réussie! Redirection...</span>';
+emailDisplay.textContent = 'Connecté en tant que: ' + result.email;
+
+// Redirection via le chemin renvoyé par le serveur
+setTimeout(() => {
+window.location.href = result.redirectTo || '/profile';
+}, 3000);
+} else {
+status.innerHTML = '<span class="text-danger"><i class="fa fa-times-circle"></i> ' + result.message + '</span>';
+spinner.style.display = 'none';
+btnText.textContent = 'Réessayer';
+authenticateBtn.disabled = false;
+}
+} catch (fetchError) {
+console.error('Fetch error:', fetchError);
+status.innerHTML = '<span class="text-danger"><i class="fa fa-exclamation-triangle"></i> Erreur de connexion: ' + fetchError.message + '</span>';
+spinner.style.display = 'none';
+btnText.textContent = 'Réessayer';
+authenticateBtn.disabled = false;
+}
+} catch (error) {
+console.error('Authentication error:', error);
+status.innerHTML = '<span class="text-danger"><i class="fa fa-exclamation-triangle"></i> Erreur: ' + error.message + '</span>';
+spinner.style.display = 'none';
+btnText.textContent = 'Réessayer';
+authenticateBtn.disabled = false;
+}
+});
+});
+		</script>
+	</body>
 </html>

@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+// Explicit import for the User entity
 use App\Entity\User;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -34,7 +35,7 @@ class FacialLoginController extends AbstractController
         Request $request, 
         EntityManagerInterface $entityManager, 
         LoggerInterface $logger
-    ): JsonResponse {
+    ): Response {
         // Validate CSRF token
         if (!$this->isCsrfTokenValid('facial_authenticate', $request->headers->get('X-CSRF-TOKEN'))) {
             return $this->json(['success' => false, 'message' => 'Token CSRF invalide'], 403);
@@ -96,6 +97,9 @@ class FacialLoginController extends AbstractController
                 return $this->json(['success' => false, 'message' => 'Aucun utilisateur correspondant trouvé'], 401);
             }
             
+            // Explicit type assertion for static analysis tools
+            /** @var User $user */
+            
             $logger->info('Utilisateur trouvé pour l\'authentification faciale: ' . $user->getEmail());
             $logger->info('User role in database: ' . $user->getRole());
             $logger->info('User roles after transformation: ' . implode(', ', $user->getRoles()));
@@ -133,14 +137,19 @@ class FacialLoginController extends AbstractController
             // Log authentication success
             $logger->info('Authentication successful for user: ' . $user->getEmail());
             
-            // Return success response with redirect path
-            return $this->json([
-                'success' => true, 
-                'message' => 'Authentification réussie', 
-                'email' => $user->getEmail(),
-                'redirectTo' => $redirectPath
-            ]);
-            
+            // Return response based on request type
+            if ($request->isXmlHttpRequest()) {
+                // If it's an AJAX request, return JSON with status
+                return $this->json([
+                    'success' => true, 
+                    'message' => 'Authentification réussie', 
+                    'email' => $user->getEmail(),
+                    'redirectTo' => $redirectPath
+                ]);
+            } else {
+                // If it's a normal request, redirect directly
+                return $this->redirect($redirectPath);
+            }
         } catch (\Exception $e) {
             $logger->error('Erreur lors de l\'authentification faciale: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
@@ -166,6 +175,7 @@ class FacialLoginController extends AbstractController
             ], 500);
         }
     }
+
     /**
      * Find user by face descriptor
      * Compare the extracted face descriptor with stored descriptors in the database
@@ -173,10 +183,11 @@ class FacialLoginController extends AbstractController
      * @param array|null $faceDescriptor Extracted face descriptor
      * @param EntityManagerInterface $entityManager
      * @param LoggerInterface $logger
-     * @return object|null User object if found, null otherwise
+     * @return \App\Entity\User|null User object if found, null otherwise
      */
-    private function findUserByFaceDescriptor(?array $faceDescriptor, EntityManagerInterface $entityManager, LoggerInterface $logger): ?object
+    private function findUserByFaceDescriptor(?array $faceDescriptor, EntityManagerInterface $entityManager, LoggerInterface $logger): ?User
     {
+        // Explicit class reference
         $userRepository = $entityManager->getRepository(User::class);
         $users = $userRepository->findBy(['facialAuthEnabled' => true]);
         
@@ -199,6 +210,9 @@ class FacialLoginController extends AbstractController
         $bestDistance = INF;
         
         foreach ($users as $user) {
+            // Explicit type assertion for static analysis tools inside loop
+            /** @var User $user */
+            
             try {
                 $storedData = json_decode($user->getFacialData(), true);
                 
@@ -266,20 +280,24 @@ class FacialLoginController extends AbstractController
     }
 
     #[Route('/debug-auth', name: 'app_debug_auth')]
-public function debugAuth(LoggerInterface $logger): JsonResponse
-{
-    $user = $this->getUser();
-    $isAuth = $this->isGranted('IS_AUTHENTICATED_FULLY');
-    $roleRH = $this->isGranted('ROLE_RESPONSABLE_RH');
-    $roleEmployee = $this->isGranted('ROLE_EMPLOYEE');
-    
-    return $this->json([
-        'is_authenticated' => $isAuth,
-        'user' => $user ? $user->getEmail() : null,
-        'role' => $user ? $user->getRole() : null,
-        'symfony_roles' => $user ? $user->getRoles() : [],
-        'has_rh_role' => $roleRH,
-        'has_employee_role' => $roleEmployee,
-    ]);
-}
+    public function debugAuth(LoggerInterface $logger): JsonResponse
+    {
+        $user = $this->getUser();
+        
+        // Explicit type assertion for the user to help IDE
+        /** @var User|null $user */
+        
+        $isAuth = $this->isGranted('IS_AUTHENTICATED_FULLY');
+        $roleRH = $this->isGranted('ROLE_RESPONSABLE_RH');
+        $roleEmployee = $this->isGranted('ROLE_EMPLOYEE');
+        
+        return $this->json([
+            'is_authenticated' => $isAuth,
+            'user' => $user ? $user->getEmail() : null,
+            'role' => $user ? $user->getRole() : null,
+            'symfony_roles' => $user ? $user->getRoles() : [],
+            'has_rh_role' => $roleRH,
+            'has_employee_role' => $roleEmployee,
+        ]);
+    }
 }

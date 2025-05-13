@@ -1,46 +1,36 @@
 <?php
 
+// src/Entity/Entretien.php
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\DBAL\Types\Types;
 use App\Entity\StatusEntretien;
+
 #[ORM\Table(name: "liste_offres")]
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: \App\Repository\EntretienRepository::class)]
 class Entretien
 {
-   
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column]
+    #[ORM\Column(name: "id_liste_offres")]
     private ?int $idListOffre = null;
 
-    #[ORM\Column]
-    private int $idCondidate;
+    #[ORM\Column(name: "id_condidat")]
+    private ?int $idCondidate = null;
 
-    #[ORM\Column]
+    #[ORM\Column(name: "id_offre")]
     private int $idOffre;
 
     #[ORM\Column(type: "string", enumType: StatusEntretien::class)]
     private StatusEntretien $status = StatusEntretien::EN_COURS;
-    
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
     private ?\DateTimeInterface $datePostulation = null;
 
-
-    #[ORM\Column(length: 100, nullable: true)]
     private ?string $nomCandidat = null;
-
-    #[ORM\Column(length: 100, nullable: true)]
     private ?string $prenomCandidat = null;
-
-    #[ORM\Column(length: 255, nullable: true)]
     private ?string $titreOffre = null;
-
-
-
-
 
     // Getters et Setters
     public function getIdListOffre(): ?int
@@ -48,7 +38,13 @@ class Entretien
         return $this->idListOffre;
     }
 
-    public function getIdCondidate(): int
+    public function setIdListOffre(?int $id): self
+    {
+        $this->idListOffre = $id;
+        return $this;
+    }
+
+    public function getIdCondidate(): ?int
     {
         return $this->idCondidate;
     }
