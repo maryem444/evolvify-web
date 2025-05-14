@@ -59,7 +59,6 @@
 - Composer
 - Symfony CLI
 - MySQL ou équivalent
-- Serveur web local (XAMPP, WAMP…)
 
 ### Étapes
 
