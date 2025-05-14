@@ -85,12 +85,12 @@
         </div>
     </div>
 
-    <!-- Delete Modal -->
+    <!-- Delete Modal amélioré -->
     <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="deleteModalLabel">Confirmation de suppression</h5>
+                    <h5 class="modal-title" id="deleteModalLabel">Confirmer la suppression</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
                 </div>
                 <div class="modal-body">
@@ -98,12 +98,75 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <form action="{{ path('app_employe_conge_delete', {'id': conge.id}) }}" method="post">
-                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ conge.id) }}">
-                        <button type="submit" class="btn btn-danger">Supprimer</button>
-                    </form>
+                    <button type="button" class="btn btn-danger" id="confirm-delete-btn">Supprimer</button>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Toast de notification -->
+    <div class="position-fixed bottom-0 end-0 m-3" style="z-index: 1060">
+        <div id="deleteToast" class="toast align-items-center text-white border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body" id="delete-toast-message">
+                    <!-- Message will be inserted here -->
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Cibler le bouton de confirmation de suppression
+    const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+    
+    // Vérifier si le bouton existe
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', function() {
+            // Désactiver le bouton et afficher l'état de chargement
+            this.disabled = true;
+            this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Suppression...';
+            
+            // Créer un formulaire pour soumettre la suppression
+            const form = document.createElement('form');
+            form.action = "{{ path('app_employe_conge_delete', {'id': conge.id}) }}";
+            form.method = 'post';
+            form.style.display = 'none';
+            
+            // Ajouter le token CSRF
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = '_token';
+            csrfInput.value = "{{ csrf_token('delete' ~ conge.id) }}";
+            form.appendChild(csrfInput);
+            
+            // Ajouter et soumettre le formulaire
+            document.body.appendChild(form);
+            form.submit();
+        });
+    }
+    
+    // Fonction pour réinitialiser correctement l'état de la page après les opérations de modal
+    function resetPageState() {
+        // Supprimer les classes modales et les styles en ligne du corps
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+        
+        // Supprimer tout backdrop modal
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        backdrops.forEach(backdrop => backdrop.remove());
+        
+        // Forcer la réapparition de la barre de défilement en basculant overflow
+        document.querySelector('html').style.overflow = 'hidden';
+        setTimeout(() => {
+            document.querySelector('html').style.overflow = '';
+        }, 10);
+    }
+});
+</script>
 {% endblock %}
